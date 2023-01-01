@@ -1,221 +1,14 @@
 import os
-import json
-import requests
-import math
-import mutagen
-from mutagen.flac import FLAC
-from mutagen.mp3 import EasyMP3
 import argparse
 import shutil
 from tabulate import tabulate
-import urllib.request
+
+from flagsAndSettings import *
+from tagFiles import *
+from renameFiles import *
 
 
-# languages to be probed from VGMDB in the given order of priority
-languages = ['ja-latn', 'Romaji', 'en', 'English',
-             'English (Apple Music)', 'ja', 'Japanese']
-BACKUPFOLDER = '/run/media/arpit/DATA/backups'
-APICALLRETRIES = 5
-tableFormat = 'rounded_grid'
-
-# flags
-BACKUP = True
-CONFIRM = False
-
-PICS = True
-SCANS = True
-DATE = True
-YEAR = True
-CATALOG = True
-BARCODE = True
-
-ORGANIZATIONS = True
-ARRANGERS = False
-COMPOSERS = False
-PERFORMERS = False
-LYRICISTS = False
-
-
-################## Helper Functions ############################
-
-
-def Request(url):
-    countLeft = APICALLRETRIES
-    while countLeft > 0:
-        try:
-            response = requests.get(url)
-            if response.status_code == 200:
-                return response.json()
-        except Exception as e:
-            pass
-        countLeft -= 1
-    return None
-
-
-def openMutagenFile(filePath):
-    fileNameWithPath, fileExtension = os.path.splitext(filePath)
-    return FLAC(filePath) if fileExtension == '.flac' else EasyMP3(filePath)
-
-
-def standardize_date(date_string: str) -> str:
-    # Split the date string into its components
-    date_components = date_string.split('-')
-    num_components = len(date_components)
-
-    if num_components == 1:
-        date_string = date_string + '-00-00'
-    elif num_components == 2:
-        date_string = date_string + '-00'
-    else:
-        pass
-    return date_string
-
-
-def getAlbumDetails(albumID):
-    return Request(f'https://vgmdb.info/album/{albumID}')
-
-
-def searchAlbum(albumName):
-    return Request(f'https://vgmdb.info/search?q={albumName}')
-
-
-def getBest(obj, orig='NA'):
-    for lang in languages:
-        if lang in obj:
-            return obj[lang]
-    return orig
-
-
-def hasCoverOfType(audio, typ):
-    for picture in audio.pictures:
-        if picture.type == typ:
-            return True
-    return False
-
-
-def getCount(discNumber):
-    # get the count of tracks -> checks if the input is something like 4/20 -> truncates to 4
-    if '/' in discNumber:
-        discNumber = discNumber.split('/')[0]
-    if ':' in discNumber:
-        discNumber = discNumber.split('/')[0]
-    return int(discNumber)
-
-
-def getOneAudioFile(folderPath):
-    for root, dirs, files in os.walk(folderPath):
-        for file in files:
-            if file.lower().endswith('.flac') or file.lower().endswith('.mp3'):
-                return os.path.join(root, file)
-    return None
-
-
-def yesNoUserInput():
-    print('Continue? (Y/n) : ', end='')
-    resp = input()
-    if resp not in 'yY':
-        return False
-    return True
-    print('\n', end='')
-
-
-def getAlbumTrackData(data):
-    trackData = {}
-    discNumber = 1
-    for disc in data['discs']:
-        trackData[discNumber] = {}
-        trackNumber = 1
-        for track in disc['tracks']:
-            trackData[discNumber][trackNumber] = getBest(track['names'])
-            trackNumber += 1
-        discNumber += 1
-    return trackData
-
-
-def getFolderTrackData(folderPath):
-    folderTrackData = {}
-    for root, dirs, files in os.walk(folderPath):
-        for file in files:
-            if not file.lower().endswith('.flac') and not file.lower().endswith('.mp3'):
-                continue
-            filePath = os.path.join(root, file)
-            audio = openMutagenFile(filePath)
-            discNumber = 1
-            trackNumber = 1
-            try:
-                discNumber = getCount(audio['discnumber'][0])
-            except Exception as e:
-                print(
-                    f'Disc Number not Present in file : {file}, Taking Default Value = 01')
-            try:
-                trackNumber = getCount(audio['tracknumber'][0])
-            except Exception as e:
-                print(
-                    f'TrackNumber not Present in file : {file}, Skipped!')
-                continue
-
-            if discNumber not in folderTrackData:
-                folderTrackData[discNumber] = {}
-            if trackNumber in folderTrackData[discNumber]:
-                print(
-                    f'disc {discNumber}, Track {trackNumber} - {folderTrackData[discNumber][trackNumber]} Already Present')
-                print(f'cannot add {file}')
-                continue
-
-            folderTrackData[discNumber][trackNumber] = filePath
-    return folderTrackData
-
-
-def doTracksAlign(albumTrackData, folderTrackData):
-    flag = True
-    if len(albumTrackData) != len(folderTrackData):
-        flag = False
-    for discNumber, tracks in albumTrackData.items():
-        if(discNumber not in folderTrackData or len(tracks) != len(folderTrackData[discNumber])):
-            flag = False
-    tableData = []
-    for discNumber, tracks in albumTrackData.items():
-        for trackNumber, trackTitle in tracks.items():
-            if discNumber not in folderTrackData or trackNumber not in folderTrackData[discNumber]:
-                tableData.append(
-                    (discNumber, trackNumber, trackTitle, ''))
-            else:
-                tableData.append((discNumber, trackNumber, trackTitle, os.path.basename(
-                    folderTrackData[discNumber][trackNumber])))
-    for discNumber, tracks in folderTrackData.items():
-        for trackNumber, trackTitle in tracks.items():
-            if discNumber not in albumTrackData or trackNumber not in albumTrackData[discNumber]:
-                tableData.append(
-                    (discNumber, trackNumber, '', os.path.basename(
-                        folderTrackData[discNumber][trackNumber])))
-
-    print(tabulate(tableData,
-                   headers=['Disc', 'Track', 'Title', 'fileName'],
-                   colalign=('center', 'center', 'left', 'left'),
-                   maxcolwidths=60, tablefmt=tableFormat), end='\n\n')
-    return flag
-
-
-def downloadPicture(URL, path, name=None):
-    pictureName = os.path.basename(URL)
-    imagePath = os.path.join(path, pictureName)
-    originalURLName, extension = os.path.splitext(imagePath)
-    if name:
-        finalImageName = name+extension
-        if os.path.exists(os.path.join(path, finalImageName)):
-            print(f'FileExists : {finalImageName}')
-            return
-    urllib.request.urlretrieve(URL, imagePath)
-    if name is not None:
-        originalURLName = name
-        os.rename(imagePath, os.path.join(path, originalURLName+extension))
-    print(f'Downloaded : {originalURLName}{extension}')
-
-
-########################## Helper Functions ############################
-
-
-def tag_files(folderPath, albumID):
+def tagAndRenameFiles(folderPath, albumID):
     print('\n', end='')
     print('Getting album Data')
     try:
@@ -227,11 +20,13 @@ def tag_files(folderPath, albumID):
         print('Failed, Please Try Again.')
         print(e)
         return False
+
     albumLink = data["vgmdb_link"]
     while albumLink and albumLink[-1] != '?':
         albumLink = albumLink[:-1]
     albumLink = albumLink[:-1]
-
+    data['albumLink'] = albumLink
+    data['folderPath'] = folderPath
     if CONFIRM:
         print(f'Link - {albumLink}')
         print(f'Album - {getBest(data["names"])}')
@@ -271,114 +66,24 @@ def tag_files(folderPath, albumID):
             print(e)
             if not yesNoUserInput():
                 return False
-    print('\n', end='')
-    print('\n', end='')
+        print('\n', end='')
+        print('\n', end='')
 
-    totalTracks = 0
-    for disc in albumTrackData:
-        totalTracks += len(albumTrackData[disc])
-    totalDisks = len(albumTrackData)
-    tracksUpperBound = int(math.ceil(math.log10(totalTracks+1)))
-    disksUpperBound = int(math.ceil(math.log10(totalDisks+1)))
-    albumName = getBest(data['names'])
-
-    if PICS or SCANS:
-        print('Downloading Pictures')
-        if(PICS and 'picture_full' in data):
-            response = requests.get(data['picture_full'])
-            image_data = response.content
-            picture = mutagen.flac.Picture()
-            picture.data = image_data
-            picture.type = 3
-            picture.mime = 'image/jpeg'
-
-        if(SCANS and 'covers' in data):
-            frontPictureExists = False
-            coverPath = os.path.join(folderPath, 'Scans')
-            if not os.path.exists(coverPath):
-                os.makedirs(coverPath)
-            for cover in data['covers']:
-                downloadPicture(URL=cover['full'],
-                                path=coverPath, name=cover['name'])
-                if cover['name'].lower() == 'front' or cover['name'].lower == 'cover':
-                    frontPictureExists = True
-            if not frontPictureExists and 'picture_full' in data:
-                downloadPicture(URL=data['picture_full'],
-                                path=coverPath, name='Front')
-            print('Done.')
-            print('\n', end='')
-
-    for discNumber, tracks in albumTrackData.items():
-        for trackNumber, trackTitle in tracks.items():
-            if discNumber not in folderTrackData or trackNumber not in folderTrackData[discNumber]:
-                continue
-
-            filePath = folderTrackData[discNumber][trackNumber]
-            fileName = os.path.basename(filePath)
-            audio = openMutagenFile(filePath)
-            isFLAC = fileName.lower().endswith('.flac')
-            # Tagging Album specific Details
+    # Tagging
+    if TAG:
+        tagFiles(albumTrackData, folderTrackData, data)
+        print('Finished Tagging operation')
+        print('\n', end='')
+        print('\n', end='')
+    # Renaming
+    if RENAME:
+        renameFiles(albumTrackData, folderTrackData, data)
+        print('Finished Renaming Operation')
+        print('\n', end='')
+        print('\n', end='')
 
 
-            if DATE and 'release_date' in data:
-                audio['date'] = standardize_date(data['release_date'])
-
-            audio['album'] = albumName
-            
-            #These tags are not supported for MP3 files (in this program), Sorry :(
-            if isFLAC:
-                if(PICS and 'picture_full' in data and not hasCoverOfType(audio, 3)):
-                    audio.add_picture(picture)
-
-                audio['tracktotal'] = str(totalTracks)
-                audio['disctotal'] = str(totalDisks)
-                audio['comment'] = f'Find the tracklist at {albumLink}'
-
-                if YEAR and 'release_date' in data and len(data['release_date']) >= 4:
-                    audio['year'] = data['release_date'][0:4]
-
-                if CATALOG and 'catalog' in data:
-                    audio['catalog'] = data['catalog']
-
-                if BARCODE and 'barcode' in data:
-                    audio['barcode'] = data['barcode']
-
-                if ORGANIZATIONS and 'organizations' in data:
-                    for org in data['organizations']:
-                        audio[org['role']] = getBest(org['names'])
-
-                def addMultiValues(tag, tagInFile, flag=True):
-                    if tag in data and flag:
-                        temp = []
-                        for val in data[tag]:
-                            temp.append(getBest(val['names']))
-                        audio[tagInFile] = temp
-
-                addMultiValues('lyricists', 'lyricist', LYRICISTS)
-                addMultiValues('performers', 'performer', PERFORMERS)
-                addMultiValues('arrangers', 'arranger', ARRANGERS)
-                addMultiValues('composers', 'composer', COMPOSERS)
-
-            # Tagging track specific details
-
-            audio['title'] = trackTitle
-            audio['discnumber'] = str(discNumber).zfill(disksUpperBound)
-            audio['tracknumber'] = str(trackNumber).zfill(tracksUpperBound)
-
-            audio.save()
-            print('{:<10s} {:<50s} {:10s} {:<50s}'.format(
-                'File Tagged : ',
-                fileName,
-                '->',
-                f'{discNumber}/{trackNumber}. {trackTitle}'
-            ))
-
-    print('\n', end='')
-    print('\n', end='')
-    return True
-
-
-def findAndTagAlbum(folderPath, searchTerm):
+def findAlbumID(folderPath, searchTerm):
     albumName = searchTerm
     if searchTerm is None:
         filePath = getOneAudioFile(folderPath)
@@ -386,17 +91,18 @@ def findAndTagAlbum(folderPath, searchTerm):
             print('No Flac File Present in the directory')
             print('\n', end='')
             print('\n', end='')
-            return False
+            return None
 
         audio = openMutagenFile(filePath)
         if 'album' not in audio or not audio['album']:
-            return False
+            return None
         albumName = audio.get("album")[0]
+
     print(f'Searching for : {albumName}')
     print('\n', end='')
     data = searchAlbum(albumName)
     if data is None or not data['results']['albums']:
-        return False
+        return None
     albumData = {}
     tableData = []
     serialNumber = 1
@@ -416,7 +122,7 @@ def findAndTagAlbum(folderPath, searchTerm):
         tableData.append((serialNumber, albumTitle, albumLink, year))
         serialNumber += 1
     if not tableData:
-        return False
+        return None
     print(tabulate(tableData,
                    headers=['S.No', 'Title', 'Link', 'Year'],
                    maxcolwidths=65,
@@ -427,13 +133,12 @@ def findAndTagAlbum(folderPath, searchTerm):
     choice = input()
     if not choice.isdigit() or int(choice) not in albumData:
         print('Invalid Choice')
-        return False
-
-    return tag_files(folderPath, albumData[int(choice)]['ID'])
+        return None
+    return albumData[int(choice)]['ID']
 
 
 def main():
-    folderPath = "/run/media/arpit/DATA/OSTs/Anime/Shinsekai Yori/Shinsekai Yori Soundtrack Disc 1"
+    folderPath = "/home/arpit/Downloads/2009.05.05 [MJCD-0010] Vivid Colors -KEY tribute album- [M3-23]"
     parser = argparse.ArgumentParser(
         description='Automatically Tag Music Albums!')
     parser.add_argument('folderPath', nargs='?', help='Flac directory path')
@@ -451,16 +156,14 @@ def main():
     if folderPath[-1] == '/':
         folderPath = folderPath[:-1]
 
-    if args.ID is not None:
-        if tag_files(folderPath, args.ID):
-            print('Done Tagging')
-        else:
-            print(f"Couldn't Tag the Album at {folderPath}")
+    albumID = args.ID
+    if albumID is None:
+        albumID = findAlbumID(folderPath, searchTerm)
+    if albumID is not None:
+        tagAndRenameFiles(folderPath, albumID)
+        print('Done Performing Operations')
     else:
-        if findAndTagAlbum(folderPath, searchTerm):
-            print('Done Tagging')
-        else:
-            print(f"Couldn't Tag the Album at {folderPath}")
+        print(f'Operations failed at {folderPath}')
 
 
 if __name__ == '__main__':
