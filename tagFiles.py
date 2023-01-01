@@ -7,7 +7,7 @@ from flagsAndSettings import *
 from utilityFunctions import *
 
 
-def tagFiles(albumTrackData, folderTrackData, data):
+def tagFiles(albumTrackData, folderTrackData, data, languages):
 
     totalTracks = 0
     for disc in albumTrackData:
@@ -15,14 +15,14 @@ def tagFiles(albumTrackData, folderTrackData, data):
     totalDisks = len(albumTrackData)
     tracksUpperBound = int(math.ceil(math.log10(totalTracks+1)))
     disksUpperBound = int(math.ceil(math.log10(totalDisks+1)))
-    albumName = getBest(data['names'])
+    albumName = getBest(data['names'], languages)
 
     if PICS or SCANS:
         print('Downloading Pictures')
         if(PICS and 'picture_full' in data):
             response = requests.get(data['picture_full'])
             image_data = response.content
-            picture = mutagen.flac.Picture()
+            picture = mutagen.flac.Picture() # type: ignore
             picture.data = image_data
             picture.type = 3
             picture.mime = 'image/jpeg'
@@ -63,8 +63,7 @@ def tagFiles(albumTrackData, folderTrackData, data):
             # These tags are not supported for MP3 files (in this program), Sorry :(
             if isFLAC:
                 if(PICS and 'picture_full' in data and not hasCoverOfType(audio, 3)):
-                    audio.add_picture(picture)
-
+                    audio.add_picture(picture) # type: ignore
                 audio['tracktotal'] = str(totalTracks)
                 audio['disctotal'] = str(totalDisks)
                 audio['comment'] = f"Find the tracklist at {data['albumLink']}"
@@ -80,13 +79,13 @@ def tagFiles(albumTrackData, folderTrackData, data):
 
                 if ORGANIZATIONS and 'organizations' in data:
                     for org in data['organizations']:
-                        audio[org['role']] = getBest(org['names'])
+                        audio[org['role']] = getBest(org['names'], languages)
 
                 def addMultiValues(tag, tagInFile, flag=True):
                     if tag in data and flag:
                         temp = []
                         for val in data[tag]:
-                            temp.append(getBest(val['names']))
+                            temp.append(getBest(val['names'], languages))
                         audio[tagInFile] = temp
 
                 addMultiValues('lyricists', 'lyricist', LYRICISTS)
@@ -99,7 +98,7 @@ def tagFiles(albumTrackData, folderTrackData, data):
             audio['title'] = trackTitle
             audio['discnumber'] = str(discNumber).zfill(disksUpperBound)
             audio['tracknumber'] = str(trackNumber).zfill(tracksUpperBound)
-
+            print(f'Tagged : {fileName}')
             audio.save()
             tableData.append(
                 (discNumber, trackNumber, trackTitle, fileName))

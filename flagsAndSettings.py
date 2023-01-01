@@ -1,10 +1,7 @@
 
-# languages to be probed from VGMDB in the given order of priority
-languages = ['ja-latn', 'Romaji', 'en', 'English',
-             'English (Apple Music)', 'ja', 'Japanese']
 BACKUPFOLDER = '/run/media/arpit/DATA/backups'
 APICALLRETRIES = 5
-tableFormat = 'rounded_grid'
+tableFormat = 'pretty'
 
 # flags
 BACKUP = True

@@ -48,7 +48,7 @@ def searchAlbum(albumName):
     return Request(f'https://vgmdb.info/search?q={albumName}')
 
 
-def getBest(obj, orig='NA'):
+def getBest(obj, languages, orig='NA'):
     for lang in languages:
         if lang in obj:
             return obj[lang]
@@ -82,26 +82,34 @@ def getOneAudioFile(folderPath):
 def yesNoUserInput():
     print('Continue? (Y/n) : ', end='')
     resp = input()
-    if resp not in 'yY':
+    if resp == 'n' or resp == 'N':
         return False
     return True
-    print('\n', end='')
 
 
-def getAlbumTrackData(data):
+def noYesUserInput():
+    print('Continue? (y/N) : ', end='')
+    resp = input()
+    if resp == 'y' or resp == 'Y':
+        return True
+    return False
+
+
+def getAlbumTrackData(data, languages):
     trackData = {}
     discNumber = 1
     for disc in data['discs']:
         trackData[discNumber] = {}
         trackNumber = 1
         for track in disc['tracks']:
-            trackData[discNumber][trackNumber] = getBest(track['names'])
+            trackData[discNumber][trackNumber] = getBest(
+                track['names'], languages)
             trackNumber += 1
         discNumber += 1
     return trackData
 
 
-def getFolderTrackData(folderPath):
+def getFolderTrackData(folderPath, languages):
     folderTrackData = {}
     for root, dirs, files in os.walk(folderPath):
         for file in files:
@@ -157,12 +165,12 @@ def doTracksAlign(albumTrackData, folderTrackData):
                 tableData.append(
                     (discNumber, trackNumber, '', os.path.basename(
                         folderTrackData[discNumber][trackNumber])))
-    
+
     tableData.sort()
     print(tabulate(tableData,
                    headers=['Disc', 'Track', 'Title', 'fileName'],
                    colalign=('center', 'center', 'left', 'left'),
-                   maxcolwidths=60, tablefmt=tableFormat), end='\n\n')
+                   maxcolwidths=55, tablefmt=tableFormat), end='\n\n')
     return flag
 
 
