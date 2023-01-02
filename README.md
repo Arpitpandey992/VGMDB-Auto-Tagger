@@ -1,4 +1,4 @@
-# FLAC-auto-tag
+#  VGMDB-Auto-Tagger
 Python script to automatically tag an album using data fetched from VGMDB.info
 
 ## Some Important Requirements
