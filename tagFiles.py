@@ -9,11 +9,7 @@ from utilityFunctions import *
 
 def tagFiles(albumTrackData, folderTrackData, data, languages):
 
-    totalTracks = 0
-    for disc in albumTrackData:
-        totalTracks += len(albumTrackData[disc])
     totalDisks = len(albumTrackData)
-    tracksUpperBound = int(math.ceil(math.log10(totalTracks+1)))
     disksUpperBound = int(math.ceil(math.log10(totalDisks+1)))
     albumName = getBest(data['names'], languages)
 
@@ -45,6 +41,8 @@ def tagFiles(albumTrackData, folderTrackData, data, languages):
 
     tableData = []
     for discNumber, tracks in albumTrackData.items():
+        totalTracks = len(tracks)
+        tracksUpperBound = int(math.ceil(math.log10(totalTracks+1)))
         for trackNumber, trackTitle in tracks.items():
             if discNumber not in folderTrackData or trackNumber not in folderTrackData[discNumber]:
                 continue
@@ -102,9 +100,9 @@ def tagFiles(albumTrackData, folderTrackData, data, languages):
             audio.save()
             tableData.append(
                 (discNumber, trackNumber, trackTitle, fileName))
+    print('\n', end='')
     
     print('Files Tagged as follows')
-    print('\n', end='')
     tableData.sort()
     print(tabulate(tableData,
                    headers=['Disc', 'Track', 'Title', 'File Name'],

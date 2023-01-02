@@ -24,3 +24,7 @@ options:
 ```
 
 
+## Plans For Future
+
+* Currently, the program cannot tag `artist`, `album artist`, etc. So i'm planning to incorporate some other API (musicbrainz, amazon, etc) to get these few tags 
+* Making the program more fail-safe and "trustable".

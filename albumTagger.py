@@ -38,8 +38,8 @@ def tagAndRenameFiles(folderPath, albumID):
         if not yesNoUserInput():
             print('\n', end='')
             return False
+        print('\n', end='')
 
-    print('\n', end='')
     albumTrackData = getAlbumTrackData(data, languages)
     folderTrackData = getFolderTrackData(folderPath, languages)
     print('Done getting TrackData')
@@ -70,8 +70,8 @@ def tagAndRenameFiles(folderPath, albumID):
             print(f'Successfully copied {folderPath} to {backupFolder}')
 
         except Exception as e:
-            print("Backup Couldn't Be Completed :(")
-            print(e)
+            print("Backup Couldn't Be Completed, but this probably means that this folder was already backed up, so it 'should' be safe ;)")
+            print('error Message :', e)
             if not yesNoUserInput():
                 return False
         print('\n', end='')
@@ -80,12 +80,15 @@ def tagAndRenameFiles(folderPath, albumID):
     # Tagging
     if TAG:
         print('Tagging files')
+        print('\n', end='')
         tagFiles(albumTrackData, folderTrackData, data, languages)
         print('Finished Tagging operation')
         print('\n', end='')
         print('\n', end='')
     # Renaming
     if RENAME:
+        print('Renaming Files and Folders')
+        print('\n', end='')
         renameFiles(albumTrackData, folderTrackData, data, languages)
         print('Finished Renaming Operation')
         print('\n', end='')
@@ -93,25 +96,38 @@ def tagAndRenameFiles(folderPath, albumID):
 
 
 def findAlbumID(folderPath, searchTerm):
+    folderName = os.path.basename(folderPath)
+    print(f'Folder Name : {folderName}')
     albumName = searchTerm
     if searchTerm is None:
         filePath = getOneAudioFile(folderPath)
         if filePath is None:
-            print('No Flac File Present in the directory')
+            print(
+                'No Audio File Present in the directory to get album name, please provide custom search term!')
             print('\n', end='')
             print('\n', end='')
             return None
 
         audio = openMutagenFile(filePath)
         if 'album' not in audio or not audio['album']:
+            print(
+                'Audio file does not have an <album> tag!, please provide custom search term')
+            print('\n', end='')
+            print('\n', end='')
             return None
         albumName = audio["album"][0]
-
     print(f'Searching for : {albumName}')
     print('\n', end='')
     data = searchAlbum(albumName)
     if data is None or not data['results']['albums']:
-        return None
+        print("No results found!, Please change search term!")
+        print("Enter 'exit' to exit or give a new search term : ", end='')
+        answer = input()
+        if(answer.lower() == 'exit'):
+            print('\n', end='')
+            return None
+        return findAlbumID(folderPath, answer)
+
     albumData = {}
     tableData = []
     serialNumber = 1
@@ -139,12 +155,18 @@ def findAlbumID(folderPath, searchTerm):
                    maxcolwidths=55,
                    tablefmt=tableFormat,
                    colalign=('center', 'left', 'left', 'left', 'center')), end='\n\n')
-    print(f'Choose Album Serial Number (1-{len(tableData)}) : ', end='')
+    print(
+        f'Write another search term (exit allowed) or Choose Album Serial Number (1-{len(tableData)}) : ', end='')
 
     choice = input()
-    if not choice.isdigit() or int(choice) not in albumData:
-        print('Invalid Choice')
+    if choice.lower() == 'exit':
         return None
+    if choice == '':
+        choice = '1'
+    if not choice.isdigit() or int(choice) not in albumData:
+        print('Invalid Choice, using that as search term!')
+        return findAlbumID(folderPath, choice)
+
     return albumData[int(choice)]['ID']
 
 
@@ -168,7 +190,7 @@ def main():
         folderPath = args.folderPath
 
     print('\n', end='')
-    if folderPath[-1] == '/':
+    while folderPath[-1] == '/':
         folderPath = folderPath[:-1]
 
     global languages
@@ -183,7 +205,7 @@ def main():
         albumID = findAlbumID(folderPath, searchTerm)
     if albumID is not None:
         tagAndRenameFiles(folderPath, albumID)
-        print('Done Performing Operations')
+        print('Finished all <Possible> Operations')
     else:
         print(f'Operations failed at {folderPath}')
 

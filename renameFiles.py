@@ -46,7 +46,7 @@ def renameFiles(albumTrackData, folderTrackData, data, languages):
     disksUpperBound = int(math.ceil(math.log10(totalDisks+1)))
     albumName = cleanName(getBest(data['names'], languages))
     folderPath = data['folderPath']
-    date = data['release_date'].replace('-','.')
+    date = data['release_date'].replace('-', '.')
     if 'catalog' in data:
         albumFolder = f'[{date}] [{data["catalog"]}] {albumName}'
     else:
@@ -54,7 +54,7 @@ def renameFiles(albumTrackData, folderTrackData, data, languages):
     albumFolderPath = os.path.join(folderPath, albumFolder)
     if not os.path.exists(albumFolderPath):
         os.makedirs(albumFolderPath)
-    
+
     tableData = []
     for discNumber, tracks in folderTrackData.items():
         properDiscNumber = str(discNumber).zfill(disksUpperBound)
@@ -76,7 +76,7 @@ def renameFiles(albumTrackData, folderTrackData, data, languages):
                     (discNumber, trackNumber, fileName, '**NO CHANGE**'))
                 continue
             newName = cleanName(albumTrackData[discNumber][trackNumber])
-            finalNewName = f'{properTrackNumber}. {newName}{extension}'
+            finalNewName = f'{properTrackNumber} - {newName}{extension}'
             newPath = os.path.join(discFolderPath, finalNewName)
             shutil.move(filePath, newPath)
             tableData.append(
@@ -88,7 +88,9 @@ def renameFiles(albumTrackData, folderTrackData, data, languages):
                    headers=['Disc', 'Track', 'Old Name', 'New Name'],
                    colalign=('center', 'center', 'left', 'left'),
                    maxcolwidths=55, tablefmt=tableFormat), end='\n\n')
-    scansFolder = os.path.join(folderPath, 'Scans')
-    if os.path.exists(scansFolder):
-        shutil.move(scansFolder, albumFolderPath)
-
+    if MOVE:
+        scansFolder = os.path.join(folderPath, 'Scans')
+        if not os.path.exists(os.path.join(albumFolderPath, 'Scans')) and os.path.exists(scansFolder):
+            shutil.move(scansFolder, albumFolderPath)
+        print(f'Successfully moved files into {albumFolder}')
+        print('\n', end='')
