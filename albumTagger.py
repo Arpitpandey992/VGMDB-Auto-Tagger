@@ -32,6 +32,7 @@ def tagAndRenameFiles(folderPath, albumID):
     albumLink = albumLink[:-1]
     data['albumLink'] = albumLink
     data['folderPath'] = folderPath
+    data['albumID'] = albumID
     if CONFIRM:
         print(f'Link - {albumLink}')
         print(f'Album - {getBest(data["names"], languages)}')
@@ -171,7 +172,7 @@ def findAlbumID(folderPath, searchTerm):
 
 
 def main():
-    folderPath = "/home/arpit/Downloads/2009.05.05 [MJCD-0010] Vivid Colors -KEY tribute album- [M3-23]"
+    folderPath = "/run/media/arpit/DATA/Downloads/Music/Soulseek/red_book/Little Busters + Key/KAGINADO Original SoundTrack"
     parser = argparse.ArgumentParser(
         description='Automatically Tag Music Albums!, Default Language -> Romaji')
     parser.add_argument('folderPath', nargs='?', help='Flac directory path')

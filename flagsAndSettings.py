@@ -8,7 +8,7 @@ BACKUP = True
 CONFIRM = False
 RENAME = True
 TAG = True
-MOVE = True
+MOVE = False
 
 PICS = True
 SCANS = True

@@ -145,32 +145,35 @@ def getFolderTrackData(folderPath, languages):
 
 def doTracksAlign(albumTrackData, folderTrackData):
     flag = True
-    if len(albumTrackData) != len(folderTrackData):
-        flag = False
-    for discNumber, tracks in albumTrackData.items():
-        if(discNumber not in folderTrackData or len(tracks) != len(folderTrackData[discNumber])):
-            flag = False
+    # if len(albumTrackData) != len(folderTrackData):
+    #     flag = False
+    # for discNumber, tracks in albumTrackData.items():
+    #     if(discNumber not in folderTrackData or len(tracks) != len(folderTrackData[discNumber])):
+    #         flag = False
     tableData = []
     for discNumber, tracks in albumTrackData.items():
         for trackNumber, trackTitle in tracks.items():
             if discNumber not in folderTrackData or trackNumber not in folderTrackData[discNumber]:
                 tableData.append(
                     (discNumber, trackNumber, trackTitle, ''))
+                flag = False
             else:
                 tableData.append((discNumber, trackNumber, trackTitle, os.path.basename(
                     folderTrackData[discNumber][trackNumber])))
+
     for discNumber, tracks in folderTrackData.items():
         for trackNumber, trackTitle in tracks.items():
             if discNumber not in albumTrackData or trackNumber not in albumTrackData[discNumber]:
                 tableData.append(
                     (discNumber, trackNumber, '', os.path.basename(
                         folderTrackData[discNumber][trackNumber])))
+                flag = False
 
     tableData.sort()
     print(tabulate(tableData,
                    headers=['Disc', 'Track', 'Title', 'fileName'],
                    colalign=('center', 'center', 'left', 'left'),
-                   maxcolwidths=55, tablefmt=tableFormat), end='\n\n')
+                   maxcolwidths=53, tablefmt=tableFormat), end='\n\n')
     return flag
 
 

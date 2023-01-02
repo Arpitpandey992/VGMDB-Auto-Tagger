@@ -47,10 +47,13 @@ def renameFiles(albumTrackData, folderTrackData, data, languages):
     albumName = cleanName(getBest(data['names'], languages))
     folderPath = data['folderPath']
     date = data['release_date'].replace('-', '.')
-    if 'catalog' in data:
-        albumFolder = f'[{date}] [{data["catalog"]}] {albumName}'
+    if MOVE:
+        if 'catalog' in data and data['catalog'] != 'N/A':
+            albumFolder = f'[{date}] [{data["catalog"]}] {albumName}'
+        else:
+            albumFolder = f'[{date}] {albumName}'
     else:
-        albumFolder = f'[{date}] {albumName}'
+        albumFolder = ''
     albumFolderPath = os.path.join(folderPath, albumFolder)
     if not os.path.exists(albumFolderPath):
         os.makedirs(albumFolderPath)
@@ -87,7 +90,7 @@ def renameFiles(albumTrackData, folderTrackData, data, languages):
     print(tabulate(tableData,
                    headers=['Disc', 'Track', 'Old Name', 'New Name'],
                    colalign=('center', 'center', 'left', 'left'),
-                   maxcolwidths=55, tablefmt=tableFormat), end='\n\n')
+                   maxcolwidths=53, tablefmt=tableFormat), end='\n\n')
     if MOVE:
         scansFolder = os.path.join(folderPath, 'Scans')
         if not os.path.exists(os.path.join(albumFolderPath, 'Scans')) and os.path.exists(scansFolder):

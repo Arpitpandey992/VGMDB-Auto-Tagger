@@ -5,6 +5,7 @@ import math
 
 from flagsAndSettings import *
 from utilityFunctions import *
+from vgmdbrip.vgmdbrip import getPictures
 
 
 def tagFiles(albumTrackData, folderTrackData, data, languages):
@@ -12,18 +13,23 @@ def tagFiles(albumTrackData, folderTrackData, data, languages):
     totalDisks = len(albumTrackData)
     disksUpperBound = int(math.ceil(math.log10(totalDisks+1)))
     albumName = getBest(data['names'], languages)
+    folderPath = data['folderPath']
+    albumID = data['albumID']
 
     if PICS or SCANS:
         print('Downloading Pictures')
         if(PICS and 'picture_full' in data):
             response = requests.get(data['picture_full'])
             image_data = response.content
-            picture = mutagen.flac.Picture() # type: ignore
+            picture = mutagen.flac.Picture()  # type: ignore
             picture.data = image_data
             picture.type = 3
             picture.mime = 'image/jpeg'
-
-        if(SCANS and 'covers' in data):
+        if SCANS:
+            getPictures(folderPath, albumID)
+        print('Downloaded Available Pictures :)', end='\n\n')
+        # old algorithm for downloading -> no Login -> less covers available!
+        if(False and SCANS and 'covers' in data):
             frontPictureExists = False
             coverPath = os.path.join(data['folderPath'], 'Scans')
             if not os.path.exists(coverPath):
@@ -61,7 +67,7 @@ def tagFiles(albumTrackData, folderTrackData, data, languages):
             # These tags are not supported for MP3 files (in this program), Sorry :(
             if isFLAC:
                 if(PICS and 'picture_full' in data and not hasCoverOfType(audio, 3)):
-                    audio.add_picture(picture) # type: ignore
+                    audio.add_picture(picture)  # type: ignore
                 audio['tracktotal'] = str(totalTracks)
                 audio['disctotal'] = str(totalDisks)
                 audio['comment'] = f"Find the tracklist at {data['albumLink']}"
@@ -101,11 +107,11 @@ def tagFiles(albumTrackData, folderTrackData, data, languages):
             tableData.append(
                 (discNumber, trackNumber, trackTitle, fileName))
     print('\n', end='')
-    
+
     print('Files Tagged as follows')
     tableData.sort()
     print(tabulate(tableData,
                    headers=['Disc', 'Track', 'Title', 'File Name'],
                    colalign=('center', 'center', 'left', 'left'),
-                   maxcolwidths=60, tablefmt=tableFormat), end='\n\n')
+                   maxcolwidths=53, tablefmt=tableFormat), end='\n\n')
     return True
