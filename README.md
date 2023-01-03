@@ -22,7 +22,7 @@ options:
   --japanese, -ja       Give Priority to Japanese (not Romaji)
   --english, -en        Give Priority to English
 ```
-
+During picture grabbing stage, it is required to give username and password, since getting all scans require the client to be logged in. If you want to skip the login part and are okay with not grabbing all available scans, Uncomment some portion in the source code.
 
 ## Plans For Future
 
