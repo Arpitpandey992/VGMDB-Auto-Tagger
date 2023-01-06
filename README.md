@@ -7,24 +7,26 @@ Python script to automatically tag an album using data fetched from VGMDB.info
 * This script works best for partially tagged albums, and it will fill in other details like `catalog`, `title`, `publisher`, etc. So it is best used in conjunction with other tagging tools, as it is very difficult to get `English` track titles and `catalog` using other tools.
 
 ## Usage
-Clone the repository and use : `python albumTagger.py <folderPath> <extraArguments>`
-Language -> Romaji
-
+Clone the repository, then inside the directory:
+```
+usage: albumTagger.py [-h] [--ID ID] [--yes] [--search SEARCH] [--japanese] [--english] [folderPath]
 positional arguments:
   folderPath            Flac directory path
 
 options:
-```
   -h, --help            show this help message and exit
   --ID ID, -i ID        Provide Album ID
+  --yes, -y, -Y         Skip Yes prompt, and when only 1 album comes up in search results
   --search SEARCH, -s SEARCH, -S SEARCH
                         Provide Custom Search Term
   --japanese, -ja       Give Priority to Japanese (not Romaji)
   --english, -en        Give Priority to English
+  
+Default Tagging Language -> Romaji
 ```
+
 During picture grabbing stage, it is required to give username and password, since getting all scans require the client to be logged in. If you want to skip the login part and are okay with not grabbing all available scans, Uncomment some portion in the source code.
 
 ## Plans For Future
-
-* Currently, the program cannot tag `artist`, `album artist`, etc. So i'm planning to incorporate some other API (musicbrainz, amazon, etc) to get these few tags 
-* Making the program more fail-safe and "trustable".
+- [ ] Integrating some other API to get tags like `artist`, `album artist`, etc.
+- [X] Making the program more fail-safe and "trustable".
