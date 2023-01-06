@@ -9,7 +9,8 @@ forbiddenCharacters = {
     '>': 'ᐳ',
     ':': '꞉',
     '"': 'ˮ',
-    '/': '᜵',
+    '\'': 'ʻ',
+    '/': '／',
     '\\': '∖',
     '|': 'ǀ',
     '?': 'ʔ',
@@ -18,7 +19,7 @@ forbiddenCharacters = {
     '%': '٪',
     '!': 'ⵑ',
     '`': '՝',
-    '&': 'ꝸ',
+    '&': '&',  # keeping same as it is not forbidden, but it may cause problems
     '{': '❴',
     '}': '❵',
     '=': '᐀',
@@ -47,13 +48,15 @@ def renameFiles(albumTrackData, folderTrackData, data, languages):
     albumName = cleanName(getBest(data['names'], languages))
     folderPath = data['folderPath']
     date = data['release_date'].replace('-', '.')
+
     if MOVE:
         if 'catalog' in data and data['catalog'] != 'N/A':
-            albumFolder = f'[{date}] [{data["catalog"]}] {albumName}'
+            albumFolder = f'[{date}] {albumName} [{data["catalog"]}]'
         else:
             albumFolder = f'[{date}] {albumName}'
     else:
         albumFolder = ''
+
     albumFolderPath = os.path.join(folderPath, albumFolder)
     if not os.path.exists(albumFolderPath):
         os.makedirs(albumFolderPath)
@@ -79,6 +82,7 @@ def renameFiles(albumTrackData, folderTrackData, data, languages):
                     (discNumber, trackNumber, fileName, '**NO CHANGE**'))
                 continue
             newName = cleanName(albumTrackData[discNumber][trackNumber])
+            # File Names
             finalNewName = f'{properTrackNumber} - {newName}{extension}'
             newPath = os.path.join(discFolderPath, finalNewName)
             shutil.move(filePath, newPath)

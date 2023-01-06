@@ -4,11 +4,11 @@ APICALLRETRIES = 5
 tableFormat = 'pretty'
 
 # flags
-BACKUP = True
+BACKUP = False
 CONFIRM = False
 RENAME = True
 TAG = True
-MOVE = False
+MOVE = True
 
 PICS = True
 SCANS = True
@@ -18,6 +18,8 @@ CATALOG = True
 BARCODE = True
 
 ORGANIZATIONS = True
+# these tags are supposed to be track specific, but in VGMDB, they are provided for entire album,
+# hence i've turned these off.
 ARRANGERS = False
 COMPOSERS = False
 PERFORMERS = False

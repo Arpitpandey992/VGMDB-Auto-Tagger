@@ -2,6 +2,9 @@ import os
 import requests
 import mutagen
 import math
+import io
+from PIL import Image
+
 
 from flagsAndSettings import *
 from utilityFunctions import *
@@ -21,6 +24,17 @@ def tagFiles(albumTrackData, folderTrackData, data, languages):
         if(PICS and 'picture_full' in data):
             response = requests.get(data['picture_full'])
             image_data = response.content
+            image = Image.open(io.BytesIO(image_data))
+            width, height = image.size
+
+            if width > 800:
+                new_height = int(height * (800 / width))
+                image = image.resize((800, new_height), resample=Image.LANCZOS)
+
+            image_data = io.BytesIO()
+            image.save(image_data, format='JPEG', quality=70)
+            image_data = image_data.getvalue()
+
             picture = mutagen.flac.Picture()  # type: ignore
             picture.data = image_data
             picture.type = 3

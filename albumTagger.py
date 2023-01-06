@@ -11,6 +11,7 @@ from renameFiles import *
 # languages to be probed from VGMDB in the given order of priority
 languages = ['ja-latn', 'Romaji', 'en', 'English',
              'English (Apple Music)', 'ja', 'Japanese']
+YES = False
 
 
 def tagAndRenameFiles(folderPath, albumID):
@@ -54,7 +55,7 @@ def tagAndRenameFiles(folderPath, albumID):
             return False
     else:
         print('Tracks are perfectly aligning with the album data received from VGMDB!')
-        if not yesNoUserInput():
+        if not YES and not yesNoUserInput():
             print('\n', end='')
             return False
 
@@ -73,7 +74,7 @@ def tagAndRenameFiles(folderPath, albumID):
         except Exception as e:
             print("Backup Couldn't Be Completed, but this probably means that this folder was already backed up, so it 'should' be safe ;)")
             print('error Message :', e)
-            if not yesNoUserInput():
+            if not YES and not yesNoUserInput():
                 return False
         print('\n', end='')
         print('\n', end='')
@@ -127,6 +128,7 @@ def findAlbumID(folderPath, searchTerm):
         if(answer.lower() == 'exit'):
             print('\n', end='')
             return None
+
         return findAlbumID(folderPath, answer)
 
     albumData = {}
@@ -156,17 +158,22 @@ def findAlbumID(folderPath, searchTerm):
                    maxcolwidths=55,
                    tablefmt=tableFormat,
                    colalign=('center', 'left', 'left', 'left', 'center')), end='\n\n')
-    print(
-        f'Write another search term (exit allowed) or Choose Album Serial Number (1-{len(tableData)}) : ', end='')
 
-    choice = input()
-    if choice.lower() == 'exit':
-        return None
-    if choice == '':
+    if YES and len(tableData) == 1:
+        print('Continuing with this album!', end='\n\n')
         choice = '1'
-    if not choice.isdigit() or int(choice) not in albumData:
-        print('Invalid Choice, using that as search term!')
-        return findAlbumID(folderPath, choice)
+    else:
+        print(
+            f'Write another search term (exit allowed) or Choose Album Serial Number (1-{len(tableData)}) : ', end='')
+
+        choice = input()
+        if choice.lower() == 'exit':
+            return None
+        if choice == '':
+            choice = '1'
+        if not choice.isdigit() or int(choice) not in albumData:
+            print('Invalid Choice, using that as search term!')
+            return findAlbumID(folderPath, choice)
 
     return albumData[int(choice)]['ID']
 
@@ -178,6 +185,8 @@ def main():
     parser.add_argument('folderPath', nargs='?', help='Flac directory path')
     parser.add_argument('--ID', '-i', type=str, default=None,
                         help='Provide Album ID')
+    parser.add_argument('--yes', '-y', '-Y', action='store_true',
+                        help='Skip Yes prompt, and when only 1 album comes up in search results')
     parser.add_argument('--search', '-s', '-S', type=str, default=None,
                         help='Provide Custom Search Term')
     parser.add_argument('--japanese', '-ja', action='store_true',
@@ -201,6 +210,9 @@ def main():
     elif args.english:
         languages = ['en', 'English',
                      'English (Apple Music)', 'ja-latn', 'Romaji', 'ja', 'Japanese']
+    global YES
+    if args.yes:
+        YES = True
     albumID = args.ID
     if albumID is None:
         albumID = findAlbumID(folderPath, searchTerm)
