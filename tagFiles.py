@@ -25,6 +25,7 @@ def tagFiles(albumTrackData, folderTrackData, data, languages):
             response = requests.get(data['picture_full'])
             image_data = response.content
             image = Image.open(io.BytesIO(image_data))
+            image = image.convert('RGB')
             width, height = image.size
 
             if width > 800:
@@ -33,6 +34,9 @@ def tagFiles(albumTrackData, folderTrackData, data, languages):
 
             image_data = io.BytesIO()
             image.save(image_data, format='JPEG', quality=70)
+            # The above line does sometimes fail, but it is better to keep it. Try catch makes it fail all the time
+            #image.save(image_data, format='PNG', quality=70)
+
             image_data = image_data.getvalue()
 
             picture = mutagen.flac.Picture()  # type: ignore

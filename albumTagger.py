@@ -179,7 +179,9 @@ def findAlbumID(folderPath, searchTerm):
 
 
 def main():
-    folderPath = "/run/media/arpit/DATA/Downloads/Music/Soulseek/red_book/Little Busters + Key/KAGINADO Original SoundTrack"
+    folderPath = "/run/media/arpit/DATA/Downloads/Torrents/Key Sounds Label/[KSLA-B]/[KSLA-0168] Summer Pockets REFLECTION BLUE 「アスタロア」 [WEB-AAC-320K] NOT_DONE"
+    
+    
     parser = argparse.ArgumentParser(
         description='Automatically Tag Music Albums!, Default Language -> Romaji')
     parser.add_argument('folderPath', nargs='?', help='Flac directory path')
