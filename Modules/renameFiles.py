@@ -1,8 +1,8 @@
 import math
 import shutil
 
-from flagsAndSettings import *
-from utilityFunctions import *
+from Modules.flagsAndSettings import *
+from Modules.utilityFunctions import *
 
 forbiddenCharacters = {
     '<': 'ᐸ',
@@ -38,18 +38,20 @@ def cleanName(name):
     return output
 
 
-def renameFiles(albumTrackData, folderTrackData, data, languages):
+def renameFiles(albumTrackData, folderTrackData, data):
+    flags: Flags = data['flags']
+    
     totalTracks = 0
     for disc in albumTrackData:
         totalTracks += len(albumTrackData[disc])
     totalDisks = len(albumTrackData)
     tracksUpperBound = int(math.ceil(math.log10(totalTracks+1)))
     disksUpperBound = int(math.ceil(math.log10(totalDisks+1)))
-    albumName = cleanName(getBest(data['names'], languages))
+    albumName = cleanName(getBest(data['names'], flags.languages))
     folderPath = data['folderPath']
     date = data['release_date'].replace('-', '.')
 
-    if MOVE:
+    if flags.MOVE:
         if 'catalog' in data and data['catalog'] != 'N/A':
             albumFolder = f'[{date}] {albumName} [{data["catalog"]}]'
         else:
@@ -95,7 +97,7 @@ def renameFiles(albumTrackData, folderTrackData, data, languages):
                    headers=['Disc', 'Track', 'Old Name', 'New Name'],
                    colalign=('center', 'center', 'left', 'left'),
                    maxcolwidths=53, tablefmt=tableFormat), end='\n\n')
-    if MOVE:
+    if flags.MOVE:
         scansFolder = os.path.join(folderPath, 'Scans')
         if not os.path.exists(os.path.join(albumFolderPath, 'Scans')) and os.path.exists(scansFolder):
             shutil.move(scansFolder, albumFolderPath)

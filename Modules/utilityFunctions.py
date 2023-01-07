@@ -5,7 +5,7 @@ from mutagen.mp3 import EasyMP3
 from tabulate import tabulate
 import urllib.request
 
-from flagsAndSettings import *
+from Modules.flagsAndSettings import *
 
 
 def Request(url):
@@ -135,8 +135,7 @@ def getFolderTrackData(folderPath, languages):
                 folderTrackData[discNumber] = {}
             if trackNumber in folderTrackData[discNumber]:
                 print(
-                    f'disc {discNumber}, Track {trackNumber} - {folderTrackData[discNumber][trackNumber]} Already Present')
-                print(f'cannot add {file}')
+                    f'disc {discNumber}, Track {trackNumber} - {os.path.basename(folderTrackData[discNumber][trackNumber])} Conflicts with {file}')
                 continue
 
             folderTrackData[discNumber][trackNumber] = filePath
