@@ -41,23 +41,6 @@ def tagFiles(albumTrackData, folderTrackData, data):
         picture.type = 3
         picture.mime = 'image/jpeg'
 
-        # old algorithm for downloading -> no Login -> less covers available!
-        if(False and flags.SCANS and 'covers' in data):
-            frontPictureExists = False
-            coverPath = os.path.join(data['folderPath'], 'Scans')
-            if not os.path.exists(coverPath):
-                os.makedirs(coverPath)
-            for cover in data['covers']:
-                downloadPicture(URL=cover['full'],
-                                path=coverPath, name=cover['name'])
-                if cover['name'].lower() == 'front' or cover['name'].lower == 'cover':
-                    frontPictureExists = True
-            if not frontPictureExists and 'picture_full' in data:
-                downloadPicture(URL=data['picture_full'],
-                                path=coverPath, name='Front')
-            print('Done.')
-            print('\n', end='')
-
     tableData = []
     for discNumber, tracks in albumTrackData.items():
         totalTracks = len(tracks)

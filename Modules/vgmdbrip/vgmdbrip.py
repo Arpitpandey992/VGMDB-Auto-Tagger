@@ -6,7 +6,7 @@ import getpass
 import pickle
 import requests
 from bs4 import BeautifulSoup
-
+from Modules.utilityFunctions import downloadPicture
 session = requests.Session()
 
 
@@ -78,15 +78,5 @@ def getPictures(folder, albumID):
         url = scan["href"]
 
         title = remove(scan.text.strip(), "\"*/:<>?\|")  # type: ignore
-        filename = title + url[-4:]
-        filePath = os.path.join(finalScanFolder, filename)
-        if os.path.exists(filePath):
-            print(f'{title} Exists')
-            continue
-
-        image = session.get(url).content
-        with open(filePath, "wb") as f:
-            f.write(image)
-
-        print(title + " downloaded")
+        downloadPicture(URL=url, path=finalScanFolder, name=title)
     pickle.dump(session, open(config, "wb"))

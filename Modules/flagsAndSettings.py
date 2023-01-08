@@ -13,6 +13,7 @@ class Flags:
         self.RENAME = True
         self.TAG = True
         self.MOVE = False
+        self.NO_AUTH = False
 
         # Metadata Flags
         self.PICS = True

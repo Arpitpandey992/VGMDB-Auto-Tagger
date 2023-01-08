@@ -79,7 +79,25 @@ def tagAndRenameFiles(folderPath, albumID, flags: Flags):
 
     if flags.SCANS:
         print('Downloading Scans...')
-        getPictures(folderPath, albumID)
+
+        if not flags.NO_AUTH:
+            # New Algorithm for downloading Scans -> All scans are downloaded, requires Authentication
+            getPictures(folderPath, albumID)
+        elif 'covers' in data:
+            # Old algorithm for downloading -> no Authentication -> less covers available!
+            frontPictureExists = False
+            coverPath = os.path.join(data['folderPath'], 'Scans')
+            if not os.path.exists(coverPath):
+                os.makedirs(coverPath)
+            for cover in data['covers']:
+                downloadPicture(URL=cover['full'],
+                                path=coverPath, name=cover['name'])
+                if cover['name'].lower() == 'front' or cover['name'].lower == 'cover':
+                    frontPictureExists = True
+            if not frontPictureExists and 'picture_full' in data:
+                downloadPicture(URL=data['picture_full'],
+                                path=coverPath, name='Front')
+
         print('Downloaded Available Pictures :)', end='\n\n')
 
     # Tagging
@@ -182,7 +200,7 @@ def findAlbumID(folderPath, searchTerm, flags: Flags):
 
 
 def main():
-    folderPath = "/run/media/arpit/DATA/Downloads/Torrents/Key Sounds Label/[KSLA-B]/[KSLA-0168] Summer Pockets REFLECTION BLUE 「アスタロア」 [WEB-AAC-320K] NOT_DONE"
+    folderPath = "/run/media/arpit/DATA/Downloads/Torrents/Key Sounds Label/Key/KAGINADO Season 2 Original Soundtrack/"
 
     parser = argparse.ArgumentParser(
         description='Automatically Tag Music Albums!, Default Language -> Romaji')
@@ -194,6 +212,8 @@ def main():
     parser.add_argument('--search', '-s', type=str, default=None,
                         help='Provide Custom Search Term')
 
+    parser.add_argument('--no-auth', dest='no_auth', action='store_true',
+                        help='Do not authenticate for downloading Scans')
     parser.add_argument('--yes', '-y', action='store_true',
                         help='Skip Yes prompt, and when only 1 album comes up in search results')
     parser.add_argument('--backup', '-b', action='store_true',
@@ -242,8 +262,10 @@ def main():
         flags.SCANS = False  # type: ignore
     if args.no_pics:
         flags.PICS = False  # type: ignore
+    if args.no_auth:
+        flags.NO_AUTH = True  # type: ignore
     # See flag values
-    if True:
+    if False:
         print(json.dumps(vars(flags), indent=4))
     albumID = args.ID
     if albumID is None:

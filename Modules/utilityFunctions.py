@@ -177,16 +177,19 @@ def doTracksAlign(albumTrackData, folderTrackData):
 
 
 def downloadPicture(URL, path, name=None):
-    pictureName = os.path.basename(URL)
-    imagePath = os.path.join(path, pictureName)
-    originalURLName, extension = os.path.splitext(imagePath)
-    if name:
-        finalImageName = name+extension
-        if os.path.exists(os.path.join(path, finalImageName)):
-            print(f'FileExists : {finalImageName}')
-            return
-    urllib.request.urlretrieve(URL, imagePath)
-    if name is not None:
-        originalURLName = name
-        os.rename(imagePath, os.path.join(path, originalURLName+extension))
-    print(f'Downloaded : {originalURLName}{extension}')
+    try:
+        pictureName = os.path.basename(URL)
+        imagePath = os.path.join(path, pictureName)
+        originalURLName, extension = os.path.splitext(imagePath)
+        if name:
+            finalImageName = name+extension
+            if os.path.exists(os.path.join(path, finalImageName)):
+                print(f'FileExists : {finalImageName}')
+                return
+        urllib.request.urlretrieve(URL, imagePath)
+        if name is not None:
+            originalURLName = name
+            os.rename(imagePath, os.path.join(path, originalURLName+extension))
+        print(f'Downloaded : {originalURLName}{extension}')
+    except Exception as e:
+        print(e)
