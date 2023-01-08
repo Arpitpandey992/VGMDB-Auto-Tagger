@@ -79,6 +79,21 @@ def getOneAudioFile(folderPath):
     return None
 
 
+def getAlbumName(folderPath):
+    filePath = getOneAudioFile(folderPath)
+    if filePath is None:
+        print('No Audio File Present in the directory to get album name, please provide custom search term!')
+        return None
+
+    audio = openMutagenFile(filePath)
+    if 'album' not in audio or not audio['album']:
+        print('Audio file does not have an <album> tag!, please provide custom search term')
+        print('\n', end='')
+        print('\n', end='')
+        return None
+    return audio["album"][0]
+
+
 def yesNoUserInput():
     print('Continue? (Y/n) : ', end='')
     resp = input()
@@ -193,3 +208,37 @@ def downloadPicture(URL, path, name=None):
         print(f'Downloaded : {originalURLName}{extension}')
     except Exception as e:
         print(e)
+
+
+forbiddenCharacters = {
+    '<': 'ᐸ',
+    '>': 'ᐳ',
+    ':': '꞉',
+    '"': 'ˮ',
+    '\'': 'ʻ',
+    '/': '／',
+    '\\': '∖',
+    '|': 'ǀ',
+    '?': 'ʔ',
+    '*': '∗',
+    '+': '᛭',
+    '%': '٪',
+    '!': 'ⵑ',
+    '`': '՝',
+    '&': '&',  # keeping same as it is not forbidden, but it may cause problems
+    '{': '❴',
+    '}': '❵',
+    '=': '᐀',
+    # Not illegal, but the bigger version looks good (JK, it's kinda illegal, cd ~/Downloads :))
+    '~': '～',
+    '#': '#',  # couldn't find alternative
+    '$': '$',  # couldn't find alternative
+    '@': '@'  # couldn't find alternative
+}
+
+
+def cleanName(name):
+    output = name
+    for invalidCharacter, validAlternative in forbiddenCharacters.items():
+        output = output.replace(invalidCharacter, validAlternative)
+    return output

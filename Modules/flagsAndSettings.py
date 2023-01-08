@@ -10,9 +10,9 @@ class Flags:
         self.BACKUP = False
         self.YES = False
         self.CONFIRM = False
-        self.RENAME = True
+        self.RENAME_FILES = True
         self.TAG = True
-        self.MOVE = False
+        self.RENAME_FOLDER = False
         self.NO_AUTH = False
 
         # Metadata Flags

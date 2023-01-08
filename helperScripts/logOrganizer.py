@@ -2,6 +2,16 @@ import os
 import shutil
 
 
+extensions = ['.log', 'cue', '.m3u', '.txt']
+
+
+def is_file_a_log(fileName):
+    for extension in extensions:
+        if fileName.lower().endswith(extension):
+            return True
+    return False
+
+
 def move_logs(dir):
     # loop through all files and directories in the specified directory
     for file in os.listdir(dir):
@@ -15,7 +25,7 @@ def move_logs(dir):
         if os.path.isdir(file_path):
             move_logs(file_path)
 
-        elif file.lower().endswith('.log') or file.lower().endswith('.cue') or file.lower().endswith('.m3u'):
+        elif is_file_a_log(file):
             logs_dir = os.path.join(dir, 'Logs')
 
             if not os.path.exists(logs_dir):
@@ -25,7 +35,7 @@ def move_logs(dir):
 
 
 # prompt the user for the directory to search
-directory = "/run/media/arpit/DATA/Downloads/Torrents/Key Sounds Label/[KSLA-B]"
+directory = "/run/media/arpit/DATA/Downloads/Torrents/Key Sounds Label"
 
 print("Started...")
 move_logs(directory)

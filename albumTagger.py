@@ -7,6 +7,78 @@ from tabulate import tabulate
 from Modules.flagsAndSettings import *
 from Modules.tagFiles import *
 from Modules.renameFiles import *
+from Modules.renameFolder import *
+
+folderPath = "/run/media/arpit/DATA/Downloads/Torrents/Key Sounds Label/Key/KAGINADO Season 2 Original Soundtrack/"
+
+
+def argumentParser():
+    global folderPath
+    parser = argparse.ArgumentParser(
+        description='Automatically Tag Music Albums!, Default Language -> Romaji')
+
+    parser.add_argument('folderPath', nargs='?', help='Flac directory path')
+
+    parser.add_argument('--ID', '-i', type=str, default=None,
+                        help='Provide Album ID')
+    parser.add_argument('--search', '-s', type=str, default=None,
+                        help='Provide Custom Search Term')
+
+    parser.add_argument('--no-auth', dest='no_auth', action='store_true',
+                        help='Do not authenticate for downloading Scans')
+    parser.add_argument('--yes', '-y', action='store_true',
+                        help='Skip Yes prompt, and when only 1 album comes up in search results')
+    parser.add_argument('--backup', '-b', action='store_true',
+                        help='Backup the albums before modifying')
+    parser.add_argument('--rename-folder', dest='rename_folder', action='store_true',
+                        help='Move files into a new folder after applying operations')
+    parser.add_argument('--no-scans', dest='no_scans', action='store_true',
+                        help='Do not download Scans')
+    parser.add_argument('--no-pics', dest='no_pics', action='store_true',
+                        help='Do not embed album cover into files')
+    parser.add_argument('--no-rename-files', dest='no_rename_files', action='store_true',
+                        help='Do not rename the files')
+    parser.add_argument('--no-tag', dest='no_tag', action='store_true',
+                        help='Do not tag the files')
+
+    parser.add_argument('--japanese', '-ja', action='store_true',
+                        help='Give Priority to Japanese (not Romaji)')
+    parser.add_argument('--english', '-en', action='store_true',
+                        help='Give Priority to English')
+    args = parser.parse_args()
+
+    if args.folderPath:
+        folderPath = args.folderPath
+
+    while folderPath[-1] == '/':
+        folderPath = folderPath[:-1]
+    flags = Flags()
+    if args.japanese:
+        flags.languages = ['ja', 'Japanese', 'ja-latn', 'Romaji', 'en', 'English',
+                           'English (Apple Music)']
+    elif args.english:
+        flags.languages = ['en', 'English',
+                           'English (Apple Music)', 'ja-latn', 'Romaji', 'ja', 'Japanese']
+    if args.yes:
+        flags.YES = True  # type: ignore
+    if args.backup:
+        flags.BACKUP = True  # type: ignore
+    if args.rename_folder:
+        flags.RENAME_FOLDER = True  # type: ignore
+    if args.no_rename_files:
+        flags.RENAME_FILES = False  # type: ignore
+    if args.no_tag:
+        flags.TAG = False  # type: ignore
+    if args.no_scans:
+        flags.SCANS = False  # type: ignore
+    if args.no_pics:
+        flags.PICS = False  # type: ignore
+    if args.no_auth:
+        flags.NO_AUTH = True  # type: ignore
+    # See flag values
+    if False:
+        print(json.dumps(vars(flags), indent=4))
+    return args, flags
 
 
 def tagAndRenameFiles(folderPath, albumID, flags: Flags):
@@ -108,54 +180,52 @@ def tagAndRenameFiles(folderPath, albumID, flags: Flags):
         print('Finished Tagging operation')
         print('\n', end='')
         print('\n', end='')
-    # Renaming
-    if flags.RENAME:
-        print('Renaming Files and Folders')
+    # Renaming Files
+    if flags.RENAME_FILES:
+        print('Renaming Files')
         print('\n', end='')
         renameFiles(albumTrackData, folderTrackData, data)
-        print('Finished Renaming Operation')
+        print('Finished Renaming Files')
         print('\n', end='')
         print('\n', end='')
+    # Renaming Folder
+    if flags.RENAME_FOLDER:
+        print('Renaming Folder')
+        print('\n', end='')
+        renameFolder(data)
+
+
+def getSearchInput():
+    print("Enter 'exit' to exit or give a new search term : ", end='')
+    answer = input()
+    if(answer.lower() == 'exit'):
+        print('\n', end='')
+        return None
+    print('\n', end='')
+    return answer
 
 
 def findAlbumID(folderPath, searchTerm, flags: Flags):
+    if searchTerm is None:
+        searchTerm = getSearchInput()
+    if searchTerm is None:
+        return None
     folderName = os.path.basename(folderPath)
     print(f'Folder Name : {folderName}')
-    albumName = searchTerm
-    if searchTerm is None:
-        filePath = getOneAudioFile(folderPath)
-        if filePath is None:
-            print(
-                'No Audio File Present in the directory to get album name, please provide custom search term!')
-            print('\n', end='')
-            print('\n', end='')
-            return None
-
-        audio = openMutagenFile(filePath)
-        if 'album' not in audio or not audio['album']:
-            print(
-                'Audio file does not have an <album> tag!, please provide custom search term')
-            print('\n', end='')
-            print('\n', end='')
-            return None
-        albumName = audio["album"][0]
-    print(f'Searching for : {albumName}')
+    print(f'Searching for : {searchTerm}')
     print('\n', end='')
-    data = searchAlbum(albumName)
+    data = searchAlbum(searchTerm)
     if data is None or not data['results']['albums']:
         print("No results found!, Please change search term!")
-        print("Enter 'exit' to exit or give a new search term : ", end='')
-        answer = input()
-        if(answer.lower() == 'exit'):
-            print('\n', end='')
-            return None
+        return findAlbumID(folderPath, None, flags)
 
-        return findAlbumID(folderPath, answer, flags)
+    if data is None:
+        return None
 
     albumData = {}
     tableData = []
     serialNumber = 1
-    for album in data['results']['albums']:
+    for album in data['results']['albums']:  # type:ignore
         albumID = album['link'].split('/')[1]
         albumLink = f"https://vgmdb.net/{album['link']}"
         albumTitle = getBest(album['titles'], flags.languages)
@@ -176,7 +246,7 @@ def findAlbumID(folderPath, searchTerm, flags: Flags):
         return None
     print(tabulate(tableData,
                    headers=['S.No', 'Catalog', 'Title', 'Link', 'Year'],
-                   maxcolwidths=55,
+                   maxcolwidths=52,
                    tablefmt=tableFormat,
                    colalign=('center', 'left', 'left', 'left', 'center')), end='\n\n')
 
@@ -193,84 +263,25 @@ def findAlbumID(folderPath, searchTerm, flags: Flags):
         if choice == '':
             choice = '1'
         if not choice.isdigit() or int(choice) not in albumData:
-            print('Invalid Choice, using that as search term!')
+            print('Invalid Choice, using that as search term!\n')
             return findAlbumID(folderPath, choice, flags)
 
     return albumData[int(choice)]['ID']
 
 
 def main():
-    folderPath = "/run/media/arpit/DATA/Downloads/Torrents/Key Sounds Label/Key/KAGINADO Season 2 Original Soundtrack/"
 
-    parser = argparse.ArgumentParser(
-        description='Automatically Tag Music Albums!, Default Language -> Romaji')
+    args, flags = argumentParser()
 
-    parser.add_argument('folderPath', nargs='?', help='Flac directory path')
-
-    parser.add_argument('--ID', '-i', type=str, default=None,
-                        help='Provide Album ID')
-    parser.add_argument('--search', '-s', type=str, default=None,
-                        help='Provide Custom Search Term')
-
-    parser.add_argument('--no-auth', dest='no_auth', action='store_true',
-                        help='Do not authenticate for downloading Scans')
-    parser.add_argument('--yes', '-y', action='store_true',
-                        help='Skip Yes prompt, and when only 1 album comes up in search results')
-    parser.add_argument('--backup', '-b', action='store_true',
-                        help='Backup the albums before modifying')
-    parser.add_argument('--move', '-m', action='store_true',
-                        help='Move files into a new folder after applying operations')
-    parser.add_argument('--no-scans', dest='no_scans', action='store_true',
-                        help='Do not download Scans')
-    parser.add_argument('--no-pics', dest='no_pics', action='store_true',
-                        help='Do not embed album cover into files')
-    parser.add_argument('--no-rename', dest='no_rename', action='store_true',
-                        help='Do not rename the files')
-    parser.add_argument('--no-tag', dest='no_tag', action='store_true',
-                        help='Do not tag the files')
-
-    parser.add_argument('--japanese', '-ja', action='store_true',
-                        help='Give Priority to Japanese (not Romaji)')
-    parser.add_argument('--english', '-en', action='store_true',
-                        help='Give Priority to English')
-    args = parser.parse_args()
-    searchTerm = args.search
-
-    if args.folderPath:
-        folderPath = args.folderPath
-
-    while folderPath[-1] == '/':
-        folderPath = folderPath[:-1]
-    flags = Flags()
-    if args.japanese:
-        flags.languages = ['ja', 'Japanese', 'ja-latn', 'Romaji', 'en', 'English',
-                           'English (Apple Music)']
-    elif args.english:
-        flags.languages = ['en', 'English',
-                           'English (Apple Music)', 'ja-latn', 'Romaji', 'ja', 'Japanese']
-    if args.yes:
-        flags.YES = True  # type: ignore
-    if args.backup:
-        flags.BACKUP = True  # type: ignore
-    if args.move:
-        flags.MOVE = True  # type: ignore
-    if args.no_rename:
-        flags.RENAME = False  # type: ignore
-    if args.no_tag:
-        flags.TAG = False  # type: ignore
-    if args.no_scans:
-        flags.SCANS = False  # type: ignore
-    if args.no_pics:
-        flags.PICS = False  # type: ignore
-    if args.no_auth:
-        flags.NO_AUTH = True  # type: ignore
-    # See flag values
-    if False:
-        print(json.dumps(vars(flags), indent=4))
     albumID = args.ID
     if albumID is None:
+        searchTerm = args.search
+        if searchTerm is None:
+            searchTerm = getAlbumName(folderPath)
         albumID = findAlbumID(folderPath, searchTerm, flags)
+
     # if album-ID is still not found, script cannot do anything :(
+
     if albumID is not None:
         tagAndRenameFiles(folderPath, albumID, flags)
         print('Finished all <Possible> Operations')

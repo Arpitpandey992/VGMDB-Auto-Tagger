@@ -1,46 +1,13 @@
 import math
 import shutil
+import os
 
-from Modules.flagsAndSettings import *
 from Modules.utilityFunctions import *
-
-forbiddenCharacters = {
-    '<': 'ᐸ',
-    '>': 'ᐳ',
-    ':': '꞉',
-    '"': 'ˮ',
-    '\'': 'ʻ',
-    '/': '／',
-    '\\': '∖',
-    '|': 'ǀ',
-    '?': 'ʔ',
-    '*': '∗',
-    '+': '᛭',
-    '%': '٪',
-    '!': 'ⵑ',
-    '`': '՝',
-    '&': '&',  # keeping same as it is not forbidden, but it may cause problems
-    '{': '❴',
-    '}': '❵',
-    '=': '᐀',
-    # Not illegal, but the bigger version looks good (JK, it's kinda illegal, cd ~/Downloads :))
-    '~': '～',
-    '#': '#',  # couldn't find alternative
-    '$': '$',  # couldn't find alternative
-    '@': '@'  # couldn't find alternative
-}
-
-
-def cleanName(name):
-    output = name
-    for invalidCharacter, validAlternative in forbiddenCharacters.items():
-        output = output.replace(invalidCharacter, validAlternative)
-    return output
 
 
 def renameFiles(albumTrackData, folderTrackData, data):
     flags: Flags = data['flags']
-    
+
     totalTracks = 0
     for disc in albumTrackData:
         totalTracks += len(albumTrackData[disc])
@@ -51,27 +18,15 @@ def renameFiles(albumTrackData, folderTrackData, data):
     folderPath = data['folderPath']
     date = data['release_date'].replace('-', '.')
 
-    if flags.MOVE:
-        if 'catalog' in data and data['catalog'] != 'N/A':
-            albumFolder = f'[{date}] {albumName} [{data["catalog"]}]'
-        else:
-            albumFolder = f'[{date}] {albumName}'
-    else:
-        albumFolder = ''
-
-    albumFolderPath = os.path.join(folderPath, albumFolder)
-    if not os.path.exists(albumFolderPath):
-        os.makedirs(albumFolderPath)
-
     tableData = []
     for discNumber, tracks in folderTrackData.items():
         properDiscNumber = str(discNumber).zfill(disksUpperBound)
         if totalDisks > 1:
             discFolderPath = os.path.join(
-                albumFolderPath, f'Disc {properDiscNumber}')
+                folderPath, f'Disc {properDiscNumber}')
             baseDiscFolder = os.path.basename(discFolderPath)
         else:
-            discFolderPath = albumFolderPath
+            discFolderPath = folderPath
             baseDiscFolder = ''
         if not os.path.exists(discFolderPath):
             os.makedirs(discFolderPath)
@@ -97,9 +52,5 @@ def renameFiles(albumTrackData, folderTrackData, data):
                    headers=['Disc', 'Track', 'Old Name', 'New Name'],
                    colalign=('center', 'center', 'left', 'left'),
                    maxcolwidths=53, tablefmt=tableFormat), end='\n\n')
-    if flags.MOVE:
-        scansFolder = os.path.join(folderPath, 'Scans')
-        if not os.path.exists(os.path.join(albumFolderPath, 'Scans')) and os.path.exists(scansFolder):
-            shutil.move(scansFolder, albumFolderPath)
-        print(f'Successfully moved files into {albumFolder}')
-        print('\n', end='')
+
+    
