@@ -9,8 +9,8 @@ def renameFolder(data):
     date = data['release_date'].replace('-', '.')
 
     if 'catalog' in data and data['catalog'] != 'N/A':
-        # newFolderName = f'[{date}] {albumName} [{data["catalog"]}]'
-        newFolderName = f'[{data["catalog"]}] {albumName} [{date}]'
+        newFolderName = f'[{date}] {albumName} [{data["catalog"]}]'
+        # newFolderName = f'[{data["catalog"]}] {albumName} [{date}]'
     else:
         newFolderName = f'[{date}] {albumName}'
 

@@ -2,7 +2,7 @@ import os
 import shutil
 
 
-extensions = ['.log', 'cue', '.m3u', '.txt']
+extensions = ['.log', 'cue', '.m3u', '.txt', '.m3u8']
 
 
 def is_file_a_log(fileName):
@@ -35,7 +35,7 @@ def move_logs(dir):
 
 
 # prompt the user for the directory to search
-directory = "/run/media/arpit/DATA/Downloads/Torrents/Key Sounds Label"
+directory = "/run/media/arpit/DATA/OSTs/Anime/Houseki no Kuni/[2018.01.17] Houseki no Kuni Original Soundtrack [THCA-60209]"
 
 print("Started...")
 move_logs(directory)

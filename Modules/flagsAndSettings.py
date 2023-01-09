@@ -12,7 +12,7 @@ class Flags:
         self.CONFIRM = False
         self.RENAME_FILES = True
         self.TAG = True
-        self.RENAME_FOLDER = False
+        self.RENAME_FOLDER = True
         self.NO_AUTH = False
 
         # Metadata Flags

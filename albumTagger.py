@@ -131,6 +131,10 @@ def tagAndRenameFiles(folderPath, albumID, flags: Flags):
 
     print('\n', end='')
     print('\n', end='')
+    
+    #Fixing date in data to be in the form YYYY-MM-DD (MM and DD will be Zero if not present)
+    data['release_date'] = fixDate(data['release_date'])
+    
     if flags.BACKUP:
         try:
             destinationFolder = BACKUPFOLDER
@@ -277,7 +281,7 @@ def main():
     if albumID is None:
         searchTerm = args.search
         if searchTerm is None:
-            searchTerm = getAlbumName(folderPath)
+            searchTerm = cleanSearchTerm(getAlbumName(folderPath))
         albumID = findAlbumID(folderPath, searchTerm, flags)
 
     # if album-ID is still not found, script cannot do anything :(

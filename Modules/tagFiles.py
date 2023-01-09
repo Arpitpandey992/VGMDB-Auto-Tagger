@@ -71,7 +71,7 @@ def tagFiles(albumTrackData, folderTrackData, data):
                 if flags.YEAR and 'release_date' in data and len(data['release_date']) >= 4:
                     audio['year'] = data['release_date'][0:4]
 
-                if flags.CATALOG and 'catalog' in data:
+                if flags.CATALOG and 'catalog' in data and data['catalog'] != 'NA':
                     audio['catalog'] = data['catalog']
 
                 if flags.BARCODE and 'barcode' in data:

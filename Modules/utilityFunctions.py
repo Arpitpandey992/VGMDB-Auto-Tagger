@@ -79,7 +79,7 @@ def getOneAudioFile(folderPath):
     return None
 
 
-def getAlbumName(folderPath):
+def getAlbumName(folderPath: str):
     filePath = getOneAudioFile(folderPath)
     if filePath is None:
         print('No Audio File Present in the directory to get album name, please provide custom search term!')
@@ -210,35 +210,62 @@ def downloadPicture(URL, path, name=None):
         print(e)
 
 
-forbiddenCharacters = {
-    '<': 'ᐸ',
-    '>': 'ᐳ',
-    ':': '꞉',
-    '"': 'ˮ',
-    '\'': 'ʻ',
-    '/': '／',
-    '\\': '∖',
-    '|': 'ǀ',
-    '?': 'ʔ',
-    '*': '∗',
-    '+': '᛭',
-    '%': '٪',
-    '!': 'ⵑ',
-    '`': '՝',
-    '&': '&',  # keeping same as it is not forbidden, but it may cause problems
-    '{': '❴',
-    '}': '❵',
-    '=': '᐀',
-    # Not illegal, but the bigger version looks good (JK, it's kinda illegal, cd ~/Downloads :))
-    '~': '～',
-    '#': '#',  # couldn't find alternative
-    '$': '$',  # couldn't find alternative
-    '@': '@'  # couldn't find alternative
-}
-
-
-def cleanName(name):
+def cleanName(name: str):
+    forbiddenCharacters = {
+        '<': 'ᐸ',
+        '>': 'ᐳ',
+        ':': '꞉',
+        '"': 'ˮ',
+        '\'': 'ʻ',
+        '/': '／',
+        '\\': '∖',
+        '|': 'ǀ',
+        '?': 'ʔ',
+        '*': '∗',
+        '+': '᛭',
+        '%': '٪',
+        '!': 'ⵑ',
+        '`': '՝',
+        '&': '&',  # keeping same as it is not forbidden, but it may cause problems
+        '{': '❴',
+        '}': '❵',
+        '=': '᐀',
+        # Not illegal, but the bigger version looks good (JK, it's kinda illegal, cd ~/Downloads :))
+        '~': '～',
+        '#': '#',  # couldn't find alternative
+        '$': '$',  # couldn't find alternative
+        '@': '@'  # couldn't find alternative
+    }
     output = name
     for invalidCharacter, validAlternative in forbiddenCharacters.items():
         output = output.replace(invalidCharacter, validAlternative)
     return output
+
+
+def fixDate(date):
+    if date is None:
+        return None
+    date = date.strip()
+    parts = date.split('-')
+    parts += ['00'] * (3 - len(parts))
+    normalized_date_str = '{}-{}-{}'.format(*parts)
+    return normalized_date_str
+
+
+def cleanSearchTerm(name):
+    if name is None:
+        return None
+
+    def isJapanese(ch):
+        return (ord(ch) >= 0x4E00 and ord(ch) <= 0x9FFF)
+
+    def isChinese(ch):
+        return (ord(ch) >= 0x3400 and ord(ch) <= 0x4DFF)
+
+    ans = ""
+    for ch in name:
+        if ch.isalnum() or ch == ' ' or isJapanese(ch) or isChinese(ch):
+            ans += ch
+        else:
+            ans += ' '
+    return ans
