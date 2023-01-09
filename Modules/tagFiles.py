@@ -62,8 +62,15 @@ def tagFiles(albumTrackData, folderTrackData, data):
 
             # These tags are not supported for MP3 files (in this program), Sorry :(
             if isFLAC:
-                if(flags.PICS and 'picture_full' in data and not hasCoverOfType(audio, 3)):
-                    audio.add_picture(picture)  # type: ignore
+                if flags.PICS and 'picture_full' in data:
+                    if hasCoverOfType(audio, 3):
+                        if flags.PIC_OVERWRITE:
+                            audio.clear_pictures()  # type: ignore
+                            audio.add_picture(picture)  # type: ignore
+
+                    else:
+                        audio.add_picture(picture)  # type: ignore
+
                 audio['tracktotal'] = str(totalTracks)
                 audio['disctotal'] = str(totalDisks)
                 audio['comment'] = f"Find the tracklist at {data['albumLink']}"
@@ -95,14 +102,16 @@ def tagFiles(albumTrackData, folderTrackData, data):
                 addMultiValues('composers', 'composer', flags.COMPOSERS)
 
             # Tagging track specific details
-
-            audio['title'] = trackTitle
+            if flags.TITLE:
+                audio['title'] = trackTitle
             audio['discnumber'] = str(discNumber).zfill(disksUpperBound)
             audio['tracknumber'] = str(trackNumber).zfill(tracksUpperBound)
             print(f'Tagged : {fileName}')
             audio.save()
             tableData.append(
                 (discNumber, trackNumber, trackTitle, fileName))
+    if not tableData:
+        return
     print('\n', end='')
 
     print('Files Tagged as follows')
@@ -111,4 +120,3 @@ def tagFiles(albumTrackData, folderTrackData, data):
                    headers=['Disc', 'Track', 'Title', 'File Name'],
                    colalign=('center', 'center', 'left', 'left'),
                    maxcolwidths=53, tablefmt=tableFormat), end='\n\n')
-    return True

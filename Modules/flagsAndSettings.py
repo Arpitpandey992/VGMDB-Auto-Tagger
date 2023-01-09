@@ -18,11 +18,13 @@ class Flags:
 
         # Metadata Flags
         self.PICS = True
+        self.PIC_OVERWRITE = False
         self.SCANS = True
         self.DATE = True
         self.YEAR = True
         self.CATALOG = True
         self.BARCODE = True
+        self.TITLE = True
 
         self.ORGANIZATIONS = True
         # these tags are supposed to be track specific, but in VGMDB, they are provided for entire album,

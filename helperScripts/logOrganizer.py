@@ -35,7 +35,7 @@ def move_logs(dir):
 
 
 # prompt the user for the directory to search
-directory = "/run/media/arpit/DATA/Downloads/Music/Soulseek/Czechball/[2021.12.30] KAGINADO Original SoundTrack [KSLA-0189~93]"
+directory = "/run/media/arpit/DATA/OSTs/Anime/HunterXHunter"
 
 print("Started...")
 move_logs(directory)

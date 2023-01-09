@@ -61,7 +61,6 @@ def hasCoverOfType(audio, typ):
             return True
     return False
 
-
 def getCount(discNumber):
     # get the count of tracks -> checks if the input is something like 4/20 -> truncates to 4
     if '/' in discNumber:

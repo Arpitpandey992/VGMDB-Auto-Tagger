@@ -46,11 +46,12 @@ def renameFiles(albumTrackData, folderTrackData, data):
             tableData.append(
                 (discNumber, trackNumber, fileName, os.path.join(baseDiscFolder, ' '+finalNewName)))
 
+    if not tableData:
+        return
+
     print('Files Renamed as Follows\n')
     tableData.sort()
     print(tabulate(tableData,
                    headers=['Disc', 'Track', 'Old Name', 'New Name'],
                    colalign=('center', 'center', 'left', 'left'),
                    maxcolwidths=53, tablefmt=tableFormat), end='\n\n')
-
-    

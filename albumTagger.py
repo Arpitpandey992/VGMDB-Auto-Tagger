@@ -10,7 +10,7 @@ from Modules.tagFiles import *
 from Modules.renameFiles import *
 from Modules.renameFolder import *
 
-folderPath = "/run/media/arpit/DATA/Downloads/Torrents/Key Sounds Label/Key/KAGINADO Season 2 Original Soundtrack/"
+folderPath = "/run/media/arpit/DATA/OSTs/Anime/Chihayafuru/[2012.01.18] Chihayafuru Original Soundtrack & Character Song Album 1 [VPCG-84916]"
 
 
 def argumentParser():
@@ -25,6 +25,8 @@ def argumentParser():
     parser.add_argument('--search', '-s', type=str, default=None,
                         help='Provide Custom Search Term')
 
+    parser.add_argument('--no-title', dest='no_title', action='store_true',
+                        help='Do not change the title of tracks')
     parser.add_argument('--no-auth', dest='no_auth', action='store_true',
                         help='Do not authenticate for downloading Scans')
     parser.add_argument('--yes', '-y', action='store_true',
@@ -35,6 +37,8 @@ def argumentParser():
                         help='Do not download Scans')
     parser.add_argument('--no-pics', dest='no_pics', action='store_true',
                         help='Do not embed album cover into files')
+    parser.add_argument('--pic-overwrite', dest='pic_overwrite', action='store_true',
+                        help='overwrite album cover?')
 
     parser.add_argument('--rename-folder', dest='rename_folder', action='store_true',
                         help='Rename the containing folder?')
@@ -84,10 +88,15 @@ def argumentParser():
         flags.TAG = True  # type: ignore
     if args.no_tag:
         flags.TAG = False  # type: ignore
+
+    if args.no_title:
+        flags.TITLE = False  # type: ignore
     if args.no_scans:
         flags.SCANS = False  # type: ignore
     if args.no_pics:
         flags.PICS = False  # type: ignore
+    if args.pic_overwrite:
+        flags.PIC_OVERWRITE = True  # type: ignore
     if args.no_auth:
         flags.NO_AUTH = True  # type: ignore
 
