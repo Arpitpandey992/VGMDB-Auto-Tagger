@@ -2,6 +2,7 @@ import os
 import argparse
 import shutil
 import json
+
 from tabulate import tabulate
 
 from Modules.flagsAndSettings import *
@@ -30,14 +31,21 @@ def argumentParser():
                         help='Skip Yes prompt, and when only 1 album comes up in search results')
     parser.add_argument('--backup', '-b', action='store_true',
                         help='Backup the albums before modifying')
-    parser.add_argument('--rename-folder', dest='rename_folder', action='store_true',
-                        help='Move files into a new folder after applying operations')
     parser.add_argument('--no-scans', dest='no_scans', action='store_true',
                         help='Do not download Scans')
     parser.add_argument('--no-pics', dest='no_pics', action='store_true',
                         help='Do not embed album cover into files')
+
+    parser.add_argument('--rename-folder', dest='rename_folder', action='store_true',
+                        help='Rename the containing folder?')
+    parser.add_argument('--no-rename-folder', dest='no_rename_folder', action='store_true',
+                        help='Rename the containing folder?')
+    parser.add_argument('--rename-files', dest='rename_files', action='store_true',
+                        help='Do not rename the files')
     parser.add_argument('--no-rename-files', dest='no_rename_files', action='store_true',
                         help='Do not rename the files')
+    parser.add_argument('--tag', dest='tag', action='store_true',
+                        help='Do not tag the files')
     parser.add_argument('--no-tag', dest='no_tag', action='store_true',
                         help='Do not tag the files')
 
@@ -59,14 +67,21 @@ def argumentParser():
     elif args.english:
         flags.languages = ['en', 'English',
                            'English (Apple Music)', 'ja-latn', 'Romaji', 'ja', 'Japanese']
+
     if args.yes:
         flags.YES = True  # type: ignore
     if args.backup:
         flags.BACKUP = True  # type: ignore
     if args.rename_folder:
         flags.RENAME_FOLDER = True  # type: ignore
+    if args.no_rename_folder:
+        flags.RENAME_FOLDER = False  # type: ignore
+    if args.rename_files:
+        flags.RENAME_FILES = True  # type: ignore
     if args.no_rename_files:
         flags.RENAME_FILES = False  # type: ignore
+    if args.tag:
+        flags.TAG = True  # type: ignore
     if args.no_tag:
         flags.TAG = False  # type: ignore
     if args.no_scans:
@@ -75,8 +90,8 @@ def argumentParser():
         flags.PICS = False  # type: ignore
     if args.no_auth:
         flags.NO_AUTH = True  # type: ignore
-    # See flag values
-    if False:
+
+    if SEE_FLAGS:
         print(json.dumps(vars(flags), indent=4))
     return args, flags
 
@@ -131,10 +146,10 @@ def tagAndRenameFiles(folderPath, albumID, flags: Flags):
 
     print('\n', end='')
     print('\n', end='')
-    
-    #Fixing date in data to be in the form YYYY-MM-DD (MM and DD will be Zero if not present)
+
+    # Fixing date in data to be in the form YYYY-MM-DD (MM and DD will be Zero if not present)
     data['release_date'] = fixDate(data['release_date'])
-    
+
     if flags.BACKUP:
         try:
             destinationFolder = BACKUPFOLDER
