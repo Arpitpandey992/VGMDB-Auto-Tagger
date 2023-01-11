@@ -67,10 +67,10 @@ def argumentParser():
     flags = Flags()
     if args.japanese:
         flags.languages = ['ja', 'Japanese', 'ja-latn', 'Romaji', 'en', 'English',
-                           'English (Apple Music)']
+                           'English (Apple Music)', 'English/German']
     elif args.english:
         flags.languages = ['en', 'English',
-                           'English (Apple Music)', 'ja-latn', 'Romaji', 'ja', 'Japanese']
+                           'English (Apple Music)', 'English/German', 'ja-latn', 'Romaji', 'ja', 'Japanese']
 
     if args.yes:
         flags.YES = True  # type: ignore

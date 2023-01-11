@@ -36,4 +36,4 @@ class Flags:
 
         # languages to be probed from VGMDB in the given order of priority
         self.languages = ['ja-latn', 'Romaji', 'en', 'English',
-                          'English (Apple Music)', 'ja', 'Japanese']
+                          'English (Apple Music)', 'English/German', 'ja', 'Japanese']
