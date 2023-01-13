@@ -1,7 +1,8 @@
 import requests
 import io
 from mutagen.flac import Picture as FLAC_PICTURE, FLAC
-from mutagen.id3._frames import APIC as MP3_PICTURE
+from mutagen.id3._frames import APIC, TALB, TDRC, TRCK, TDRL, COMM, TXXX, TPOS, TIT2
+from mutagen.id3 import ID3
 from PIL import Image
 
 from Modules.flagsAndSettings import *
@@ -12,7 +13,7 @@ from Modules.utilityFunctions import getBest
 supportedExtensions = ['.flac', '.mp3']
 
 
-def hasCoverOfType(audio, pictureType, extension):
+def hasPictureOfType(audio, pictureType, extension):
     if extension == '.flac':
         for picture in audio.pictures:
             if picture.type == pictureType:
@@ -28,6 +29,17 @@ def hasCoverOfType(audio, pictureType, extension):
         return False
 
     return False
+
+
+def deletePictureOfType(audio, pictureType, extension):
+    if extension == '.flac':
+        # This will remove all pictures sadly, i couldn't find any proper method to remove only one picture
+        audio.clear_pictures()
+
+    elif extension == '.mp3':
+        for frame in audio.getall("APIC:"):
+            if frame.type == pictureType:
+                audio.pop(frame.HashKey)
 
 
 def standardize_date(date_string: str) -> str:
@@ -76,15 +88,16 @@ def getPictureObject(data, extension):
         picture.data = image_data
         picture.type = 3
         picture.mime = 'image/jpeg'
+        picture.desc = u'Cover (front)'
         data[pictureKey] = picture
         return picture
 
     elif extension == 'mp3':
-        picture = MP3_PICTURE(encoding=3,
-                              mime='image/jpeg',
-                              type=3,
-                              desc=u'Cover (Front)',
-                              data=image_data)
+        picture = APIC(encoding=3,
+                       mime='image/jpeg',
+                       type=3,
+                       desc=u'Cover (front)',
+                       data=image_data)
         data[pictureKey] = picture
         return picture
 
@@ -92,24 +105,25 @@ def getPictureObject(data, extension):
 def tagFLAC(data, albumData):
     flags: Flags = data['flags']
     audio = FLAC(albumData['filePath'])
+
     # Tagging Album specific Details
-
-    if flags.DATE and 'release_date' in data:
-        audio['date'] = standardize_date(data['release_date'])
-
     audio['album'] = albumData['albumName']
-    picture = getPictureObject(data, albumData['extension'])
-    if flags.PICS and picture is not None:
-        if hasCoverOfType(audio, 3, albumData['extension']):
-            if flags.PIC_OVERWRITE:
-                audio.clear_pictures()
-                audio.add_picture(picture)
-        else:
-            audio.add_picture(picture)
-
     audio['tracktotal'] = str(albumData['totalTracks'])
     audio['disctotal'] = str(albumData['totalDisks'])
     audio['comment'] = f"Find the tracklist at {data['albumLink']}"
+
+    if flags.PICS:
+        picture = getPictureObject(data, albumData['extension'])
+        if picture is not None:
+            if hasPictureOfType(audio, 3, albumData['extension']):
+                if flags.PIC_OVERWRITE:
+                    deletePictureOfType(audio, 3, albumData['extension'])
+                    audio.add_picture(picture)
+            else:
+                audio.add_picture(picture)
+
+    if flags.DATE and 'release_date' in data:
+        audio['date'] = standardize_date(data['release_date'])
 
     if flags.YEAR and 'release_date' in data and len(data['release_date']) >= 4:
         audio['year'] = data['release_date'][0:4]
@@ -156,4 +170,58 @@ def tagFLAC(data, albumData):
 
 
 def tagMP3(data, albumData):
+    flags: Flags = data['flags']
+    audio = ID3(albumData['filePath'])
+
+    audio.add(TALB(encoding=3, text=[albumData['albumName']]))
+    audio.add(COMM(encoding=3, text=[f"Find the tracklist at {data['albumLink']}"]))
+
+    if flags.PICS:
+        picture = getPictureObject(data, albumData['extension'])
+        if picture is not None:
+            if hasPictureOfType(audio, 3, albumData['extension']):
+                if flags.PIC_OVERWRITE:
+                    deletePictureOfType(audio, 3, albumData['extension'])
+                    audio.add(picture)
+            else:
+                audio.add(picture)
+
+    if flags.DATE and 'release_date' in data:
+        audio.add(TDRC(encoding=3, text=[standardize_date(data['release_date'])]))
+
+    if flags.YEAR and 'release_date' in data and len(data['release_date']) >= 4:
+        audio.add(TXXX(encoding=3, desc='Year',
+                  text=[data['release_date'][0:4]]))
+
+    if flags.CATALOG and 'catalog' in data and data['catalog'] != 'NA':
+        audio.add(TXXX(encoding=3, desc='Catalog', text=[data['catalog']]))
+
+    if flags.BARCODE and 'barcode' in data:
+        audio.add(TXXX(encoding=3, desc='Barcode', text=[data['barcode']]))
+
+    if flags.ORGANIZATIONS and 'organizations' in data:
+        for org in data['organizations']:
+            audio.add(TXXX(encoding=3, desc=org['role'], text=[getBest(org['names'], flags.languages)]))
+
+    audio.add(TIT2(encoding=3, text=[albumData['trackTitle']]))
+
+    audio.add(TRCK(
+        encoding=3,
+        text=[str(albumData['trackNumber']).zfill(albumData['tracksUpperBound']) +
+              '/' +
+              str(albumData['totalTracks'])]
+    ))
+    audio.add(TPOS(
+        encoding=3,
+        text=[str(albumData['discNumber']).zfill(albumData['disksUpperBound']) +
+              '/' +
+              str(albumData['totalDisks'])]
+    ))
+
+    try:
+        audio.save()
+        return True
+    except Exception as e:
+        print(e)
+
     return False
