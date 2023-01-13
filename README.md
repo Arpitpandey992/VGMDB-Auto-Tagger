@@ -28,5 +28,10 @@ Default Tagging Language -> Romaji
 During picture grabbing stage, it is required to give username and password, since getting all scans require the client to be logged in. If you want to skip the login part and are okay with not grabbing all available scans, Uncomment some portion in the source code.
 
 ## Plans For Future
-- [ ] Integrating some other API to get tags like `artist`, `album artist`, etc.
 - [X] Making the program more fail-safe and "trustable".
+- [X] Adding full support for FLAC.
+- [ ] Adding full support for MP3.
+- [ ] Adding full support for M4A.
+- [ ] Adding full support for AAC.
+- [ ] Integrating some other API to get tags like `artist`, `album artist`, etc.
+- [ ] Adding a User Interface for easily using the script.
