@@ -39,18 +39,18 @@ def argumentParser():
     parser.add_argument('--no-pics', dest='no_pics', action='store_true',
                         help='Do not embed album cover into files')
     parser.add_argument('--pic-overwrite', dest='pic_overwrite', action='store_true',
-                        help='overwrite album cover?')
+                        help='overwrite album cover')
 
     parser.add_argument('--rename-folder', dest='rename_folder', action='store_true',
-                        help='Rename the containing folder?')
+                        help='Rename the containing folder')
     parser.add_argument('--no-rename-folder', dest='no_rename_folder', action='store_true',
-                        help='Rename the containing folder?')
+                        help='Do not Rename the containing folder?')
     parser.add_argument('--rename-files', dest='rename_files', action='store_true',
-                        help='Do not rename the files')
+                        help='rename the files')
     parser.add_argument('--no-rename-files', dest='no_rename_files', action='store_true',
                         help='Do not rename the files')
     parser.add_argument('--tag', dest='tag', action='store_true',
-                        help='Do not tag the files')
+                        help='tag the files')
     parser.add_argument('--no-tag', dest='no_tag', action='store_true',
                         help='Do not tag the files')
 
