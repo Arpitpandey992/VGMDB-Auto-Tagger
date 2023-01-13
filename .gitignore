@@ -2,3 +2,4 @@ __pycache__
 # Cookies file for storing VGMDB login tokens
 /Modules/vgmdbrip/vgmdbrip.pkl
 /temp.py
+tempcoderunnerfile.py

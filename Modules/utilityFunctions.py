@@ -1,11 +1,11 @@
 import os
 import requests
-from mutagen.flac import FLAC
-from mutagen.mp3 import EasyMP3
+
 from tabulate import tabulate
 import urllib.request
 
 from Modules.flagsAndSettings import *
+from Modules.mutagenWrapper import AudioFactory
 
 
 def Request(url):
@@ -19,11 +19,6 @@ def Request(url):
             pass
         countLeft -= 1
     return None
-
-
-def openMutagenFile(filePath):
-    fileNameWithPath, fileExtension = os.path.splitext(filePath)
-    return FLAC(filePath) if fileExtension == '.flac' else EasyMP3(filePath)
 
 
 def getAlbumDetails(albumID):
@@ -53,7 +48,8 @@ def getCount(discNumber):
 def getOneAudioFile(folderPath):
     for root, dirs, files in os.walk(folderPath):
         for file in files:
-            if file.lower().endswith('.flac') or file.lower().endswith('.mp3'):
+            _, extension = os.path.splitext(file)
+            if extension.lower() in supportedExtensions:
                 return os.path.join(root, file)
     return None
 
@@ -64,13 +60,12 @@ def getAlbumName(folderPath: str):
         print('No Audio File Present in the directory to get album name, please provide custom search term!')
         return None
 
-    audio = openMutagenFile(filePath)
-    if 'album' not in audio or not audio['album']:
+    audio = AudioFactory.buildAudioManager(filePath)
+    albumName = audio.getAlbum()
+    if albumName is None:
         print('Audio file does not have an <album> tag!, please provide custom search term')
-        print('\n', end='')
-        print('\n', end='')
         return None
-    return audio["album"][0]
+    return albumName
 
 
 def yesNoUserInput():
@@ -96,33 +91,35 @@ def getAlbumTrackData(data, languages):
         trackData[discNumber] = {}
         trackNumber = 1
         for track in disc['tracks']:
-            trackData[discNumber][trackNumber] = getBest(
-                track['names'], languages)
+            trackData[discNumber][trackNumber] = getBest(track['names'], languages)
             trackNumber += 1
         discNumber += 1
     return trackData
 
 
-def getFolderTrackData(folderPath, languages):
+def getFolderTrackData(folderPath):
     folderTrackData = {}
     for root, dirs, files in os.walk(folderPath):
         for file in files:
-            if not file.lower().endswith('.flac') and not file.lower().endswith('.mp3'):
+            _, extension = os.path.splitext(file)
+            if extension.lower() not in supportedExtensions:
                 continue
             filePath = os.path.join(root, file)
-            audio = openMutagenFile(filePath)
+            audio = AudioFactory.buildAudioManager(filePath)
             discNumber = 1
             trackNumber = 1
-            try:
-                discNumber = getCount(audio['discnumber'][0])
-            except Exception as e:
-                print(
-                    f'Disc Number not Present in file : {file}, Taking Default Value = 01')
-            try:
-                trackNumber = getCount(audio['tracknumber'][0])
-            except Exception as e:
-                print(
-                    f'TrackNumber not Present in file : {file}, Skipped!')
+            discNumber = audio.getDiscNumber()
+            if discNumber is not None:
+                discNumber = getCount(discNumber)
+            else:
+                print(f'Disc Number not Present in file : {file}, Taking Default Value = 01')
+                discNumber = 1
+
+            trackNumber = audio.getTrackNumber()
+            if trackNumber is not None:
+                trackNumber = getCount(trackNumber)
+            else:
+                print(f'TrackNumber not Present in file : {file}, Skipped!')
                 continue
 
             if discNumber not in folderTrackData:
@@ -142,8 +139,7 @@ def doTracksAlign(albumTrackData, folderTrackData):
     for discNumber, tracks in albumTrackData.items():
         for trackNumber, trackTitle in tracks.items():
             if discNumber not in folderTrackData or trackNumber not in folderTrackData[discNumber]:
-                tableData.append(
-                    (discNumber, trackNumber, trackTitle, ''))
+                tableData.append((discNumber, trackNumber, trackTitle, ''))
                 flag = False
             else:
                 tableData.append((discNumber, trackNumber, trackTitle, os.path.basename(

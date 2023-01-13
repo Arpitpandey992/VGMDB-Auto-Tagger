@@ -1,5 +1,6 @@
 import os
-from Modules.utilityFunctions import *
+from Modules.flagsAndSettings import Flags
+from Modules.utilityFunctions import getBest, cleanName
 
 
 def renameFolder(data):

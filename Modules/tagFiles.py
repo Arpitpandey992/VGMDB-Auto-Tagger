@@ -3,9 +3,9 @@ import math
 from PIL import Image
 from tabulate import tabulate
 
-from Modules.flagsAndSettings import Flags
+from Modules.flagsAndSettings import *
 from Modules.utilityFunctions import getBest
-from Modules.tagUtilityFunctions import *
+from Modules.tagUtilityFunctions import tagAudioFile
 
 
 def tagFiles(albumTrackData, folderTrackData, data):
@@ -17,27 +17,6 @@ def tagFiles(albumTrackData, folderTrackData, data):
         'folderPath': data['folderPath'],
         'albumID': data['albumID'],
     }
-
-    # if flags.PICS and 'picture_full' in data:
-    #     print('Getting Album Cover')
-    #     response = requests.get(data['picture_full'])
-    #     image_data = response.content
-    #     image = Image.open(io.BytesIO(image_data))
-    #     image = image.convert('RGB')  # Remove transparency if present
-    #     width, height = image.size
-
-    #     if width > 800:
-    #         new_height = int(height * (800 / width))
-    #         image = image.resize((800, new_height), resample=Image.LANCZOS)
-
-    #     image_data = io.BytesIO()
-    #     image.save(image_data, format='JPEG', quality=70)
-    #     image_data = image_data.getvalue()
-
-    #     picture = mutagen.flac.Picture()  # type: ignore
-    #     picture.data = image_data
-    #     picture.type = 3
-    #     picture.mime = 'image/jpeg'
 
     tableData = []
     for albumData['discNumber'], tracks in albumTrackData.items():
@@ -53,27 +32,21 @@ def tagFiles(albumTrackData, folderTrackData, data):
             albumData['filePath'] = folderTrackData[albumData['discNumber']
                                                     ][albumData['trackNumber']]
             albumData['fileName'] = os.path.basename(albumData['filePath'])
-            filePathWithoutExtension, albumData['extension'] = os.path.splitext(
-                albumData['fileName'])
+            filePathWithoutExtension, albumData['extension'] = os.path.splitext(albumData['fileName'])
             albumData['extension'] = albumData['extension'].lower()
 
             if albumData['extension'] not in supportedExtensions:
-                print(f"Couldn't tag : {albumData['fileName']}")
+                print(f"Couldn't tag : {albumData['fileName']}, {albumData['extension']} Not Supported Yet :(")
                 tableData.append(
                     ('XX', 'XX', 'XX', albumData['fileName']))
                 continue
 
-            audioTagged = False
-            if albumData['extension'] == '.flac':
-                audioTagged = tagFLAC(data, albumData)
-
-            elif albumData['extension'] == '.mp3':
-                audioTagged = tagMP3(data, albumData)
+            # Tagging the file
+            audioTagged = tagAudioFile(data, albumData)
 
             if audioTagged:
                 print(f"Tagged : {albumData['fileName']}")
-                tableData.append(
-                    (albumData['discNumber'], albumData['trackNumber'], albumData['trackTitle'], albumData['fileName']))
+                tableData.append((albumData['discNumber'], albumData['trackNumber'], albumData['trackTitle'], albumData['fileName']))
             else:
                 print(f"Couldn't tag : {albumData['fileName']}")
                 tableData.append(

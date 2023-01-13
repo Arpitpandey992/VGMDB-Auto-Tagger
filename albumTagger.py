@@ -6,12 +6,13 @@ import json
 from tabulate import tabulate
 
 from Modules.flagsAndSettings import *
-from Modules.tagFiles import *
-from Modules.renameFiles import *
-from Modules.renameFolder import *
+from Modules.tagFiles import tagFiles
+from Modules.renameFiles import renameFiles
+from Modules.renameFolder import renameFolder
+from Modules.utilityFunctions import *
 from Modules.vgmdbrip.vgmdbrip import getPictures
 
-folderPath = "/home/arpit/Downloads/[2012.01.25] STEINS;GATE Future Gadget Compact Disc 8 Soundtrack II ˮEvent Horizonˮ [MFXT-0008EX]"
+folderPath = "/home/arpit/Downloads/[2010.02.17] FAIRY TAIL Character Song Collection VOL.1 Natsu & Gray [PCCG-70063]"
 
 
 def argumentParser():
@@ -138,7 +139,7 @@ def tagAndRenameFiles(folderPath, albumID, flags: Flags):
         print('\n', end='')
 
     albumTrackData = getAlbumTrackData(data, flags.languages)
-    folderTrackData = getFolderTrackData(folderPath, flags.languages)
+    folderTrackData = getFolderTrackData(folderPath)
     print('Done getting TrackData')
     print('\n', end='')
     print('\n', end='')
