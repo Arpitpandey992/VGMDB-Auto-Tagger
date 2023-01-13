@@ -2,7 +2,7 @@ import os
 import shutil
 
 
-extensions = ['.log', 'cue', '.m3u', '.txt', '.m3u8']
+extensions = ['.log', 'cue', '.m3u', '.txt', '.m3u8', '.mht', '.nfo']
 
 
 def is_file_a_log(fileName):
@@ -13,12 +13,10 @@ def is_file_a_log(fileName):
 
 
 def move_logs(dir):
-    # loop through all files and directories in the specified directory
     for file in os.listdir(dir):
         # skip the folder if it's already named Logs
         if os.path.basename(dir).lower() == "logs":
             continue
-        # construct the full path of the file
         file_path = os.path.join(dir, file)
 
         # if the file is a directory, recursively call the function
@@ -35,7 +33,7 @@ def move_logs(dir):
 
 
 # prompt the user for the directory to search
-directory = "/run/media/arpit/DATA/OSTs/Anime/HunterXHunter"
+directory = ""
 
 print("Started...")
 move_logs(directory)

@@ -26,20 +26,6 @@ def openMutagenFile(filePath):
     return FLAC(filePath) if fileExtension == '.flac' else EasyMP3(filePath)
 
 
-def standardize_date(date_string: str) -> str:
-    # Split the date string into its components
-    date_components = date_string.split('-')
-    num_components = len(date_components)
-
-    if num_components == 1:
-        date_string = date_string + '-00-00'
-    elif num_components == 2:
-        date_string = date_string + '-00'
-    else:
-        pass
-    return date_string
-
-
 def getAlbumDetails(albumID):
     return Request(f'https://vgmdb.info/album/{albumID}')
 
@@ -54,12 +40,6 @@ def getBest(obj, languages, orig='NA'):
             return obj[lang]
     return orig
 
-
-def hasCoverOfType(audio, typ):
-    for picture in audio.pictures:
-        if picture.type == typ:
-            return True
-    return False
 
 def getCount(discNumber):
     # get the count of tracks -> checks if the input is something like 4/20 -> truncates to 4
@@ -158,11 +138,6 @@ def getFolderTrackData(folderPath, languages):
 
 def doTracksAlign(albumTrackData, folderTrackData):
     flag = True
-    # if len(albumTrackData) != len(folderTrackData):
-    #     flag = False
-    # for discNumber, tracks in albumTrackData.items():
-    #     if(discNumber not in folderTrackData or len(tracks) != len(folderTrackData[discNumber])):
-    #         flag = False
     tableData = []
     for discNumber, tracks in albumTrackData.items():
         for trackNumber, trackTitle in tracks.items():

@@ -9,8 +9,9 @@ from Modules.flagsAndSettings import *
 from Modules.tagFiles import *
 from Modules.renameFiles import *
 from Modules.renameFolder import *
+from Modules.vgmdbrip.vgmdbrip import getPictures
 
-folderPath = "/run/media/arpit/DATA/OSTs/Anime/Chihayafuru/[2012.01.18] Chihayafuru Original Soundtrack & Character Song Album 1 [VPCG-84916]"
+folderPath = "/home/arpit/Downloads/[2012.01.25] STEINS;GATE Future Gadget Compact Disc 8 Soundtrack II ˮEvent Horizonˮ [MFXT-0008EX]"
 
 
 def argumentParser():
