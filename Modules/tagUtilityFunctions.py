@@ -72,7 +72,7 @@ def tagAudioFile(data, albumData):
     if flags.YEAR and 'release_date' in data and len(data['release_date']) >= 4:
         audio.setCustomTag('Year', data['release_date'][0:4])
 
-    if flags.CATALOG and 'catalog' in data and data['catalog'] != 'NA':
+    if flags.CATALOG and 'catalog' in data:
         audio.setCustomTag('Catalog', data['catalog'])
 
     if flags.BARCODE and 'barcode' in data:
@@ -80,13 +80,13 @@ def tagAudioFile(data, albumData):
 
     if flags.ORGANIZATIONS and 'organizations' in data:
         for org in data['organizations']:
-            audio.setCustomTag(org['role'], getBest(org['names'], flags.languages))
+            audio.setCustomTag(org['role'], getBest(org['names'], flags.languageOrder))
 
     def addMultiValues(tag, tagInFile, flag=True):
         if tag in data and flag:
             listOfValues = []
             for val in data[tag]:
-                listOfValues.append(getBest(val['names'], flags.languages))
+                listOfValues.append(getBest(val['names'], flags.languageOrder))
             audio.addMultipleValues(tagInFile, listOfValues)
 
     addMultiValues('lyricists', 'lyricist', flags.LYRICISTS)

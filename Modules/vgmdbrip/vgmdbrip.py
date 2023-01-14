@@ -74,7 +74,7 @@ def getPictures(folder, albumID):
         os.makedirs(finalScanFolder)
     gallery = soup.find("div", attrs={"class": "covertab",
                                       "id": "cover_gallery"})
-    for scan in gallery.find_all("a", attrs={"class": "highslide"}):
+    for scan in gallery.find_all("a", attrs={"class": "highslide"}):  # type:ignore
         url = scan["href"]
 
         title = remove(scan.text.strip(), "\"*/:<>?\|")  # type: ignore

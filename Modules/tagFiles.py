@@ -13,7 +13,7 @@ def tagFiles(albumTrackData, folderTrackData, data):
     albumData = {
         'totalDisks': len(albumTrackData),
         'disksUpperBound': int(math.ceil(math.log10(len(albumTrackData)+1))),
-        'albumName': getBest(data['names'], flags.languages),
+        'albumName': getBest(data['names'], flags.languageOrder),
         'folderPath': data['folderPath'],
         'albumID': data['albumID'],
     }

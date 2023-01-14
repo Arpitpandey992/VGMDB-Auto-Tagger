@@ -6,6 +6,11 @@ tableFormat = 'pretty'
 SEE_FLAGS = False
 
 supportedExtensions = ['.flac', '.mp3']
+languages = {
+    'romaji': ['ja-latn', 'Romaji'],
+    'english': ['en', 'English', 'English (Apple Music)', 'English/German', 'English localized', 'English (alternate)', 'English Translated', 'English [Translation]'],
+    'japanese': ['ja', 'Japanese']
+}
 
 
 class Flags:
@@ -38,6 +43,4 @@ class Flags:
         self.LYRICISTS = False
 
         # languages to be probed from VGMDB in the given order of priority
-        self.languages = ['ja-latn', 'Romaji',
-                          'en', 'English', 'English (Apple Music)', 'English/German',
-                          'ja', 'Japanese']
+        self.languageOrder = ['english', 'romaji', 'japanese']

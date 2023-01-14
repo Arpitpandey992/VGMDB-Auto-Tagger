@@ -14,7 +14,7 @@ def renameFiles(albumTrackData, folderTrackData, data):
     totalDisks = len(albumTrackData)
     tracksUpperBound = int(math.ceil(math.log10(totalTracks+1)))
     disksUpperBound = int(math.ceil(math.log10(totalDisks+1)))
-    albumName = cleanName(getBest(data['names'], flags.languages))
+    albumName = cleanName(getBest(data['names'], flags.languageOrder))
     folderPath = data['folderPath']
     date = data['release_date'].replace('-', '.')
 

@@ -20,7 +20,7 @@ def argumentParser():
     parser = argparse.ArgumentParser(
         description='Automatically Tag Music Albums!, Default Language -> Romaji')
 
-    parser.add_argument('folderPath', nargs='?', help='Flac directory path')
+    parser.add_argument('folderPath', nargs='?', help='Album directory path')
 
     parser.add_argument('--ID', '-i', type=str, default=None,
                         help='Provide Album ID')
@@ -54,11 +54,15 @@ def argumentParser():
                         help='tag the files')
     parser.add_argument('--no-tag', dest='no_tag', action='store_true',
                         help='Do not tag the files')
+    parser.add_argument('--no-modify', dest='no_modify', action='store_true',
+                        help='Do not modify the files or folder in any way')
 
     parser.add_argument('--japanese', '-ja', action='store_true',
-                        help='Give Priority to Japanese (not Romaji)')
+                        help='Give Priority to Japanese')
     parser.add_argument('--english', '-en', action='store_true',
                         help='Give Priority to English')
+    parser.add_argument('--romaji', '-ro', action='store_true',
+                        help='Give Priority to Romaji')
     args = parser.parse_args()
 
     if args.folderPath:
@@ -68,11 +72,11 @@ def argumentParser():
         folderPath = folderPath[:-1]
     flags = Flags()
     if args.japanese:
-        flags.languages = ['ja', 'Japanese', 'ja-latn', 'Romaji', 'en', 'English',
-                           'English (Apple Music)', 'English/German']
+        flags.languageOrder = ['japanese', 'romaji', 'english']
     elif args.english:
-        flags.languages = ['en', 'English',
-                           'English (Apple Music)', 'English/German', 'ja-latn', 'Romaji', 'ja', 'Japanese']
+        flags.languageOrder = ['english', 'romaji', 'japanese']
+    elif args.romaji:
+        flags.languageOrder = ['romaji', 'english', 'japanese']
 
     if args.yes:
         flags.YES = True  # type: ignore
@@ -90,7 +94,6 @@ def argumentParser():
         flags.TAG = True  # type: ignore
     if args.no_tag:
         flags.TAG = False  # type: ignore
-
     if args.no_title:
         flags.TITLE = False  # type: ignore
     if args.no_scans:
@@ -101,6 +104,11 @@ def argumentParser():
         flags.PIC_OVERWRITE = True  # type: ignore
     if args.no_auth:
         flags.NO_AUTH = True  # type: ignore
+
+    if args.no_modify:
+        flags.TAG = False  # type: ignore
+        flags.RENAME_FOLDER = False  # type: ignore
+        flags.RENAME_FILES = False  # type: ignore
 
     if SEE_FLAGS:
         print(json.dumps(vars(flags), indent=4))
@@ -129,16 +137,18 @@ def tagAndRenameFiles(folderPath, albumID, flags: Flags):
     data['folderPath'] = folderPath
     data['albumID'] = albumID
     data['flags'] = flags
+    if 'catalog' in data and (data['catalog'] == 'N/A' or data['catalog'] == 'NA'):
+        del data['catalog']
 
     if flags.CONFIRM:
         print(f'Link - {albumLink}')
-        print(f'Album - {getBest(data["names"], flags.languages)}')
+        print(f'Album - {getBest(data["names"], flags.languageOrder)}')
         if not yesNoUserInput():
             print('\n', end='')
             return False
         print('\n', end='')
 
-    albumTrackData = getAlbumTrackData(data, flags.languages)
+    albumTrackData = getAlbumTrackData(data, flags.languageOrder)
     folderTrackData = getFolderTrackData(folderPath)
     print('Done getting TrackData')
     print('\n', end='')
@@ -258,7 +268,7 @@ def findAlbumID(folderPath, searchTerm, flags: Flags):
     for album in data['results']['albums']:  # type:ignore
         albumID = album['link'].split('/')[1]
         albumLink = f"https://vgmdb.net/{album['link']}"
-        albumTitle = getBest(album['titles'], flags.languages)
+        albumTitle = getBest(album['titles'], flags.languageOrder)
         releaseDate = album['release_date']
         year = releaseDate[0:4] if len(releaseDate) >= 4 else 'NA'
         catalog = album['catalog']

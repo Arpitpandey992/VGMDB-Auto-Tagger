@@ -2,7 +2,7 @@ import os
 import shutil
 
 
-extensions = ['.log', 'cue', '.m3u', '.txt', '.m3u8', '.mht', '.nfo']
+extensions = ['.log', 'cue', '.m3u', '.txt', '.m3u8', '.mht', '.nfo', '.accurip', '.sfv', '.md5']
 
 
 def is_file_a_log(fileName):
@@ -33,7 +33,7 @@ def move_logs(dir):
 
 
 # prompt the user for the directory to search
-directory = ""
+directory = "/run/media/arpit/DATA/OSTs/Games"
 
 print("Started...")
 move_logs(directory)

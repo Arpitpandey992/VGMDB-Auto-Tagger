@@ -29,19 +29,20 @@ def searchAlbum(albumName):
     return Request(f'https://vgmdb.info/search?q={albumName}')
 
 
-def getBest(obj, languages, orig='NA'):
-    for lang in languages:
-        if lang in obj:
-            return obj[lang]
-    return orig
+def getBest(languageObject, languageOrder):
+    for currentLanguage in languageOrder:
+        for languageKey in languages[currentLanguage]:
+            if languageKey in languageObject:
+                return languageObject[languageKey]
+    return list(languageObject.items())[0][0]
 
 
 def getCount(discNumber):
     # get the count of tracks -> checks if the input is something like 4/20 -> truncates to 4
     if '/' in discNumber:
         discNumber = discNumber.split('/')[0]
-    if ':' in discNumber:
-        discNumber = discNumber.split('/')[0]
+    elif ':' in discNumber:
+        discNumber = discNumber.split(':')[0]
     return int(discNumber)
 
 
@@ -84,14 +85,14 @@ def noYesUserInput():
     return False
 
 
-def getAlbumTrackData(data, languages):
+def getAlbumTrackData(data, languageOrder):
     trackData = {}
     discNumber = 1
     for disc in data['discs']:
         trackData[discNumber] = {}
         trackNumber = 1
         for track in disc['tracks']:
-            trackData[discNumber][trackNumber] = getBest(track['names'], languages)
+            trackData[discNumber][trackNumber] = getBest(track['names'], languageOrder)
             trackNumber += 1
         discNumber += 1
     return trackData

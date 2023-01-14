@@ -7,6 +7,9 @@ from mutagen.flac import Picture as PictureFLAC, FLAC
 from mutagen.id3._frames import APIC, TALB, TDRC, TRCK, COMM, TXXX, TPOS, TIT2
 from mutagen.id3 import ID3
 
+"""
+This is a wrapper around mutagen module. This basically allows us to call the same functions for any extension, and hence reducing code complexity.
+"""
 
 pictureNumberToName = {
     0: u'Other',
@@ -27,7 +30,7 @@ pictureNumberToName = {
     15: u'During performance',
 }
 
-
+# Interface Class specifying the required functionality
 class IAudioManager(ABC):
     @abstractmethod
     def setTitle(self, newTitle: str):
@@ -270,31 +273,31 @@ class Mp3(IAudioManager):
         return ans.text[0] if ans else None
 
     def getAlbum(self):
-        ans =  self.audio.get('TALB')
+        ans = self.audio.get('TALB')
         return ans.text[0] if ans else None
 
     def getDiscNumber(self):
-        ans =  self.audio.get('TPOS')
+        ans = self.audio.get('TPOS')
         return ans.text[0] if ans else None
 
     def getTotalDiscs(self):
-        ans =  self.audio.get('TPOS')
+        ans = self.audio.get('TPOS')
         return ans.text[0] if ans else None
 
     def getTrackNumber(self):
-        ans =  self.audio.get('TRCK')
+        ans = self.audio.get('TRCK')
         return ans.text[0] if ans else None
 
     def getTotalTracks(self):
-        ans =  self.audio.get('TRCK')
+        ans = self.audio.get('TRCK')
         return ans.text[0] if ans else None
 
     def getComment(self):
-        ans =  self.audio.get('COMM')
+        ans = self.audio.get('COMM')
         return ans.text[0] if ans else None
 
     def getDate(self):
-        ans =  self.audio.get('TDRC')
+        ans = self.audio.get('TDRC')
         return ans.text[0] if ans else None
 
     def getCustomTag(self, key):
@@ -302,7 +305,6 @@ class Mp3(IAudioManager):
             if key in frame.HashKey:
                 return frame.text[0]
         return None
-        # return self.audio.getall(key)[0].text
 
     def save(self):
         self.audio.save()
