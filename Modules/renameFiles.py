@@ -6,20 +6,20 @@ from Modules.utilityFunctions import *
 
 
 def renameFiles(albumTrackData, folderTrackData, data):
-    flags: Flags = data['flags']
+    # flags: Flags = data['flags']
 
     totalTracks = 0
     for disc in albumTrackData:
         totalTracks += len(albumTrackData[disc])
     totalDisks = len(albumTrackData)
-    tracksUpperBound = int(math.ceil(math.log10(totalTracks+1)))
     disksUpperBound = int(math.ceil(math.log10(totalDisks+1)))
-    albumName = cleanName(getBest(data['names'], flags.languageOrder))
+    # albumName = cleanName(getBest(data['names'], flags.languageOrder))
     folderPath = data['folderPath']
-    date = data['release_date'].replace('-', '.')
+    # date = data['release_date'].replace('-', '.')
 
     tableData = []
     for discNumber, tracks in folderTrackData.items():
+        tracksUpperBound = int(math.ceil(math.log10(len(tracks)+1)))
         properDiscNumber = str(discNumber).zfill(disksUpperBound)
         if totalDisks > 1:
             discFolderPath = os.path.join(

@@ -12,15 +12,12 @@ from Modules.renameFolder import renameFolder
 from Modules.utilityFunctions import *
 from Modules.vgmdbrip.vgmdbrip import getPictures
 
-folderPath = "/home/arpit/Downloads/[2010.02.17] FAIRY TAIL Character Song Collection VOL.1 Natsu & Gray [PCCG-70063]"
-
 
 def argumentParser():
-    global folderPath
     parser = argparse.ArgumentParser(
-        description='Automatically Tag Music Albums!, Default Language -> Romaji')
+        description='Automatically Tag Music folders using data from VGMDB.net')
 
-    parser.add_argument('folderPath', nargs='?', help='Album directory path')
+    parser.add_argument('folderPath', help='Album directory path (Required Argument)')
 
     parser.add_argument('--ID', '-i', type=str, default=None,
                         help='Provide Album ID')
@@ -65,11 +62,11 @@ def argumentParser():
                         help='Give Priority to Romaji')
     args = parser.parse_args()
 
-    if args.folderPath:
-        folderPath = args.folderPath
+    folderPath = args.folderPath
 
     while folderPath[-1] == '/':
         folderPath = folderPath[:-1]
+    
     flags = Flags()
     if args.japanese:
         flags.languageOrder = ['japanese', 'romaji', 'english']
@@ -112,7 +109,7 @@ def argumentParser():
 
     if SEE_FLAGS:
         print(json.dumps(vars(flags), indent=4))
-    return args, flags
+    return args, flags, folderPath
 
 
 def tagAndRenameFiles(folderPath, albumID, flags: Flags):
@@ -311,7 +308,7 @@ def findAlbumID(folderPath, searchTerm, flags: Flags):
 
 def main():
 
-    args, flags = argumentParser()
+    args, flags, folderPath = argumentParser()
 
     albumID = args.ID
     if albumID is None:

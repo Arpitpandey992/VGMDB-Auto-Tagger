@@ -9,7 +9,12 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "args": ["--pic-overwrite", "--english", "--yes"],
+            "args": [
+                "--pic-overwrite",
+                "--english",
+                "--yes",
+                "/run/media/arpit/DATA/Downloads/Music/Soulseek/gay_crime_skeleton/[2021.11.23] The Legend of Zelda꞉ Skyward Sword Original Soundtrack [COCX-41645~9]"
+            ],
             "console": "integratedTerminal",
             "justMyCode": true
         }
