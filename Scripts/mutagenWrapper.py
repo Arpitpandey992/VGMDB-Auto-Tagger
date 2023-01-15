@@ -7,6 +7,8 @@ from mutagen.flac import Picture as PictureFLAC, FLAC
 from mutagen.id3._frames import APIC, TALB, TDRC, TRCK, COMM, TXXX, TPOS, TIT2
 from mutagen.id3 import ID3
 
+from Utility.utilityFunctions import splitAndGetFirst, splitAndGetSecond
+
 """
 This is a wrapper around mutagen module. This basically allows us to call the same functions for any extension, and hence reducing code complexity.
 """
@@ -31,6 +33,14 @@ pictureNumberToName = {
 }
 
 # Interface Class specifying the required functionality
+
+
+def getFirstElement(listVariable):
+    if not listVariable:
+        return None
+    return listVariable[0]
+
+
 class IAudioManager(ABC):
     @abstractmethod
     def setTitle(self, newTitle: str):
@@ -75,6 +85,10 @@ class IAudioManager(ABC):
         """ Set the album release date """
 
     @abstractmethod
+    def setCatalog(self, key: str, value: str):
+        """ Set a custom tag as Key = value """
+
+    @abstractmethod
     def setCustomTag(self, key: str, value: str):
         """ Set a custom tag as Key = value """
 
@@ -112,6 +126,10 @@ class IAudioManager(ABC):
         """ get a custom tag as Key = value """
 
     @abstractmethod
+    def getCatalog(self):
+        """ get a custom tag as Key = value """
+
+    @abstractmethod
     def save(self):
         """ Apply metadata changes """
 
@@ -136,7 +154,7 @@ class Flac(IAudioManager):
 
     def setDiscNumbers(self, discNumber, totalDiscs):
         self.audio['discnumber'] = discNumber
-        self.audio['disctotal'] = totalDiscs
+        self.audio['totaldiscs'] = totalDiscs
 
     def setTrackNumbers(self, trackNumber, totalTracks):
         self.audio['tracknumber'] = trackNumber
@@ -170,41 +188,58 @@ class Flac(IAudioManager):
     def setCustomTag(self, key, value):
         self.audio[key] = value
 
+    def setCatalog(self, value: str):
+        self.setCustomTag('CATALOGNUMBER', value)
+
     def getTitle(self):
         ans = self.audio.get('title')
-        return ans[0] if ans is not None else None
+        return getFirstElement(ans)
 
     def getAlbum(self):
         ans = self.audio.get('album')
-        return ans[0] if ans is not None else None
+        return getFirstElement(ans)
 
     def getDiscNumber(self):
         ans = self.audio.get('discnumber')
-        return ans[0] if ans is not None else None
+        return getFirstElement(ans)
 
     def getTotalDiscs(self):
         ans = self.audio.get('disctotal')
-        return ans[0] if ans is not None else None
+        if ans is None:
+            ans = self.audio.get('totaldiscs')
+        return getFirstElement(ans)
 
     def getTrackNumber(self):
         ans = self.audio.get('tracknumber')
-        return ans[0] if ans is not None else None
+        return getFirstElement(ans)
 
     def getTotalTracks(self):
         ans = self.audio.get('tracktotal')
-        return ans[0] if ans is not None else None
+        if ans is None:
+            ans = self.audio.get('totaltracks')
+        return getFirstElement(ans)
 
     def getComment(self):
         ans = self.audio.get('comment')
-        return ans[0] if ans is not None else None
+        return getFirstElement(ans)
 
     def getDate(self):
         ans = self.audio.get('date')
-        return ans[0] if ans is not None else None
+        return getFirstElement(ans)
 
     def getCustomTag(self, key):
         ans = self.audio.get(key)
-        return ans[0] if ans is not None else None
+        return getFirstElement(ans)
+
+    def getCatalog(self):
+        ans = self.getCustomTag('CATALOGNUMBER')
+        if ans:
+            return ans
+        ans = self.getCustomTag('CATALOG')
+        if ans:
+            return ans
+        ans = self.getCustomTag('LABELNO')
+        return ans
 
     def save(self):
         self.audio.save()
@@ -268,43 +303,56 @@ class Mp3(IAudioManager):
     def setCustomTag(self, key, value):
         self.audio.add(TXXX(encoding=3, desc=key, text=[value]))
 
+    def setCatalog(self, value: str):
+        self.setCustomTag('CATALOGNUMBER', value)
+
     def getTitle(self):
         ans = self.audio.get('TIT2')
-        return ans.text[0] if ans else None
+        return getFirstElement(ans.text) if ans else None
 
     def getAlbum(self):
         ans = self.audio.get('TALB')
-        return ans.text[0] if ans else None
+        return getFirstElement(ans.text) if ans else None
 
     def getDiscNumber(self):
         ans = self.audio.get('TPOS')
-        return ans.text[0] if ans else None
+        return splitAndGetFirst(getFirstElement(ans.text)) if ans else None
 
     def getTotalDiscs(self):
         ans = self.audio.get('TPOS')
-        return ans.text[0] if ans else None
+        return splitAndGetSecond(getFirstElement(ans.text)) if ans else None
 
     def getTrackNumber(self):
         ans = self.audio.get('TRCK')
-        return ans.text[0] if ans else None
+        return splitAndGetFirst(getFirstElement(ans.text)) if ans else None
 
     def getTotalTracks(self):
         ans = self.audio.get('TRCK')
-        return ans.text[0] if ans else None
+        return splitAndGetSecond(getFirstElement(ans.text)) if ans else None
 
     def getComment(self):
         ans = self.audio.get('COMM')
-        return ans.text[0] if ans else None
+        return getFirstElement(ans.text) if ans else None
 
     def getDate(self):
         ans = self.audio.get('TDRC')
-        return ans.text[0] if ans else None
+        return getFirstElement(ans.text) if ans else None
 
     def getCustomTag(self, key):
         for frame in self.audio.getall("TXXX"):
             if key in frame.HashKey:
                 return frame.text[0]
         return None
+
+    def getCatalog(self):
+        ans = self.getCustomTag('CATALOGNUMBER')
+        if ans:
+            return ans
+        ans = self.getCustomTag('CATALOG')
+        if ans:
+            return ans
+        ans = self.getCustomTag('LABELNO')
+        return ans
 
     def save(self):
         self.audio.save()

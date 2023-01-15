@@ -5,15 +5,26 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "Run Tagger",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "albumTagger.py",
             "args": [
                 "--pic-overwrite",
                 "--english",
                 "--yes",
-                "/run/media/arpit/DATA/Downloads/Music/Soulseek/gay_crime_skeleton/[2021.11.23] The Legend of Zelda꞉ Skyward Sword Original Soundtrack [COCX-41645~9]"
+                "/home/arpit/Downloads/Ginga Eiyuu Densetsu Rasen Meikyuu OP & ED"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Organize",
+            "type": "python",
+            "request": "launch",
+            "program": "organize.py",
+            "args": [
+                "/home/arpit/Downloads/[2012-01-25] STEINS;GATE Future Gadget Compact Disc 8 Soundtrack II ˮEvent Horizonˮ [MFXT-0008EX]"
             ],
             "console": "integratedTerminal",
             "justMyCode": true

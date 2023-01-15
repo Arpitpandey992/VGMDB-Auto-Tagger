@@ -1,11 +1,11 @@
 import os
-from Modules.flagsAndSettings import Flags
-from Modules.utilityFunctions import getBest, cleanName
+from Imports.flagsAndSettings import Flags
+from Utility.utilityFunctions import getBest, cleanName
 
 
 def renameFolder(data):
     flags: Flags = data['flags']
-    albumName = cleanName(getBest(data['names'], flags.languageOrder))
+    albumName = getBest(data['names'], flags.languageOrder)
     folderPath = data['folderPath']
     date = data['release_date'].replace('-', '.')
 
@@ -15,7 +15,9 @@ def renameFolder(data):
     else:
         newFolderName = f'[{date}] {albumName}'
 
+    newFolderName = cleanName(newFolderName)
     oldFolderName = os.path.basename(folderPath)
+
     baseFolderPath = os.path.dirname(folderPath)
     newFolderPath = os.path.join(baseFolderPath, newFolderName)
     os.rename(folderPath, newFolderPath)

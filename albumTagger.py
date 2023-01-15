@@ -5,11 +5,13 @@ import json
 
 from tabulate import tabulate
 
-from Modules.flagsAndSettings import *
-from Modules.tagFiles import tagFiles
-from Modules.renameFiles import renameFiles
-from Modules.renameFolder import renameFolder
-from Modules.utilityFunctions import *
+from Imports.flagsAndSettings import *
+from Utility.utilityFunctions import *
+
+from Modules.Tag.tagFiles import tagFiles
+from Modules.Rename.renameFiles import renameFiles
+from Modules.Rename.renameFolder import renameFolder
+from Utility.audioUtilityFunctions import getAlbumName, getAlbumTrackData, getFolderTrackData, doTracksAlign
 from Modules.vgmdbrip.vgmdbrip import getPictures
 
 
@@ -66,7 +68,7 @@ def argumentParser():
 
     while folderPath[-1] == '/':
         folderPath = folderPath[:-1]
-    
+
     flags = Flags()
     if args.japanese:
         flags.languageOrder = ['japanese', 'romaji', 'english']

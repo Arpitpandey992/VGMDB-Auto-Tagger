@@ -2,9 +2,9 @@ import requests
 import io
 from PIL import Image
 
-from Modules.flagsAndSettings import Flags
-from Modules.utilityFunctions import getBest
-from Modules.mutagenWrapper import AudioFactory
+from Imports.flagsAndSettings import Flags
+from Utility.utilityFunctions import getBest, getProperCount
+from Utility.mutagenWrapper import AudioFactory
 
 
 def standardizeDate(date: str) -> str:
@@ -50,10 +50,10 @@ def tagAudioFile(data, albumData):
     # Tagging Album specific Details
     audio.setTitle(albumData['trackTitle'])
     audio.setAlbum(albumData['albumName'])
-    audio.setTrackNumbers(str(albumData['trackNumber']).zfill(albumData['tracksUpperBound']),
+    audio.setTrackNumbers(getProperCount(albumData['trackNumber'], albumData['totalTracks']),
                           str(albumData['totalTracks']))
-    audio.setDiscNumbers(str(albumData['discNumber']).zfill(albumData['disksUpperBound']),
-                         str(albumData['totalDisks']))
+    audio.setDiscNumbers(getProperCount(albumData['discNumber'], albumData['totalDiscs']),
+                         str(albumData['totalDiscs']))
     audio.setComment(f"Find the tracklist at {data['albumLink']}")
 
     if flags.PICS:
@@ -73,7 +73,7 @@ def tagAudioFile(data, albumData):
         audio.setCustomTag('Year', data['release_date'][0:4])
 
     if flags.CATALOG and 'catalog' in data:
-        audio.setCustomTag('Catalog', data['catalog'])
+        audio.setCatalog(data['catalog'])
 
     if flags.BARCODE and 'barcode' in data:
         audio.setCustomTag('Barcode', data['barcode'])

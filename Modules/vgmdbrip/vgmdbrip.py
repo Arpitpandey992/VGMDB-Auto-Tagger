@@ -6,7 +6,7 @@ import getpass
 import pickle
 import requests
 from bs4 import BeautifulSoup
-from Modules.utilityFunctions import downloadPicture
+from Utility.utilityFunctions import downloadPicture
 session = requests.Session()
 
 

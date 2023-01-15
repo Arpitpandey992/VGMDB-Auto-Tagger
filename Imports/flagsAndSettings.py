@@ -1,5 +1,3 @@
-
-
 BACKUPFOLDER = '/run/media/arpit/DATA/backups'
 APICALLRETRIES = 5
 tableFormat = 'pretty'

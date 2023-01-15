@@ -3,16 +3,16 @@ import math
 from PIL import Image
 from tabulate import tabulate
 
-from Modules.flagsAndSettings import *
-from Modules.utilityFunctions import getBest
-from Modules.tagUtilityFunctions import tagAudioFile
+from Imports.flagsAndSettings import Flags, supportedExtensions, tableFormat
+from Utility.utilityFunctions import getBest
+from Modules.Tag.tagUtilityFunctions import tagAudioFile
 
 
 def tagFiles(albumTrackData, folderTrackData, data):
     flags: Flags = data['flags']
     albumData = {
-        'totalDisks': len(albumTrackData),
-        'disksUpperBound': int(math.ceil(math.log10(len(albumTrackData)+1))),
+        'totalDiscs': len(albumTrackData),
+        # 'discsUpperBound': int(math.ceil(math.log10(len(albumTrackData)+1))),
         'albumName': getBest(data['names'], flags.languageOrder),
         'folderPath': data['folderPath'],
         'albumID': data['albumID'],
@@ -22,8 +22,8 @@ def tagFiles(albumTrackData, folderTrackData, data):
     for albumData['discNumber'], tracks in albumTrackData.items():
 
         albumData['totalTracks'] = len(tracks)
-        albumData['tracksUpperBound'] = int(
-            math.ceil(math.log10(len(tracks)+1)))
+        # albumData['tracksUpperBound'] = int(
+        #     math.ceil(math.log10(len(tracks)+1)))
 
         for albumData['trackNumber'], albumData['trackTitle'] in tracks.items():
             if albumData['discNumber'] not in folderTrackData or albumData['trackNumber'] not in folderTrackData[albumData['discNumber']]:
