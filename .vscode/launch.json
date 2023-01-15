@@ -24,7 +24,7 @@
             "request": "launch",
             "program": "organize.py",
             "args": [
-                "/home/arpit/Downloads/[2012-01-25] STEINS;GATE Future Gadget Compact Disc 8 Soundtrack II ˮEvent Horizonˮ [MFXT-0008EX]"
+                "/run/media/arpit/DATA/Downloads/Music/Soulseek/red_bookNTN/Ginga Eiyuu Densetsu Music Collection/CD-BOX - Ginga Teikoku Side"
             ],
             "console": "integratedTerminal",
             "justMyCode": true

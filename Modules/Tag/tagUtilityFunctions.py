@@ -48,7 +48,8 @@ def tagAudioFile(data, albumData):
     audio = AudioFactory.buildAudioManager(albumData['filePath'])
 
     # Tagging Album specific Details
-    audio.setTitle(albumData['trackTitle'])
+    if flags.TITLE:
+        audio.setTitle(albumData['trackTitle'])
     audio.setAlbum(albumData['albumName'])
     audio.setTrackNumbers(getProperCount(albumData['trackNumber'], albumData['totalTracks']),
                           str(albumData['totalTracks']))

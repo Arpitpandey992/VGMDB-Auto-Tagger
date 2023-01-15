@@ -48,7 +48,7 @@ def renameFiles(folderPath):
             used.add(discTrackTuple)
 
             oldName = file
-            newName = f"{trackNumber} - {title}{extension}"
+            newName = cleanName(f"{trackNumber} - {title}{extension}")
             discFolderName = f'Disc {discNumber}'
             if int(totalDiscs) == 1:
                 # no need to make separate disc folders
