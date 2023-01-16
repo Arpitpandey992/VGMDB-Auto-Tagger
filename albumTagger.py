@@ -11,8 +11,8 @@ from Utility.utilityFunctions import *
 from Modules.Tag.tagFiles import tagFiles
 from Modules.Rename.renameFiles import renameFiles
 from Modules.Rename.renameFolder import renameFolder
-from Utility.audioUtilityFunctions import getAlbumName, getAlbumTrackData, getFolderTrackData, doTracksAlign
-from Modules.vgmdbrip.vgmdbrip import getPictures
+from Utility.audioUtilityFunctions import getAlbumNameAndDate, getAlbumTrackData, getFolderTrackData, doTracksAlign, getYearFromDate
+from Modules.vgmdbrip.vgmdbrip import getPictures, getPicturesTheOldWay
 
 
 def argumentParser():
@@ -173,6 +173,8 @@ def tagAndRenameFiles(folderPath, albumID, flags: Flags):
     if flags.BACKUP:
         try:
             destinationFolder = BACKUPFOLDER
+            if not os.path.exists(destinationFolder):
+                os.makedirs(destinationFolder)
             print(f'Backing Up {folderPath}...')
             print('\n', end='')
             backupFolder = os.path.join(
@@ -196,18 +198,7 @@ def tagAndRenameFiles(folderPath, albumID, flags: Flags):
             getPictures(folderPath, albumID)
         elif 'covers' in data:
             # Old algorithm for downloading -> no Authentication -> less covers available!
-            frontPictureExists = False
-            coverPath = os.path.join(data['folderPath'], 'Scans')
-            if not os.path.exists(coverPath):
-                os.makedirs(coverPath)
-            for cover in data['covers']:
-                downloadPicture(URL=cover['full'],
-                                path=coverPath, name=cover['name'])
-                if cover['name'].lower() == 'front' or cover['name'].lower == 'cover':
-                    frontPictureExists = True
-            if not frontPictureExists and 'picture_full' in data:
-                downloadPicture(URL=data['picture_full'],
-                                path=coverPath, name='Front')
+            getPicturesTheOldWay(data)
 
         print('Downloaded Available Pictures :)', end='\n\n')
 
@@ -244,22 +235,19 @@ def getSearchInput():
     return answer
 
 
-def findAlbumID(folderPath, searchTerm, flags: Flags):
+def findAlbumID(folderPath, searchTerm, searchYear, flags: Flags):
     folderName = os.path.basename(folderPath)
     print(f'Folder Name : {folderName}')
     if searchTerm is None:
         searchTerm = getSearchInput()
     if searchTerm is None:
         return None
-    print(f'Searching for : {searchTerm}')
+    print(f'Searching for : {searchTerm}, Year = {searchYear}')
     print('\n', end='')
     data = searchAlbum(searchTerm)
     if data is None or not data['results']['albums']:
         print("No results found!, Please change search term!")
-        return findAlbumID(folderPath, None, flags)
-
-    if data is None:
-        return None
+        return findAlbumID(folderPath, None, None, flags)
 
     albumData = {}
     tableData = []
@@ -269,7 +257,7 @@ def findAlbumID(folderPath, searchTerm, flags: Flags):
         albumLink = f"https://vgmdb.net/{album['link']}"
         albumTitle = getBest(album['titles'], flags.languageOrder)
         releaseDate = album['release_date']
-        year = releaseDate[0:4] if len(releaseDate) >= 4 else 'NA'
+        year = getYearFromDate(releaseDate)
         catalog = album['catalog']
         albumData[serialNumber] = {
             'Link': albumLink,
@@ -279,7 +267,8 @@ def findAlbumID(folderPath, searchTerm, flags: Flags):
             'Year': year,
             'Catalog': catalog
         }
-        tableData.append((serialNumber, catalog, albumTitle, albumLink, year))
+        if not searchYear or searchYear == year:
+            tableData.append((serialNumber, catalog, albumTitle, albumLink, year))
         serialNumber += 1
     if not tableData:
         return None
@@ -303,7 +292,7 @@ def findAlbumID(folderPath, searchTerm, flags: Flags):
             choice = '1'
         if not choice.isdigit() or int(choice) not in albumData:
             print('Invalid Choice, using that as search term!\n')
-            return findAlbumID(folderPath, choice, flags)
+            return findAlbumID(folderPath, choice, None, flags)
 
     return albumData[int(choice)]['ID']
 
@@ -314,9 +303,13 @@ def main():
     albumID = args.ID
     if albumID is None:
         searchTerm = args.search
+        date = None
         if searchTerm is None:
-            searchTerm = cleanSearchTerm(getAlbumName(folderPath))
-        albumID = findAlbumID(folderPath, searchTerm, flags)
+            albumName, date = getAlbumNameAndDate(folderPath)
+            if albumName is None:
+                print('Could not obtain album name from files in the directory, please provide custom search term!')
+            searchTerm = cleanSearchTerm(albumName)
+        albumID = findAlbumID(folderPath, searchTerm, getYearFromDate(date), flags)
     # if album-ID is still not found, script cannot do anything :(
 
     if albumID is not None:

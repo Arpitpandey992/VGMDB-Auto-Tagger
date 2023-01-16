@@ -6,6 +6,12 @@ from Utility.mutagenWrapper import AudioFactory
 from Utility.utilityFunctions import getBest, splitAndGetFirst
 
 
+def getYearFromDate(date):
+    if not date:
+        return None
+    return date[0:4] if len(date) >= 4 else None
+
+
 def getOneAudioFile(folderPath):
     for root, dirs, files in os.walk(folderPath):
         for file in files:
@@ -15,18 +21,15 @@ def getOneAudioFile(folderPath):
     return None
 
 
-def getAlbumName(folderPath: str):
+def getAlbumNameAndDate(folderPath: str):
     filePath = getOneAudioFile(folderPath)
     if filePath is None:
-        print('No Audio File Present in the directory to get album name, please provide custom search term!')
-        return None
+        return None, None
 
     audio = AudioFactory.buildAudioManager(filePath)
     albumName = audio.getAlbum()
-    if albumName is None:
-        print('Audio file does not have an <album> tag!, please provide custom search term')
-        return None
-    return albumName
+    date = audio.getDate()
+    return albumName, date
 
 
 def getAlbumTrackData(data, languageOrder):

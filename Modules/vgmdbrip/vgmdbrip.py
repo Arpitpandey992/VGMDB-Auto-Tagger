@@ -69,14 +69,33 @@ def getPictures(folder, albumID):
     login(config)
     soup = Soup(session.get("https://vgmdb.net/album/" + albumID).content)
     print('Title: ' + soup.title.text)  # type: ignore
-    finalScanFolder = os.path.join(folder, 'Scans')
-    if not os.path.exists(finalScanFolder):
-        os.makedirs(finalScanFolder)
     gallery = soup.find("div", attrs={"class": "covertab",
                                       "id": "cover_gallery"})
-    for scan in gallery.find_all("a", attrs={"class": "highslide"}):  # type:ignore
-        url = scan["href"]
 
+    scans = gallery.find_all("a", attrs={"class": "highslide"})  # type:ignore
+    pictureCount = len(scans)
+
+    finalScanFolder = os.path.join(folder, 'Scans') if pictureCount > 1 else folder
+    if not os.path.exists(finalScanFolder):
+        os.makedirs(finalScanFolder)
+
+    for scan in scans:
+        url = scan["href"]
         title = remove(scan.text.strip(), "\"*/:<>?\|")  # type: ignore
         downloadPicture(URL=url, path=finalScanFolder, name=title)
     pickle.dump(session, open(config, "wb"))
+
+
+def getPicturesTheOldWay(data):
+    frontPictureExists = False
+    coverPath = os.path.join(data['folderPath'], 'Scans')
+    if not os.path.exists(coverPath):
+        os.makedirs(coverPath)
+    for cover in data['covers']:
+        downloadPicture(URL=cover['full'],
+                        path=coverPath, name=cover['name'])
+        if cover['name'].lower() == 'front' or cover['name'].lower == 'cover':
+            frontPictureExists = True
+    if not frontPictureExists and 'picture_full' in data:
+        downloadPicture(URL=data['picture_full'],
+                        path=coverPath, name='Front')

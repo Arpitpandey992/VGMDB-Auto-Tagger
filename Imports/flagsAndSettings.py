@@ -1,4 +1,4 @@
-BACKUPFOLDER = '/run/media/arpit/DATA/backups'
+BACKUPFOLDER = '~/Music/Backups'
 APICALLRETRIES = 5
 tableFormat = 'pretty'
 SEE_FLAGS = False

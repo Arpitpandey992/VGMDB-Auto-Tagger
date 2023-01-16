@@ -7,11 +7,47 @@ from mutagen.flac import Picture as PictureFLAC, FLAC
 from mutagen.id3._frames import APIC, TALB, TDRC, TRCK, COMM, TXXX, TPOS, TIT2
 from mutagen.id3 import ID3
 
-from Utility.utilityFunctions import splitAndGetFirst, splitAndGetSecond
-
 """
 This is a wrapper around mutagen module. This basically allows us to call the same functions for any extension, and hence reducing code complexity.
 """
+
+
+def isString(var):
+    return isinstance(var, str)
+
+
+def splitAndGetFirst(discNumber):
+    # get the count of tracks -> checks if the input is something like 4/20 -> truncates to 4
+    # output is a string, input can be an integer, float, ...
+    if not isString(discNumber):
+        return str(discNumber)
+
+    if '/' in discNumber:
+        discNumber = discNumber.split('/')[0]
+    elif ':' in discNumber:
+        discNumber = discNumber.split(':')[0]
+
+    return discNumber
+
+
+def splitAndGetSecond(discNumber):
+    # get the count of tracks -> checks if the input is something like 4/20 -> truncates to 20
+    # output is a string, input can be an integer, float, ...
+    if not isString(discNumber):
+        return str(discNumber)
+
+    if '/' in discNumber:
+        discNumber = discNumber.split('/')
+        if len(discNumber) < 2:
+            return None
+        discNumber = discNumber[1]
+    elif ':' in discNumber:
+        discNumber = discNumber.split(':')
+        if len(discNumber) < 2:
+            return None
+        discNumber = discNumber[1]
+    return discNumber
+
 
 pictureNumberToName = {
     0: u'Other',
@@ -230,22 +266,24 @@ class Flac(IAudioManager):
         return getFirstElement(ans)
 
     def getDate(self):
-        ans = self.audio.get('date')
-        return getFirstElement(ans)
+        possibleFields = ['date', 'ORIGINALDATE', 'year', 'ORIGINALYEAR']
+        for field in possibleFields:
+            ans = getFirstElement(self.audio.get(field))
+            if ans:
+                return ans
+        return None
 
     def getCustomTag(self, key):
         ans = self.audio.get(key)
         return getFirstElement(ans)
 
     def getCatalog(self):
-        ans = self.getCustomTag('CATALOGNUMBER')
-        if ans:
-            return ans
-        ans = self.getCustomTag('CATALOG')
-        if ans:
-            return ans
-        ans = self.getCustomTag('LABELNO')
-        return ans
+        possibleFields = ['CATALOGNUMBER', 'CATALOG', 'LABELNO']
+        for field in possibleFields:
+            ans = self.getCustomTag(field)
+            if ans:
+                return ans
+        return None
 
     def save(self):
         self.audio.save()
@@ -352,14 +390,12 @@ class Mp3(IAudioManager):
         return None
 
     def getCatalog(self):
-        ans = self.getCustomTag('CATALOGNUMBER')
-        if ans:
-            return ans
-        ans = self.getCustomTag('CATALOG')
-        if ans:
-            return ans
-        ans = self.getCustomTag('LABELNO')
-        return ans
+        possibleFields = ['CATALOGNUMBER', 'CATALOG', 'LABELNO']
+        for field in possibleFields:
+            ans = self.getCustomTag(field)
+            if ans:
+                return ans
+        return None
 
     def save(self):
         self.audio.save()
@@ -380,3 +416,12 @@ class AudioFactory():
         }
         _, extension = os.path.splitext(filePath)
         return audioFileHandler[extension.lower()](filePath)
+
+
+# def testWrapper():
+#     filePath = "/home/arpit/Downloads/06 - Symphony No.9 In D Major 4.Adagio.flac"
+#     audio = AudioFactory.buildAudioManager(filePath)
+#     print(audio.getDate())
+
+
+# testWrapper()
