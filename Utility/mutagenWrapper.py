@@ -195,6 +195,7 @@ class Flac(IAudioManager):
 
     def setCatalog(self, value: str):
         self.setCustomTag('CATALOGNUMBER', value)
+        self.setCustomTag('CATALOG', value)
 
     def getTitle(self):
         ans = self.audio.get('title')
@@ -310,6 +311,7 @@ class Mp3(IAudioManager):
 
     def setCatalog(self, value: str):
         self.setCustomTag('CATALOGNUMBER', value)
+        self.setCustomTag('CATALOG', value)
 
     def getTitle(self):
         ans = self.audio.get('TIT2')

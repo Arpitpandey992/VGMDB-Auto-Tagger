@@ -245,12 +245,12 @@ def getSearchInput():
 
 
 def findAlbumID(folderPath, searchTerm, flags: Flags):
+    folderName = os.path.basename(folderPath)
+    print(f'Folder Name : {folderName}')
     if searchTerm is None:
         searchTerm = getSearchInput()
     if searchTerm is None:
         return None
-    folderName = os.path.basename(folderPath)
-    print(f'Folder Name : {folderName}')
     print(f'Searching for : {searchTerm}')
     print('\n', end='')
     data = searchAlbum(searchTerm)
@@ -309,7 +309,6 @@ def findAlbumID(folderPath, searchTerm, flags: Flags):
 
 
 def main():
-
     args, flags, folderPath = argumentParser()
 
     albumID = args.ID
@@ -318,7 +317,6 @@ def main():
         if searchTerm is None:
             searchTerm = cleanSearchTerm(getAlbumName(folderPath))
         albumID = findAlbumID(folderPath, searchTerm, flags)
-
     # if album-ID is still not found, script cannot do anything :(
 
     if albumID is not None:
