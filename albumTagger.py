@@ -259,17 +259,17 @@ def findAlbumID(folderPath, searchTerm, searchYear, flags: Flags):
         releaseDate = album['release_date']
         year = getYearFromDate(releaseDate)
         catalog = album['catalog']
-        albumData[serialNumber] = {
-            'Link': albumLink,
-            'Title': albumTitle,
-            'ID': albumID,
-            'Date': releaseDate,
-            'Year': year,
-            'Catalog': catalog
-        }
         if not searchYear or searchYear == year:
+            albumData[serialNumber] = {
+                'Link': albumLink,
+                'Title': albumTitle,
+                'ID': albumID,
+                'Date': releaseDate,
+                'Year': year,
+                'Catalog': catalog
+            }
             tableData.append((serialNumber, catalog, albumTitle, albumLink, year))
-        serialNumber += 1
+            serialNumber += 1
     if not tableData:
         return None
     print(tabulate(tableData,
