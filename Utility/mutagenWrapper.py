@@ -381,7 +381,12 @@ class Mp3(IAudioManager):
 
     def getDate(self):
         ans = self.audio.get('TDRC')
-        return getFirstElement(ans.text) if ans else None
+        if not ans or not ans.text:
+            return None
+        ans = getFirstElement(ans.text)
+        if not ans or not ans.text:
+            return None
+        return ans.text
 
     def getCustomTag(self, key):
         for frame in self.audio.getall("TXXX"):

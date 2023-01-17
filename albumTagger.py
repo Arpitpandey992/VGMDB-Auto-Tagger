@@ -32,6 +32,8 @@ def argumentParser():
                         help='Do not authenticate for downloading Scans')
     parser.add_argument('--yes', '-y', action='store_true',
                         help='Skip Yes prompt, and when only 1 album comes up in search results')
+    parser.add_argument('--no-input', dest='no_input', action='store_true',
+                        help='Go full auto mode, and only tag those albums where no user input is required!')
     parser.add_argument('--backup', '-b', action='store_true',
                         help='Backup the albums before modifying')
     parser.add_argument('--no-scans', dest='no_scans', action='store_true',
@@ -79,6 +81,8 @@ def argumentParser():
 
     if args.yes:
         flags.YES = True  # type: ignore
+    if args.no_input:
+        flags.NO_INPUT = True  # type: ignore
     if args.backup:
         flags.BACKUP = True  # type: ignore
     if args.rename_folder:
@@ -155,12 +159,12 @@ def tagAndRenameFiles(folderPath, albumID, flags: Flags):
 
     if not doTracksAlign(albumTrackData, folderTrackData):
         print('The tracks are not fully fitting the album data received from VGMDB!')
-        if not noYesUserInput():
+        if flags.NO_INPUT or not noYesUserInput():
             print('\n', end='')
             return False
     else:
         print('Tracks are perfectly aligning with the album data received from VGMDB!')
-        if not flags.YES and not yesNoUserInput():
+        if not flags.NO_INPUT and not flags.YES and not yesNoUserInput():
             print('\n', end='')
             return False
 
@@ -185,7 +189,7 @@ def tagAndRenameFiles(folderPath, albumID, flags: Flags):
         except Exception as e:
             print("Backup Couldn't Be Completed, but this probably means that this folder was already backed up, so it 'should' be safe ;)")
             print('error Message :', e)
-            if not flags.YES and not yesNoUserInput():
+            if not flags.NO_INPUT and not flags.YES and not yesNoUserInput():
                 return False
         print('\n', end='')
         print('\n', end='')
@@ -236,6 +240,8 @@ def getSearchInput():
 
 
 def findAlbumID(folderPath, searchTerm, searchYear, flags: Flags):
+    if flags.NO_INPUT and not searchTerm:
+        return None
     folderName = os.path.basename(folderPath)
     print(f'Folder Name : {folderName}')
     if searchTerm is None:
@@ -271,19 +277,21 @@ def findAlbumID(folderPath, searchTerm, searchYear, flags: Flags):
             tableData.append((serialNumber, catalog, albumTitle, albumLink, year))
             serialNumber += 1
     if not tableData:
-        return None
+        # if we are here then that means we are getting some results but none are in the year provided
+        return findAlbumID(folderPath, searchTerm, None, flags)
     print(tabulate(tableData,
                    headers=['S.No', 'Catalog', 'Title', 'Link', 'Year'],
                    maxcolwidths=52,
                    tablefmt=tableFormat,
                    colalign=('center', 'left', 'left', 'left', 'center')), end='\n\n')
 
-    if flags.YES and len(tableData) == 1:
+    if (flags.NO_INPUT or flags.YES) and len(tableData) == 1:
         print('Continuing with this album!', end='\n\n')
         choice = '1'
+    elif flags.NO_INPUT:
+        return None
     else:
-        print(
-            f'Write another search term (exit allowed) or Choose Album Serial Number (1-{len(tableData)}) : ', end='')
+        print(f'Write another search term (exit allowed) or Choose Album Serial Number (1-{len(tableData)}) : ', end='')
 
         choice = input()
         if choice.lower() == 'exit':

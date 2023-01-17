@@ -21,6 +21,7 @@ class Flags:
         self.TAG = True
         self.RENAME_FOLDER = True
         self.NO_AUTH = False
+        self.NO_INPUT = False
 
         # Metadata Flags
         self.PICS = True
