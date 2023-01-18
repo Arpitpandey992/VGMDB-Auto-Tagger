@@ -21,7 +21,7 @@ def argumentParser():
 
     parser.add_argument('folderPath', help='Album directory path (Required Argument)')
 
-    parser.add_argument('--ID', '-i', type=str, default=None,
+    parser.add_argument('--id', '-i', type=str, default=None,
                         help='Provide Album ID')
     parser.add_argument('--search', '-s', type=str, default=None,
                         help='Provide Custom Search Term')
@@ -41,7 +41,7 @@ def argumentParser():
     parser.add_argument('--no-pics', dest='no_pics', action='store_true',
                         help='Do not embed album cover into files')
     parser.add_argument('--pic-overwrite', dest='pic_overwrite', action='store_true',
-                        help='overwrite album cover')
+                        help='overwrite album cover within files')
 
     parser.add_argument('--rename-folder', dest='rename_folder', action='store_true',
                         help='Rename the containing folder')
