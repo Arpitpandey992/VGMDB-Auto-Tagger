@@ -308,7 +308,7 @@ def findAlbumID(folderPath, searchTerm, searchYear, flags: Flags):
 def main():
     args, flags, folderPath = argumentParser()
 
-    albumID = args.ID
+    albumID = args.id
     if albumID is None:
         searchTerm = args.search
         date = None

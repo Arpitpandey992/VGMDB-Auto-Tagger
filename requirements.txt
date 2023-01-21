@@ -3,3 +3,4 @@ mutagen
 Pillow
 requests
 tabulate
+musicbrainzngs
