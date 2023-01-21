@@ -46,6 +46,8 @@ def splitAndGetSecond(discNumber):
         if len(discNumber) < 2:
             return None
         discNumber = discNumber[1]
+    else:
+        return None
     return discNumber
 
 

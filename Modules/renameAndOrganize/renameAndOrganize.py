@@ -31,14 +31,13 @@ def renameFiles(folderPath):
             if discNumber is None:
                 print(f'DiscNumber not Present in file : {file} taking default value = 1')
                 discNumber = '1'
-                continue
 
             if totalTracks is None:
                 totalTracks = '99'
 
             if totalDiscs is None:
                 totalDiscs = '1'
-
+            print(trackNumber, totalTracks)
             trackNumber = getProperCount(trackNumber, totalTracks)
             discNumber = getProperCount(discNumber, totalDiscs)
             discTrackTuple = (int(discNumber), int(trackNumber))
