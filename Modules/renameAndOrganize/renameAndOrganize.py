@@ -72,9 +72,11 @@ def renameFolder(folderPath):
     if albumName is None:
         print(f'No Album Name in {filePath}, aborting')
         return
-    date = audio.getDate().replace('-', '.')
+    date = audio.getDate()
     if date is None:
         date = audio.getCustomTag('year')
+    else:
+        date = date.replace('-', '.')
     catalog = audio.getCatalog()
     newFolderName = albumName
     if catalog and date:
