@@ -58,6 +58,17 @@ def argumentParser():
     parser.add_argument('--no-modify', dest='no_modify', action='store_true',
                         help='Do not modify the files or folder in any way')
 
+    parser.add_argument('--single', action='store_true',
+                        help='enable this if there is only one track in the album')
+    parser.add_argument('--performers', action='store_true',
+                        help='tag performers in the files')
+    parser.add_argument('--arrangers', action='store_true',
+                        help='tag arrangers in the files')
+    parser.add_argument('--composers', action='store_true',
+                        help='tag composers in the files')
+    parser.add_argument('--lyricists', action='store_true',
+                        help='tag lyricists in the files')
+
     parser.add_argument('--japanese', '-ja', action='store_true',
                         help='Give Priority to Japanese')
     parser.add_argument('--english', '-en', action='store_true',
@@ -107,6 +118,15 @@ def argumentParser():
         flags.PIC_OVERWRITE = True  # type: ignore
     if args.no_auth:
         flags.NO_AUTH = True  # type: ignore
+
+    if args.single or args.performers:
+        flags.PERFORMERS = True  # type: ignore
+    if args.single or args.arrangers:
+        flags.ARRANGERS = True  # type: ignore
+    if args.single or args.lyricists:
+        flags.LYRICISTS = True  # type: ignore
+    if args.single or args.composers:
+        flags.COMPOSERS = True  # type: ignore
 
     if args.no_modify:
         flags.TAG = False  # type: ignore
