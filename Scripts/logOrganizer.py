@@ -33,7 +33,7 @@ def move_logs(dir):
 
 
 # prompt the user for the directory to search
-directory = "/run/media/arpit/DATA/OSTs/Visual Novels/Steins;Gate"
+directory = "/run/media/arpit/DATA/Downloads/Torrents/Dragon Ball Music Library"
 
 print("Started...")
 move_logs(directory)

@@ -21,7 +21,7 @@ def getOneAudioFile(folderPath):
     return None
 
 
-def getAlbumNameAndDate(folderPath: str):
+def getSearchTermAndDate(folderPath: str):
     filePath = getOneAudioFile(folderPath)
     if filePath is None:
         return None, None
@@ -29,6 +29,9 @@ def getAlbumNameAndDate(folderPath: str):
     audio = AudioFactory.buildAudioManager(filePath)
     albumName = audio.getAlbum()
     date = audio.getDate()
+    catalog = audio.getCatalog()
+    if catalog:
+        return catalog, date
     return albumName, date
 
 

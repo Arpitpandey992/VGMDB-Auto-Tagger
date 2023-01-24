@@ -11,7 +11,7 @@ from Utility.utilityFunctions import *
 from Modules.Tag.tagFiles import tagFiles
 from Modules.Rename.renameFiles import renameFiles
 from Modules.Rename.renameFolder import renameFolder
-from Utility.audioUtilityFunctions import getAlbumNameAndDate, getAlbumTrackData, getFolderTrackData, doTracksAlign, getYearFromDate
+from Utility.audioUtilityFunctions import getSearchTermAndDate, getAlbumTrackData, getFolderTrackData, doTracksAlign, getYearFromDate
 from Modules.vgmdbrip.vgmdbrip import getPictures, getPicturesTheOldWay
 
 
@@ -333,7 +333,7 @@ def main():
         searchTerm = args.search
         date = None
         if searchTerm is None:
-            albumName, date = getAlbumNameAndDate(folderPath)
+            albumName, date = getSearchTermAndDate(folderPath)
             if albumName is None:
                 print('Could not obtain album name from files in the directory, please provide custom search term!')
             searchTerm = cleanSearchTerm(albumName)
