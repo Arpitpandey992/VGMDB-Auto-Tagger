@@ -1,6 +1,6 @@
 import os
 import shutil
-
+import argparse
 
 extensions = ['.log', 'cue', '.m3u', '.txt', '.m3u8', '.mht', '.nfo', '.accurip', '.sfv', '.md5', '.url']
 
@@ -32,9 +32,14 @@ def move_logs(dir):
             shutil.move(file_path, logs_dir)
 
 
-# prompt the user for the directory to search
-directory = "/run/media/arpit/DATA/Downloads/Torrents/Dragon Ball Music Library"
+folderPath = '/run/media/arpit/DATA/Downloads/Music/Soulseek/dcfan89/[1997.12.09] Dragon Ball Z꞉ Original USA Television Soundtrack [STCD 601]'
+parser = argparse.ArgumentParser(description='Organize a music album folder using file tags!')
+parser.add_argument('folderPath', nargs='?', help='Album directory path (Required Argument)')
+
+args = parser.parse_args()
+if args.folderPath:
+    folderPath = args.folderPath
 
 print("Started...")
-move_logs(directory)
+move_logs(folderPath)
 print("Finished!")
