@@ -131,6 +131,10 @@ class IAudioManager(ABC):
         """ Set a custom tag as Key = value """
 
     @abstractmethod
+    def setDiscName(self, value: str):
+        """ Set The Name of The Disc """
+
+    @abstractmethod
     def getTitle(self) -> str:
         """ get the title of track """
 
@@ -168,7 +172,11 @@ class IAudioManager(ABC):
 
     @abstractmethod
     def getCatalog(self) -> str:
-        """ get a custom tag as Key = value """
+        """ get Catalog Value """
+
+    @abstractmethod
+    def getDiscName(self) -> str:
+        """ get the name of the disc """
 
     @abstractmethod
     def save(self):
@@ -235,6 +243,9 @@ class Flac(IAudioManager):
         self.setCustomTag('CATALOGNUMBER', value)
         self.setCustomTag('CATALOG', value)
 
+    def setDiscName(self, value: str):
+        self.setCustomTag('DISCSUBTITLE', value)
+
     def getTitle(self):
         ans = self.audio.get('title')
         return getFirstElement(ans)
@@ -281,6 +292,14 @@ class Flac(IAudioManager):
 
     def getCatalog(self):
         possibleFields = ['CATALOGNUMBER', 'CATALOG', 'LABELNO']
+        for field in possibleFields:
+            ans = self.getCustomTag(field)
+            if ans:
+                return ans
+        return None
+
+    def getDiscName(self):
+        possibleFields = ['DISCSUBTITLE', 'DISCNAME']
         for field in possibleFields:
             ans = self.getCustomTag(field)
             if ans:
@@ -353,6 +372,9 @@ class Mp3(IAudioManager):
         self.setCustomTag('CATALOGNUMBER', value)
         self.setCustomTag('CATALOG', value)
 
+    def setDiscName(self, value: str):
+        self.setCustomTag('DISCSUBTITLE', value)
+
     def getTitle(self):
         ans = self.audio.get('TIT2')
         return getFirstElement(ans.text) if ans else None
@@ -398,6 +420,14 @@ class Mp3(IAudioManager):
 
     def getCatalog(self):
         possibleFields = ['CATALOGNUMBER', 'CATALOG', 'LABELNO']
+        for field in possibleFields:
+            ans = self.getCustomTag(field)
+            if ans:
+                return ans
+        return None
+
+    def getDiscName(self):
+        possibleFields = ['DISCSUBTITLE', 'DISCNAME']
         for field in possibleFields:
             ans = self.getCustomTag(field)
             if ans:

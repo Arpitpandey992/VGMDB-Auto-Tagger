@@ -37,7 +37,6 @@ def renameFiles(folderPath):
 
             if totalDiscs is None:
                 totalDiscs = '1'
-            print(trackNumber, totalTracks)
             trackNumber = getProperCount(trackNumber, totalTracks)
             discNumber = getProperCount(discNumber, totalDiscs)
             discTrackTuple = (int(discNumber), int(trackNumber))
@@ -48,7 +47,13 @@ def renameFiles(folderPath):
 
             oldName = file
             newName = cleanName(f"{trackNumber} - {title}{extension}")
-            discFolderName = f'Disc {discNumber}'
+            discName = audio.getDiscName()
+
+            if discName:
+                discFolderName = f'Disc {discNumber} - {discName}'
+            else:
+                discFolderName = f'Disc {discNumber}'
+
             if int(totalDiscs) == 1:
                 # no need to make separate disc folders
                 discFolderName = ''
