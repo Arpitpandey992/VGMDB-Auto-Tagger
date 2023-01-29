@@ -7,8 +7,13 @@ from Utility.utilityFunctions import getProperCount, cleanName
 from Utility.audioUtilityFunctions import getOneAudioFile
 from Imports.flagsAndSettings import supportedExtensions
 
+"""
+Organize a single album contained in a single folder. 
+This will rename the files within the folder and appropriately rename the folder
+"""
 
-def renameFiles(folderPath):
+
+def renameAndOrganizeFiles(folderPath):
     used = set()
     for root, dirs, files in os.walk(folderPath):
         for file in sorted(files):

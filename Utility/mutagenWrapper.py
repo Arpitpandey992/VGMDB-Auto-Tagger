@@ -141,6 +141,10 @@ class IAudioManager(ABC):
     @abstractmethod
     def getAlbum(self) -> str:
         """ get the album name of the track """
+    
+    @abstractmethod
+    def getArtist(self) -> str:
+        """ get the album name of the track """
 
     @abstractmethod
     def getDiscNumber(self) -> str:
@@ -252,6 +256,9 @@ class Flac(IAudioManager):
 
     def getAlbum(self):
         ans = self.audio.get('album')
+
+    def getArtist(self):
+        ans = self.audio.get('artist')
         return getFirstElement(ans)
 
     def getDiscNumber(self):
@@ -382,6 +389,10 @@ class Mp3(IAudioManager):
     def getAlbum(self):
         ans = self.audio.get('TALB')
         return getFirstElement(ans.text) if ans else None
+    
+    def getArtist(self):
+        ans = self.audio.get('TPE1')
+        return getFirstElement(ans)
 
     def getDiscNumber(self):
         ans = self.audio.get('TPOS')
@@ -455,10 +466,7 @@ class AudioFactory():
         return audioFileHandler[extension.lower()](filePath)
 
 
-# def testWrapper():
-#     filePath = "/home/arpit/Downloads/06 - Symphony No.9 In D Major 4.Adagio.flac"
-#     audio = AudioFactory.buildAudioManager(filePath)
-#     print(audio.getDate())
-
-
-# testWrapper()
+if __name__ == '__main__':
+    filePath = ""
+    audio = AudioFactory.buildAudioManager(filePath)
+    print(audio.getDate())

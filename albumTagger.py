@@ -16,8 +16,7 @@ from Modules.vgmdbrip.vgmdbrip import getPictures, getPicturesTheOldWay
 
 
 def argumentParser():
-    parser = argparse.ArgumentParser(
-        description='Automatically Tag Music folders using data from VGMDB.net')
+    parser = argparse.ArgumentParser(description='Automatically Tag Music folders using data from VGMDB.net!')
 
     parser.add_argument('folderPath', help='Album directory path (Required Argument)')
 
