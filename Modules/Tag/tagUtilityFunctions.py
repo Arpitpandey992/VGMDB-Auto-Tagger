@@ -7,7 +7,9 @@ from Utility.utilityFunctions import getBest, getProperCount
 from Utility.mutagenWrapper import AudioFactory
 
 
-def standardizeDate(date: str) -> str:
+def standardizeDate(date) -> str:
+    if date is None:
+        return ""
     dateComponents = date.split('-')
     numberOfComponents = len(dateComponents)
 
