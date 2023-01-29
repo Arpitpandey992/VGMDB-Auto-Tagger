@@ -66,9 +66,16 @@ def renameAndOrganizeFiles(folderPath):
             if not os.path.exists(discFolderPath):
                 os.makedirs(discFolderPath)
             newFilePath = os.path.join(discFolderPath, newName)
-            os.rename(filePath, newFilePath)
-            print(f'Renamed {oldName} to {discFolderName}/{newName}')
-    print('\n', end='')
+            if oldName != newName:
+                try:
+                    if os.path.exists(newFilePath):
+                        print(f'{newFilePath} Exists, cannot rename {file}')
+                    else:
+                        os.rename(filePath, newFilePath)
+                        print(f'Renamed {oldName} to {discFolderName}/{newName}')
+                except Exception as e:
+                    print(f'Cannot rename {file}')
+                    print(e)
 
 
 def renameFolder(folderPath):
@@ -103,6 +110,14 @@ def renameFolder(folderPath):
 
     baseFolderPath = os.path.dirname(folderPath)
     newFolderPath = os.path.join(baseFolderPath, newFolderName)
-    os.rename(folderPath, newFolderPath)
-    print(f'Successfully Renamed {oldFolderName} to {newFolderName}')
+    if(oldFolderName != newFolderName):
+        os.rename(folderPath, newFolderPath)
+        print(f'Successfully Renamed {oldFolderName} to {newFolderName}')
+
+
+def organizeAlbum(folderPath):
+    print(f'Organizing Album : {os.path.basename(folderPath)}')
+    renameAndOrganizeFiles(folderPath)
+    renameFolder(folderPath)
+    print(f'{os.path.basename(folderPath)} Organized!')
     print('\n', end='')

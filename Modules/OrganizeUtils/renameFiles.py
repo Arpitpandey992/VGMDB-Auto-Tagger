@@ -48,7 +48,7 @@ def renameFiles(folderPath):
             try:
                 if os.path.exists(newFilePath):
                     print(f'{newFilePath} Exists, cannot rename {file}')
-                else:
+                elif oldName != newName:
                     os.rename(filePath, newFilePath)
                     print(f'Renamed {oldName} to {newName}')
             except Exception as e:

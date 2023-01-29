@@ -141,7 +141,7 @@ class IAudioManager(ABC):
     @abstractmethod
     def getAlbum(self) -> str:
         """ get the album name of the track """
-    
+
     @abstractmethod
     def getArtist(self) -> str:
         """ get the album name of the track """
@@ -256,6 +256,7 @@ class Flac(IAudioManager):
 
     def getAlbum(self):
         ans = self.audio.get('album')
+        return getFirstElement(ans)
 
     def getArtist(self):
         ans = self.audio.get('artist')
@@ -389,7 +390,7 @@ class Mp3(IAudioManager):
     def getAlbum(self):
         ans = self.audio.get('TALB')
         return getFirstElement(ans.text) if ans else None
-    
+
     def getArtist(self):
         ans = self.audio.get('TPE1')
         return getFirstElement(ans)
