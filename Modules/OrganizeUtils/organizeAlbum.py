@@ -67,7 +67,7 @@ def renameAndOrganizeFiles(folderPath):
             if not os.path.exists(discFolderPath):
                 os.makedirs(discFolderPath)
             newFilePath = os.path.join(discFolderPath, newName)
-            if oldName != newName:
+            if filePath != newFilePath:
                 try:
                     if os.path.exists(newFilePath):
                         print(f'{newFilePath} Exists, cannot rename {file}')
