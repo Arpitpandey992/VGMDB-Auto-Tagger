@@ -50,10 +50,11 @@ During picture grabbing stage, it is required to give username and password, sin
 
 ## Progress and Future Plans
 - [X] Making the program more fail-safe and "trustable".
-- [X] Adding full support for FLAC.
-- [X] Adding full support for MP3.
-- [ ] Adding full support for M4A.
-- [ ] Adding full support for AAC.
+- [X] Adding support for FLAC.
+- [X] Adding support for MP3.
+- [ ] Adding support for M4A.
+- [ ] Adding support for AAC.
+- [ ] Adding support for OGG.
 - [ ] Integrating some other API (Like Musicbrainz) to get tags such as `artist`, `album artist`, etc.
 - [ ] Adding a User Interface for easily using the script.
 - [ ] Script for easily managing albums that were tagged once, by fetching data in a fully automatic fashion.
