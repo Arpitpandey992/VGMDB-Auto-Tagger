@@ -1,6 +1,6 @@
 BACKUPFOLDER = '~/Music/Backups'
 APICALLRETRIES = 5
-tableFormat = 'simple'
+tableFormat = 'pretty'
 SEE_FLAGS = False
 
 supportedExtensions = ['.flac', '.mp3']

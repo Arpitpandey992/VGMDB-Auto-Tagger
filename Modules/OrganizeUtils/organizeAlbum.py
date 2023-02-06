@@ -110,7 +110,7 @@ def renameFolder(folderPath):
 
     baseFolderPath = os.path.dirname(folderPath)
     newFolderPath = os.path.join(baseFolderPath, newFolderName)
-    if(oldFolderName != newFolderName):
+    if (oldFolderName != newFolderName):
         os.rename(folderPath, newFolderPath)
         print(f'Successfully Renamed {oldFolderName} to {newFolderName}')
 
