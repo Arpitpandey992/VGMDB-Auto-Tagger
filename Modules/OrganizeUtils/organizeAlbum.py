@@ -1,5 +1,3 @@
-import math
-import shutil
 import os
 
 from Utility.mutagenWrapper import AudioFactory
@@ -79,16 +77,19 @@ def renameAndOrganizeFiles(folderPath):
                     print(e)
 
 
-def renameFolder(folderPath):
+def renameFolder(folderPath, sameFolderName: bool = False):
     filePath = getOneAudioFile(folderPath)
     if filePath is None:
         print('No Audio file in directory!, aborting')
         return
     audio = AudioFactory.buildAudioManager(filePath)
-    albumName = audio.getAlbum()
-    if albumName is None:
-        print(f'No Album Name in {filePath}, aborting')
-        return
+    if sameFolderName:
+        albumName = os.path.basename(folderPath)
+    else:
+        albumName = audio.getAlbum()
+        if albumName is None:
+            print(f'No Album Name in {filePath}, aborting')
+            return
     date = standardizeDate(audio.getDate())
     if date == "":
         date = standardizeDate(audio.getCustomTag('year'))
@@ -105,8 +106,8 @@ def renameFolder(folderPath):
     else:
         newFolderName = f'{albumName}'
 
-    newFolderName = cleanName(newFolderName)
     oldFolderName = os.path.basename(folderPath)
+    newFolderName = cleanName(newFolderName)
 
     baseFolderPath = os.path.dirname(folderPath)
     newFolderPath = os.path.join(baseFolderPath, newFolderName)
@@ -115,9 +116,9 @@ def renameFolder(folderPath):
         print(f'Successfully Renamed {oldFolderName} to {newFolderName}')
 
 
-def organizeAlbum(folderPath):
+def organizeAlbum(folderPath, sameFolderName: bool = False):
     print(f'Organizing Album : {os.path.basename(folderPath)}')
     renameAndOrganizeFiles(folderPath)
-    renameFolder(folderPath)
+    renameFolder(folderPath, sameFolderName)
     print(f'{os.path.basename(folderPath)} Organized!')
     print('\n', end='')

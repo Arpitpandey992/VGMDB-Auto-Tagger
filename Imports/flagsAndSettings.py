@@ -3,7 +3,7 @@ APICALLRETRIES = 5
 tableFormat = 'pretty'
 SEE_FLAGS = False
 
-supportedExtensions = ['.flac', '.mp3']
+supportedExtensions = ['.flac', '.mp3', '.ogg']
 languages = {
     'romaji': ['ja-latn', 'Romaji'],
     'english': ['en', 'English', 'English (Apple Music)', 'English/German', 'English localized', 'English (alternate)', 'English Translated', 'English [Translation]'],

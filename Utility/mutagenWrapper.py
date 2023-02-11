@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import os
 
 from mutagen.flac import Picture as PictureFLAC, FLAC
+from mutagen.oggvorbis import OggVorbis
 from mutagen.id3._frames import APIC, TALB, TDRC, TRCK, COMM, TXXX, TPOS, TIT2
 from mutagen.id3 import ID3
 
@@ -195,9 +196,9 @@ class IAudioManager(ABC):
         """ Add multiple values to a particular tag """
 
 
-class Flac(IAudioManager):
-    def __init__(self, filePath):
-        self.audio = FLAC(filePath)
+class Vorbis(IAudioManager):
+    def __init__(self, mutagen_object):
+        self.audio = mutagen_object
 
     def setTitle(self, newTitle):
         self.audio['title'] = newTitle
@@ -324,9 +325,9 @@ class Flac(IAudioManager):
         self.audio[key] = listOfValues
 
 
-class Mp3(IAudioManager):
-    def __init__(self, filePath):
-        self.audio = ID3(filePath)
+class ID_3(IAudioManager):
+    def __init__(self, mutagen_object):
+        self.audio = mutagen_object
 
     def setTitle(self, newTitle):
         self.audio.add(TIT2(encoding=3, text=[newTitle]))
@@ -460,14 +461,17 @@ class AudioFactory():
     @staticmethod
     def buildAudioManager(filePath) -> IAudioManager:
         audioFileHandler = {
-            '.flac': Flac,
-            '.mp3': Mp3,
+            '.flac': [Vorbis, FLAC],
+            '.mp3': [ID_3, ID3],
+            '.ogg': [Vorbis, OggVorbis],
         }
         _, extension = os.path.splitext(filePath)
-        return audioFileHandler[extension.lower()](filePath)
+        codec = audioFileHandler[extension.lower()][0]
+        handler = audioFileHandler[extension.lower()][1]
+        return codec(handler(filePath))
 
 
 if __name__ == '__main__':
-    filePath = ""
+    filePath = "/run/media/arpit/DATA/Music/Anime/Mo Dao Zu Shi (Grandmaster of Demonic Cultivation) (魔道祖师)/Original Soundtrack [Spotify-320Kbps OGG]/01 - Various Artists - 醉梦前尘.ogg"
     audio = AudioFactory.buildAudioManager(filePath)
     print(audio.getDate())
