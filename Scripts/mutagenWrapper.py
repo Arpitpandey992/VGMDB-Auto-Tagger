@@ -198,8 +198,7 @@ class IAudioManager(ABC):
 
 
 class Vorbis(IAudioManager):
-    def __init__(self, mutagen_object, extension):
-        self.extension = extension.lower()
+    def __init__(self, mutagen_object):
         self.audio = mutagen_object
 
     def setTitle(self, newTitle):
@@ -222,33 +221,23 @@ class Vorbis(IAudioManager):
         self.audio['comment'] = comment
 
     def setPictureOfType(self, imageData, pictureType):
-        import base64
         picture = PictureFLAC()
         picture.data = imageData
         picture.type = pictureType
         picture.mime = 'image/jpeg'
         picture.desc = pictureNumberToName[pictureType]
-        if 'flac' in self.extension:
-            self.audio.add_picture(picture)
-        elif 'ogg' in self.extension:
-            self.audio["metadata_block_picture"] = base64.b64encode(picture.write()).decode("ascii")
+        self.audio.add_picture(picture)
 
     def hasPictureOfType(self, pictureType):
-        if 'ogg' in self.extension and "metadata_block_picture" in self.audio:
-            return True
-        elif 'flac' in self.extension:
-            for picture in self.audio.pictures:
-                if picture.type == pictureType:
-                    return True
+        for picture in self.audio.pictures:
+            if picture.type == pictureType:
+                return True
         return False
 
     def deletePictureOfType(self, pictureType):
         # This will remove all pictures sadly,
         # i couldn't find any proper method to remove only one picture
-        if 'flac' in self.extension:
-            self.audio.clear_pictures()
-        elif 'ogg' in self.extension and "metadata_block_picture" in self.audio:
-            self.audio.pop("metadata_block_picture")
+        self.audio.clear_pictures()
 
     def setDate(self, date):
         self.audio['date'] = date
@@ -338,9 +327,8 @@ class Vorbis(IAudioManager):
 
 
 class ID_3(IAudioManager):
-    def __init__(self, mutagen_object, extension):
+    def __init__(self, mutagen_object):
         self.audio = mutagen_object
-        self.extension = extension.lower()
 
     def setTitle(self, newTitle):
         self.audio.add(TIT2(encoding=3, text=[newTitle]))
@@ -481,7 +469,7 @@ class AudioFactory():
         _, extension = os.path.splitext(filePath)
         codec = audioFileHandler[extension.lower()][0]
         handler = audioFileHandler[extension.lower()][1]
-        return codec(handler(filePath), extension)
+        return codec(handler(filePath))
 
 
 if __name__ == '__main__':

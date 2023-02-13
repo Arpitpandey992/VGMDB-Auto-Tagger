@@ -2,10 +2,9 @@ import math
 import shutil
 import os
 
-from Utility.mutagenWrapper import AudioFactory
+from Utility.mutagenWrapper import AudioFactory, supportedExtensions
 from Utility.utilityFunctions import getProperCount, cleanName
 from Utility.audioUtilityFunctions import getOneAudioFile
-from Imports.flagsAndSettings import supportedExtensions
 
 """
 Rename all files recursively or iteratively in a directory.

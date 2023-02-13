@@ -1,9 +1,8 @@
 import os
 
-from Utility.mutagenWrapper import AudioFactory
+from Utility.mutagenWrapper import AudioFactory, supportedExtensions
 from Utility.utilityFunctions import getProperCount, cleanName
 from Utility.audioUtilityFunctions import getOneAudioFile
-from Imports.flagsAndSettings import supportedExtensions
 from Modules.Tag.tagUtilityFunctions import standardizeDate
 
 """

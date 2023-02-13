@@ -2,7 +2,7 @@ from Imports.flagsAndSettings import *
 import os
 from tabulate import tabulate
 
-from Utility.mutagenWrapper import AudioFactory
+from Utility.mutagenWrapper import AudioFactory, supportedExtensions
 from Utility.utilityFunctions import getBest, splitAndGetFirst
 
 

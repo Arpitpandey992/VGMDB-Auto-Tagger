@@ -3,9 +3,10 @@ import math
 from PIL import Image
 from tabulate import tabulate
 
-from Imports.flagsAndSettings import Flags, supportedExtensions, tableFormat
+from Imports.flagsAndSettings import Flags, tableFormat
 from Utility.utilityFunctions import getBest
 from Modules.Tag.tagUtilityFunctions import tagAudioFile
+from Utility.mutagenWrapper import supportedExtensions
 
 
 def tagFiles(albumTrackData, folderTrackData, data):
