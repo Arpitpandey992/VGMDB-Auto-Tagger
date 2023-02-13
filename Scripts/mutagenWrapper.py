@@ -149,6 +149,10 @@ class IAudioManager(ABC):
         """ get the album name of the track """
 
     @abstractmethod
+    def getAlbumArtist(self) -> str:
+        """ get the album Artist name of the track """
+
+    @abstractmethod
     def getDiscNumber(self) -> str:
         """ get disc number and total number of discs """
 
@@ -198,7 +202,8 @@ class IAudioManager(ABC):
 
 
 class Vorbis(IAudioManager):
-    def __init__(self, mutagen_object):
+    def __init__(self, mutagen_object, extension):
+        self.extension = extension.lower()
         self.audio = mutagen_object
 
     def setTitle(self, newTitle):
@@ -221,23 +226,33 @@ class Vorbis(IAudioManager):
         self.audio['comment'] = comment
 
     def setPictureOfType(self, imageData, pictureType):
+        import base64
         picture = PictureFLAC()
         picture.data = imageData
         picture.type = pictureType
         picture.mime = 'image/jpeg'
         picture.desc = pictureNumberToName[pictureType]
-        self.audio.add_picture(picture)
+        if 'flac' in self.extension:
+            self.audio.add_picture(picture)
+        elif 'ogg' in self.extension:
+            self.audio["metadata_block_picture"] = base64.b64encode(picture.write()).decode("ascii")
 
     def hasPictureOfType(self, pictureType):
-        for picture in self.audio.pictures:
-            if picture.type == pictureType:
-                return True
+        if 'ogg' in self.extension and "metadata_block_picture" in self.audio:
+            return True
+        elif 'flac' in self.extension:
+            for picture in self.audio.pictures:
+                if picture.type == pictureType:
+                    return True
         return False
 
     def deletePictureOfType(self, pictureType):
         # This will remove all pictures sadly,
         # i couldn't find any proper method to remove only one picture
-        self.audio.clear_pictures()
+        if 'flac' in self.extension:
+            self.audio.clear_pictures()
+        elif 'ogg' in self.extension and "metadata_block_picture" in self.audio:
+            self.audio.pop("metadata_block_picture")
 
     def setDate(self, date):
         self.audio['date'] = date
@@ -262,6 +277,10 @@ class Vorbis(IAudioManager):
 
     def getArtist(self):
         ans = self.audio.get('artist')
+        return getFirstElement(ans)
+
+    def getAlbumArtist(self):
+        ans = self.audio.get('albumartist')
         return getFirstElement(ans)
 
     def getDiscNumber(self):
@@ -327,8 +346,9 @@ class Vorbis(IAudioManager):
 
 
 class ID_3(IAudioManager):
-    def __init__(self, mutagen_object):
+    def __init__(self, mutagen_object, extension):
         self.audio = mutagen_object
+        self.extension = extension.lower()
 
     def setTitle(self, newTitle):
         self.audio.add(TIT2(encoding=3, text=[newTitle]))
@@ -396,6 +416,10 @@ class ID_3(IAudioManager):
     def getArtist(self):
         ans = self.audio.get('TPE1')
         return getFirstElement(ans)
+
+    def getAlbumArtist(self):
+        ans = self.audio.get('TPE2')
+        return getFirstElement(ans.text) if ans else None
 
     def getDiscNumber(self):
         ans = self.audio.get('TPOS')
@@ -469,7 +493,7 @@ class AudioFactory():
         _, extension = os.path.splitext(filePath)
         codec = audioFileHandler[extension.lower()][0]
         handler = audioFileHandler[extension.lower()][1]
-        return codec(handler(filePath))
+        return codec(handler(filePath), extension)
 
 
 if __name__ == '__main__':

@@ -149,6 +149,10 @@ class IAudioManager(ABC):
         """ get the album name of the track """
 
     @abstractmethod
+    def getAlbumArtist(self) -> str:
+        """ get the album Artist name of the track """
+
+    @abstractmethod
     def getDiscNumber(self) -> str:
         """ get disc number and total number of discs """
 
@@ -273,6 +277,10 @@ class Vorbis(IAudioManager):
 
     def getArtist(self):
         ans = self.audio.get('artist')
+        return getFirstElement(ans)
+
+    def getAlbumArtist(self):
+        ans = self.audio.get('albumartist')
         return getFirstElement(ans)
 
     def getDiscNumber(self):
@@ -408,6 +416,10 @@ class ID_3(IAudioManager):
     def getArtist(self):
         ans = self.audio.get('TPE1')
         return getFirstElement(ans)
+
+    def getAlbumArtist(self):
+        ans = self.audio.get('TPE2')
+        return getFirstElement(ans.text) if ans else None
 
     def getDiscNumber(self):
         ans = self.audio.get('TPOS')

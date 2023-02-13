@@ -44,6 +44,9 @@ for file in os.listdir(folderPath):
     audio = AudioFactory.buildAudioManager(filePath)
     title = audio.getTitle()
     artist = audio.getArtist()
+    albumArtist = audio.getAlbumArtist()
+    if albumArtist:
+        artist = albumArtist
     if (title and artist):
         newName = f"{artist} - {title}{ext}"
     elif title:
