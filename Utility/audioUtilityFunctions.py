@@ -90,7 +90,7 @@ def doTracksAlign(albumTrackData, folderTrackData, flags: Flags):
     for discNumber, tracks in albumTrackData.items():
         for trackNumber, trackTitle in tracks.items():
             if discNumber not in folderTrackData or trackNumber not in folderTrackData[discNumber]:
-                tableData.append((discNumber, trackNumber, trackTitle, ''))
+                tableData.append((discNumber, trackNumber, getBest(trackTitle, flags.languageOrder), ''))
                 flag = False
             else:
                 tableData.append((discNumber, trackNumber, getBest(trackTitle, flags.languageOrder), os.path.basename(
