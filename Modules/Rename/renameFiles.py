@@ -1,12 +1,13 @@
 import shutil
 import os
 
-from Imports.flagsAndSettings import tableFormat
-from Utility.utilityFunctions import getProperCount, cleanName
+from Imports.flagsAndSettings import tableFormat, Flags
+from Utility.utilityFunctions import getProperCount, cleanName, getBest
 from tabulate import tabulate
 
+
 def renameFiles(albumTrackData, folderTrackData, data):
-    # flags: Flags = data['flags']
+    flags: Flags = data['flags']
 
     totalTracks = 0
     for disc in albumTrackData:
@@ -40,7 +41,7 @@ def renameFiles(albumTrackData, folderTrackData, data):
                 tableData.append(
                     (discNumber, trackNumber, fileName, '**NO CHANGE**'))
                 continue
-            newName = cleanName(albumTrackData[discNumber][trackNumber])
+            newName = cleanName(getBest(albumTrackData[discNumber][trackNumber], flags.languageOrder))
             # File Names
             finalNewName = f'{properTrackNumber} - {newName}{extension}'
             newPath = os.path.join(discFolderPath, finalNewName)

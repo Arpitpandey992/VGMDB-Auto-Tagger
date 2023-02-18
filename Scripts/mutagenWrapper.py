@@ -83,7 +83,7 @@ def getFirstElement(listVariable):
 
 class IAudioManager(ABC):
     @abstractmethod
-    def setTitle(self, newTitle: str):
+    def setTitle(self, newTitle: str | list[str]):
         """ Set the title of track """
 
     @abstractmethod

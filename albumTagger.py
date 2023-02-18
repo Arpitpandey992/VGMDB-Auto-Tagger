@@ -176,7 +176,7 @@ def tagAndRenameFiles(folderPath, albumID, flags: Flags):
     print('\n', end='')
     print('\n', end='')
 
-    if not doTracksAlign(albumTrackData, folderTrackData):
+    if not doTracksAlign(albumTrackData, folderTrackData, flags):
         print('The tracks are not fully fitting the album data received from VGMDB!')
         if flags.NO_INPUT or not noYesUserInput():
             print('\n', end='')
@@ -251,7 +251,7 @@ def tagAndRenameFiles(folderPath, albumID, flags: Flags):
 def getSearchInput():
     print("Enter 'exit' to exit or give a new search term : ", end='')
     answer = input()
-    if(answer.lower() == 'exit'):
+    if (answer.lower() == 'exit'):
         print('\n', end='')
         return None
     print('\n', end='')

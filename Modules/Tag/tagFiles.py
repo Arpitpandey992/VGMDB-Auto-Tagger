@@ -15,6 +15,7 @@ def tagFiles(albumTrackData, folderTrackData, data):
         'totalDiscs': len(albumTrackData),
         # 'discsUpperBound': int(math.ceil(math.log10(len(albumTrackData)+1))),
         'albumName': getBest(data['names'], flags.languageOrder),
+        'albumNames': data['names'],
         'folderPath': data['folderPath'],
         'albumID': data['albumID'],
     }
@@ -23,10 +24,8 @@ def tagFiles(albumTrackData, folderTrackData, data):
     for albumData['discNumber'], tracks in albumTrackData.items():
 
         albumData['totalTracks'] = len(tracks)
-        # albumData['tracksUpperBound'] = int(
-        #     math.ceil(math.log10(len(tracks)+1)))
 
-        for albumData['trackNumber'], albumData['trackTitle'] in tracks.items():
+        for albumData['trackNumber'], albumData['trackTitles'] in tracks.items():
             if albumData['discNumber'] not in folderTrackData or albumData['trackNumber'] not in folderTrackData[albumData['discNumber']]:
                 continue
 
@@ -47,7 +46,7 @@ def tagFiles(albumTrackData, folderTrackData, data):
 
             if audioTagged:
                 print(f"Tagged : {albumData['fileName']}")
-                tableData.append((albumData['discNumber'], albumData['trackNumber'], albumData['trackTitle'], albumData['fileName']))
+                tableData.append((albumData['discNumber'], albumData['trackNumber'], getBest(albumData['trackTitles'], flags.languageOrder), albumData['fileName']))
             else:
                 print(f"Couldn't tag : {albumData['fileName']}")
                 tableData.append(

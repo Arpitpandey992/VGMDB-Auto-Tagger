@@ -83,24 +83,24 @@ def getFirstElement(listVariable):
 
 class IAudioManager(ABC):
     @abstractmethod
-    def setTitle(self, newTitle: str):
+    def setTitle(self, newTitle: list[str]):
         """ Set the title of track """
 
     @abstractmethod
-    def setAlbum(self, newAlbum: str):
+    def setAlbum(self, newAlbum: list[str]):
         """ Set the album name of the track """
 
     @abstractmethod
     def setDiscNumbers(self, discNumber: str, totalDiscs: str):
-        """ 
+        """
         set disc number and total number of discs
         The arguments are supposed to be a string here
         """
 
     @abstractmethod
     def setTrackNumbers(self, trackNumber: str, totalTracks: str):
-        """ 
-        Set Track number and total number of tracks 
+        """
+        Set Track number and total number of tracks
         The arguments are supposed to be a string here
         """
 
@@ -351,10 +351,16 @@ class ID_3(IAudioManager):
         self.extension = extension.lower()
 
     def setTitle(self, newTitle):
-        self.audio.add(TIT2(encoding=3, text=[newTitle]))
+        self.audio.add(TIT2(encoding=3, text=[newTitle[0]]))
+        if len(newTitle) > 1:
+            # Multiple titles are not supported in ID3 -> add other titles as custom tag!
+            self.addMultipleValues("Alternate Title", newTitle[1:])
 
     def setAlbum(self, newAlbum):
-        self.audio.add(TALB(encoding=3, text=[newAlbum]))
+        self.audio.add(TALB(encoding=3, text=[newAlbum[0]]))
+        if len(newAlbum) > 1:
+            # Multiple titles are not supported in ID3 -> add other titles as custom tag!
+            self.addMultipleValues("Alternate Album Name", newAlbum[1:])
 
     def setDiscNumbers(self, discNumber, totalDiscs):
         self.audio.add(TPOS(
@@ -478,7 +484,7 @@ class ID_3(IAudioManager):
     def getInformation(self):
         return self.audio.pprint()
 
-    def addMultipleValues(self, key: str, listOfValues: list):
+    def addMultipleValues(self, key: str, listOfValues: list[str]):
         self.audio.add(TXXX(encoding=3, desc=key, text=listOfValues))
 
 

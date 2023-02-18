@@ -31,6 +31,7 @@ class Flags:
         self.CATALOG = True
         self.BARCODE = True
         self.TITLE = True
+        self.ALL_LANG = True
 
         self.ORGANIZATIONS = True
         # these tags are supposed to be track specific, but in VGMDB, they are provided for entire album,

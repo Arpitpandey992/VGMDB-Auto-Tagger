@@ -42,7 +42,7 @@ def getAlbumTrackData(data, languageOrder):
         trackData[discNumber] = {}
         trackNumber = 1
         for track in disc['tracks']:
-            trackData[discNumber][trackNumber] = getBest(track['names'], languageOrder)
+            trackData[discNumber][trackNumber] = track['names']
             trackNumber += 1
         discNumber += 1
     return trackData
@@ -84,7 +84,7 @@ def getFolderTrackData(folderPath):
     return folderTrackData
 
 
-def doTracksAlign(albumTrackData, folderTrackData):
+def doTracksAlign(albumTrackData, folderTrackData, flags: Flags):
     flag = True
     tableData = []
     for discNumber, tracks in albumTrackData.items():
@@ -93,7 +93,7 @@ def doTracksAlign(albumTrackData, folderTrackData):
                 tableData.append((discNumber, trackNumber, trackTitle, ''))
                 flag = False
             else:
-                tableData.append((discNumber, trackNumber, trackTitle, os.path.basename(
+                tableData.append((discNumber, trackNumber, getBest(trackTitle, flags.languageOrder), os.path.basename(
                     folderTrackData[discNumber][trackNumber])))
 
     for discNumber, tracks in folderTrackData.items():
