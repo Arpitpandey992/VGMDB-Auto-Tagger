@@ -1,42 +1,20 @@
-import re
 import os
-import argparse
+from mutagen.flac import FLAC
 
-folderPath = "/run/media/arpit/DATA/Downloads/Torrents/Key Sounds Label/[KSLA-B]/[2001.08.10] Natukage ／ nostalgia [KSLA-0002] [CD-FLAC]"
-parser = argparse.ArgumentParser(
-    description='Custom task')
+# Define the input and output directories
+input_dir = "/run/media/arpit/DATA/Music/Visual Novels/Key Sounds Label/Extra/HEAVEN BURNS RED (1)/New Folder"
+output_dir = "/run/media/arpit/DATA/Music/Visual Novels/Key Sounds Label/Extra/HEAVEN BURNS RED (1)/New Folder/art"
 
-parser.add_argument('folderPath', nargs='?', help='Album directory path')
-args = parser.parse_args()
-if args.folderPath:
-    folderPath = args.folderPath
-while folderPath[-1] == '/':
-    folderPath = folderPath[:-1]
-
-
-def rename_folder(folder_path):
-    # Extract the date, catalog, and quality from the original folder name
-    folder_name = os.path.basename(folder_path)
-    match = re.search(
-        r'^\[(\d{4}.\d{2}.\d{2})\] (.*) \[(.*)\] \[(.*)\]$', folder_name)
-    if not match:
-        print(f'{folder_name} does not match the expected pattern')
-        return
-
-    date = match.group(1)
-    folder_name = match.group(2)
-    catalog = match.group(3)
-    quality = match.group(4)
-
-    # Construct the new folder name
-    new_folder_name = f'[{catalog}] {folder_name} [{date}] [{quality}]'
-
-    # Rename the folder
-    new_folder_path = os.path.join(
-        os.path.dirname(folder_path), new_folder_name)
-    os.rename(folder_path, new_folder_path)
-    print(f'renamed {os.path.basename(folder_path)} to {new_folder_name}')
-
-
-# Test the function
-rename_folder(folderPath)
+# Loop over all files in the input directory
+for file_name in os.listdir(input_dir):
+    # Check if the file is a FLAC file
+    if file_name.endswith(".flac"):
+        # Load the FLAC file and get the album art
+        file_path = os.path.join(input_dir, file_name)
+        flac_file = FLAC(file_path)
+        artwork = flac_file.pictures[0].data if flac_file.pictures else None
+        # Save the album art to a file with the same name as the FLAC file
+        if artwork:
+            output_path = os.path.join(output_dir, file_name.replace(".flac", ".jpg"))
+            with open(output_path, "wb") as f:
+                f.write(artwork)

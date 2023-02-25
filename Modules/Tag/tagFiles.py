@@ -32,7 +32,7 @@ def tagFiles(albumTrackData, folderTrackData, data):
             albumData['filePath'] = folderTrackData[albumData['discNumber']
                                                     ][albumData['trackNumber']]
             albumData['fileName'] = os.path.basename(albumData['filePath'])
-            filePathWithoutExtension, albumData['extension'] = os.path.splitext(albumData['fileName'])
+            albumData['fileNameWithoutExtension'], albumData['extension'] = os.path.splitext(albumData['fileName'])
             albumData['extension'] = albumData['extension'].lower()
 
             if albumData['extension'] not in supportedExtensions:

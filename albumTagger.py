@@ -27,6 +27,8 @@ def argumentParser():
 
     parser.add_argument('--no-title', dest='no_title', action='store_true',
                         help='Do not change the title of tracks')
+    parser.add_argument('--keep-title', dest='keep_title', action='store_true',
+                        help='keep the current title as well, and add other available titles')
     parser.add_argument('--no-auth', dest='no_auth', action='store_true',
                         help='Do not authenticate for downloading Scans')
     parser.add_argument('--yes', '-y', action='store_true',
@@ -56,6 +58,10 @@ def argumentParser():
                         help='Do not tag the files')
     parser.add_argument('--no-modify', dest='no_modify', action='store_true',
                         help='Do not modify the files or folder in any way')
+    parser.add_argument('--one-lang', dest='one_lang', action='store_true',
+                        help='Only keep the best names')
+    parser.add_argument('--translate', dest='translate', action='store_true',
+                        help='Translate all text to english')
 
     parser.add_argument('--single', action='store_true',
                         help='enable this if there is only one track in the album')
@@ -109,6 +115,16 @@ def argumentParser():
         flags.TAG = False  # type: ignore
     if args.no_title:
         flags.TITLE = False  # type: ignore
+    if args.keep_title:
+        flags.KEEP_TITLE = True  # type: ignore
+    if args.one_lang:
+        flags.ALL_LANG = False  # type: ignore
+    if args.translate:
+        flags.TRANSLATE = True  # type: ignore
+        # When translating, it is better not to keep multiple names (keeping the original name as it is assumed to not be in english)
+        flags.ALL_LANG = False  # type: ignore
+        flags.KEEP_TITLE = True  # type: ignore
+
     if args.no_scans:
         flags.SCANS = False  # type: ignore
     if args.no_pics:
@@ -170,7 +186,7 @@ def tagAndRenameFiles(folderPath, albumID, flags: Flags):
             return False
         print('\n', end='')
 
-    albumTrackData = getAlbumTrackData(data, flags.languageOrder)
+    albumTrackData = getAlbumTrackData(data)
     folderTrackData = getFolderTrackData(folderPath)
     print('Done getting TrackData')
     print('\n', end='')

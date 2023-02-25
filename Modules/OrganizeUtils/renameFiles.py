@@ -40,7 +40,7 @@ def renameFiles(folderPath):
                 3: f"{title}{extension}",
             }
             # Change the naming template here :
-            nameChoice = 3
+            nameChoice = 1
             newName = cleanName(names[nameChoice])
 
             newFilePath = os.path.join(root, newName)

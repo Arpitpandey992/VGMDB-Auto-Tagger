@@ -4,6 +4,7 @@ from tabulate import tabulate
 
 from Utility.mutagenWrapper import AudioFactory, supportedExtensions
 from Utility.utilityFunctions import getBest, splitAndGetFirst
+from Utility.translate import translate
 
 
 def getYearFromDate(date):
@@ -35,14 +36,20 @@ def getSearchTermAndDate(folderPath: str):
     return albumName, date
 
 
-def getAlbumTrackData(data, languageOrder):
+def getAlbumTrackData(data):
+    flags: Flags = data['flags']
     trackData = {}
     discNumber = 1
     for disc in data['discs']:
         trackData[discNumber] = {}
         trackNumber = 1
         for track in disc['tracks']:
-            trackData[discNumber][trackNumber] = track['names']
+            names = track['names']
+            # This is pretty dangerous, Do not translate unless absolutely sure
+            if flags.TRANSLATE:
+                for lang, trackName in names.items():
+                    names[lang] = translate(trackName)
+            trackData[discNumber][trackNumber] = names
             trackNumber += 1
         discNumber += 1
     return trackData
@@ -106,7 +113,7 @@ def doTracksAlign(albumTrackData, folderTrackData, flags: Flags):
 
     tableData.sort()
     print(tabulate(tableData,
-                   headers=['Disc', 'Track', 'Title', 'fileName'],
+                   headers=['Disc', 'Track', 'Title (Translated)' if flags.TRANSLATE else 'Title', 'fileName'],
                    colalign=('center', 'center', 'left', 'left'),
                    maxcolwidths=53, tablefmt=tableFormat), end='\n\n')
     return flag

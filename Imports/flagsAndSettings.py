@@ -21,6 +21,7 @@ class Flags:
         self.RENAME_FOLDER = True
         self.NO_AUTH = False
         self.NO_INPUT = False
+        self.TRANSLATE = False
 
         # Metadata Flags
         self.PICS = True
@@ -31,6 +32,7 @@ class Flags:
         self.CATALOG = True
         self.BARCODE = True
         self.TITLE = True
+        self.KEEP_TITLE = False
         self.ALL_LANG = True
 
         self.ORGANIZATIONS = True

@@ -56,7 +56,7 @@ def tagAudioFile(data, albumData):
                 listOfValues.append(getBest(val['names'], flags.languageOrder))
             audio.addMultipleValues(tagInFile, listOfValues)
 
-    def addAllLanguages(languageObject: dict, func) -> None:
+    def getAllLanguages(languageObject: dict) -> list[str]:
         ans = []
         for currentLanguage in flags.languageOrder:
             for languageKey in languages[currentLanguage]:
@@ -69,16 +69,24 @@ def tagAudioFile(data, albumData):
         [res.append(x) for x in ans if x not in res]
         if len(res) == 0:
             res = list(languageObject.items())[0][0]
-        func(res)
+        return res
 
     # Tagging Album specific Details
     if flags.TITLE:
+        titles = [getBest(albumData['trackTitles'], flags.languageOrder)]
         if flags.ALL_LANG:
-            addAllLanguages(albumData['trackTitles'], audio.setTitle)
-        else:
-            audio.setTitle([getBest(albumData['trackTitles'], flags.languageOrder)])
+            titles: list[str] = getAllLanguages(albumData['trackTitles'])
+        if flags.KEEP_TITLE:
+            titles.append(audio.getTitle())
+            res = []
+            [res.append(x) for x in titles if x not in res]
+            titles = res
+        
+        audio.setTitle(titles)
+        
     if flags.ALL_LANG:
-        addAllLanguages(albumData['albumNames'], audio.setAlbum)
+        albumNames = getAllLanguages(albumData['albumNames'])
+        audio.setAlbum(albumNames)
     else:
         audio.setAlbum([albumData['albumName']])
     audio.setTrackNumbers(getProperCount(albumData['trackNumber'], albumData['totalTracks']),

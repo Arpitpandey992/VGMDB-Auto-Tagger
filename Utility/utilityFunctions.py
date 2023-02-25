@@ -129,7 +129,8 @@ def cleanName(name: str):
         ':': '꞉',
         '"': 'ˮ',
         '\'': 'ʻ',
-        '/': '／',
+        # '/': '／', # Looks far too stretched, but is more popular for some reason
+        '/': 'Ⳇ',  # This one looks more natural
         '\\': '∖',
         '|': 'ǀ',
         '?': 'ʔ',
