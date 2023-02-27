@@ -9,12 +9,13 @@ Python script to automatically tag an album using data fetched from VGMDB.info
 ## Usage
 Clone the repository, then inside the directory:
 ```
-usage: albumTagger.py [-h] [--id ID] [--search SEARCH] [--no-title] [--no-auth] [--yes] [--no-input] [--backup] [--no-scans] [--no-pics] [--pic-overwrite]
-                      [--rename-folder] [--no-rename-folder] [--rename-files] [--no-rename-files] [--tag] [--no-tag] [--no-modify] [--japanese] [--english]
-                      [--romaji]
+usage: python albumTagger.py [-h] [--id ID] [--search SEARCH] [--no-title] [--keep-title] [--no-auth] [--yes] [--no-input] [--backup]
+                      [--no-scans] [--no-pics] [--pic-overwrite] [--rename-folder] [--no-rename-folder] [--rename-files]
+                      [--no-rename-files] [--tag] [--no-tag] [--no-modify] [--one-lang] [--translate] [--single] [--performers]
+                      [--arrangers] [--composers] [--lyricists] [--japanese] [--english] [--romaji]
                       folderPath
 
-Automatically Tag Music folders using data from VGMDB.net
+Automatically Tag Music folders using data from VGMDB.net!
 
 positional arguments:
   folderPath            Album directory path (Required Argument)
@@ -25,6 +26,7 @@ options:
   --search SEARCH, -s SEARCH
                         Provide Custom Search Term
   --no-title            Do not change the title of tracks
+  --keep-title          keep the current title as well, and add other available titles
   --no-auth             Do not authenticate for downloading Scans
   --yes, -y             Skip Yes prompt, and when only 1 album comes up in search results
   --no-input            Go full auto mode, and only tag those albums where no user input is required!
@@ -39,10 +41,16 @@ options:
   --tag                 tag the files
   --no-tag              Do not tag the files
   --no-modify           Do not modify the files or folder in any way
+  --one-lang            Only keep the best names
+  --translate           Translate all text to english
+  --single              enable this if there is only one track in the album
+  --performers          tag performers in the files
+  --arrangers           tag arrangers in the files
+  --composers           tag composers in the files
+  --lyricists           tag lyricists in the files
   --japanese, -ja       Give Priority to Japanese
   --english, -en        Give Priority to English
   --romaji, -ro         Give Priority to Romaji
-
 
 ```
 
