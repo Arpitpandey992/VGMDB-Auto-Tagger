@@ -59,12 +59,14 @@ def tagAudioFile(data, albumData):
     def getAllLanguages(languageObject: dict) -> list[str]:
         ans = []
         for currentLanguage in flags.languageOrder:
+            # Ignoring japanese names
+            if currentLanguage == 'japanese':
+                continue
             for languageKey in languages[currentLanguage]:
                 if languageKey in languageObject:
                     ans.append(languageObject[languageKey])
                     break
         # removing duplicates
-        # ans = [*set(ans)]
         res = []
         [res.append(x) for x in ans if x not in res]
         if len(res) == 0:
@@ -81,9 +83,9 @@ def tagAudioFile(data, albumData):
             res = []
             [res.append(x) for x in titles if x not in res]
             titles = res
-        
+
         audio.setTitle(titles)
-        
+
     if flags.ALL_LANG:
         albumNames = getAllLanguages(albumData['albumNames'])
         audio.setAlbum(albumNames)

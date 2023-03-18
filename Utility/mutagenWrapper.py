@@ -5,13 +5,13 @@ import os
 
 from mutagen.flac import Picture as PictureFLAC, FLAC
 from mutagen.oggvorbis import OggVorbis
+from mutagen.oggopus import OggOpus
 from mutagen.id3._frames import APIC, TALB, TDRC, TRCK, COMM, TXXX, TPOS, TIT2
 from mutagen.id3 import ID3
 
 """
 This is a wrapper around mutagen module. This basically allows us to call the same functions for any extension, and hence reducing code complexity.
 """
-supportedExtensions = ['.flac', '.mp3', '.ogg']
 
 
 def isString(var):
@@ -129,7 +129,7 @@ class IAudioManager(ABC):
         """ Set a custom tag as Key = value """
 
     @abstractmethod
-    def setCustomTag(self, key: str, value: str):
+    def setCustomTag(self, key: str, value: str | list[str]):
         """ Set a custom tag as Key = value """
 
     @abstractmethod
@@ -488,14 +488,19 @@ class ID_3(IAudioManager):
         self.audio.add(TXXX(encoding=3, desc=key, text=listOfValues))
 
 
+audioFileHandler = {
+    '.flac': [Vorbis, FLAC],
+    '.mp3': [ID_3, ID3],
+    '.ogg': [Vorbis, OggVorbis],
+    '.opus': [Vorbis, OggOpus],
+}
+supportedExtensions = audioFileHandler.keys()
+
+
 class AudioFactory():
     @staticmethod
     def buildAudioManager(filePath) -> IAudioManager:
-        audioFileHandler = {
-            '.flac': [Vorbis, FLAC],
-            '.mp3': [ID_3, ID3],
-            '.ogg': [Vorbis, OggVorbis],
-        }
+
         _, extension = os.path.splitext(filePath)
         codec = audioFileHandler[extension.lower()][0]
         handler = audioFileHandler[extension.lower()][1]

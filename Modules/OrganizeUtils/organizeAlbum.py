@@ -49,7 +49,11 @@ def renameAndOrganizeFiles(folderPath):
             used.add(discTrackTuple)
 
             oldName = file
-            newName = cleanName(f"{trackNumber} - {title}{extension}")
+            isSingle = int(totalTracks) == 1
+            if isSingle:
+                newName = cleanName(f"{title}{extension}")
+            else:
+                newName = cleanName(f"{trackNumber} - {title}{extension}")
             discName = audio.getDiscName()
 
             if discName:
@@ -121,3 +125,8 @@ def organizeAlbum(folderPath, sameFolderName: bool = False):
     renameFolder(folderPath, sameFolderName)
     print(f'{os.path.basename(folderPath)} Organized!')
     print('\n', end='')
+
+
+if __name__ == '__main__':
+    folder = '/run/media/arpit/Seagate Backup Plus Slim 1TB/Samuel Kim/[2022.04.08] Attack on Titan꞉ Epic Collection, Vol. 4 (Cover)'
+    organizeAlbum(folder)
