@@ -2,7 +2,7 @@ import os
 import shutil
 
 # Specify the directory to search
-directory = "/home/arpit/Downloads/New Folder"
+directory = "/run/media/arpit/DATA/Music/Deemix/Super Mario 64 Lofi/Qumu"
 DELETE_AS_WELL = True
 
 

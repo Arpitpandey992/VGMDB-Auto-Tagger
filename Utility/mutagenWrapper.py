@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import os
 
 from mutagen.flac import Picture as PictureFLAC, FLAC
+from mutagen.wave import WAVE
 from mutagen.oggvorbis import OggVorbis
 from mutagen.oggopus import OggOpus
 from mutagen.id3._frames import APIC, TALB, TDRC, TRCK, COMM, TXXX, TPOS, TIT2
@@ -346,6 +347,11 @@ class Vorbis(IAudioManager):
 
 
 class ID_3(IAudioManager):
+    """
+    mainly for mp3 files -> full functionality
+    for wav files -> only getting tags is functional currently, cannot set tags
+    """
+
     def __init__(self, mutagen_object, extension):
         self.audio = mutagen_object
         self.extension = extension.lower()
@@ -386,17 +392,32 @@ class ID_3(IAudioManager):
         self.audio.add(picture)
 
     def hasPictureOfType(self, pictureType):
-        pictures = self.audio.getall("APIC")
-        if pictures:
-            for picture in pictures:
-                if picture.type == pictureType:
-                    return True
+        if self.extension == '.wav':
+            for tag in self.audio.tags:
+                if tag.startswith("APIC:"):
+                    frame = self.audio.get(tag)
+                    if frame.type == pictureType:
+                        return True
+
+        elif self.extension == '.mp3':
+            pictures = self.audio.getall("APIC:")
+            if pictures:
+                for picture in pictures:
+                    if picture.type == pictureType:
+                        return True
         return False
 
     def deletePictureOfType(self, pictureType):
-        for frame in self.audio.getall("APIC:"):
-            if frame.type == pictureType:
-                self.audio.pop(frame.HashKey)
+        if self.extension == '.wav':
+            for tag in self.audio.tags:
+                if tag.startswith("APIC:"):
+                    frame = self.audio.get(tag)
+                    if frame.type == pictureType:
+                        self.audio.pop(frame.HashKey)
+        elif self.extension == '.mp3':
+            for frame in self.audio.getall("APIC:"):
+                if frame.type == pictureType:
+                    self.audio.pop(frame.HashKey)
 
     def setDate(self, date):
         self.audio.add(TDRC(encoding=3, text=[date]))
@@ -457,9 +478,17 @@ class ID_3(IAudioManager):
         return ans.text
 
     def getCustomTag(self, key):
-        for frame in self.audio.getall("TXXX"):
-            if key in frame.HashKey:
-                return frame.text[0]
+        if self.extension == '.mp3':
+            frames = self.audio.getall("TXXX")
+            for frame in frames:
+                if key in frame.HashKey:
+                    return frame.text[0]
+        elif self.extension == '.wav':
+            tags = self.audio.tags
+            for tag in tags:
+                if not tag.startswith("TXXX") or key not in tag:
+                    continue
+                return self.audio.get(tag).text[0]
         return None
 
     def getCatalog(self):
@@ -490,6 +519,7 @@ class ID_3(IAudioManager):
 
 audioFileHandler = {
     '.flac': [Vorbis, FLAC],
+    '.wav': [ID_3, WAVE],
     '.mp3': [ID_3, ID3],
     '.ogg': [Vorbis, OggVorbis],
     '.opus': [Vorbis, OggOpus],
