@@ -2,6 +2,7 @@
 from abc import ABC, abstractmethod
 
 import os
+from typing import Union, Optional, List, TypeVar
 
 from mutagen.flac import Picture as PictureFLAC, FLAC
 from mutagen.wave import WAVE
@@ -15,11 +16,11 @@ This is a wrapper around mutagen module. This basically allows us to call the sa
 """
 
 
-def isString(var):
+def isString(var) -> bool:
     return isinstance(var, str)
 
 
-def splitAndGetFirst(discNumber):
+def splitAndGetFirst(discNumber: str) -> str:
     # get the count of tracks -> checks if the input is something like 4/20 -> truncates to 4
     # output is a string, input can be an integer, float, ...
     if not isString(discNumber):
@@ -33,22 +34,22 @@ def splitAndGetFirst(discNumber):
     return discNumber
 
 
-def splitAndGetSecond(discNumber):
+def splitAndGetSecond(discNumber: str) -> Optional[str]:
     # get the count of tracks -> checks if the input is something like 4/20 -> truncates to 20
     # output is a string, input can be an integer, float, ...
     if not isString(discNumber):
         return str(discNumber)
 
     if '/' in discNumber:
-        discNumber = discNumber.split('/')
-        if len(discNumber) < 2:
+        discNumberElements = discNumber.split('/')
+        if len(discNumberElements) < 2:
             return None
-        discNumber = discNumber[1]
+        discNumber = discNumberElements[1]
     elif ':' in discNumber:
-        discNumber = discNumber.split(':')
-        if len(discNumber) < 2:
+        discNumberElements = discNumber.split(':')
+        if len(discNumberElements) < 2:
             return None
-        discNumber = discNumber[1]
+        discNumber = discNumberElements[1]
     else:
         return None
     return discNumber
@@ -75,8 +76,10 @@ pictureNumberToName = {
 
 # Interface Class specifying the required functionality
 
+listElement = TypeVar('listElement')
 
-def getFirstElement(listVariable):
+
+def getFirstElement(listVariable: Optional[List[listElement]]) -> Optional[listElement]:
     if not listVariable:
         return None
     return listVariable[0]
@@ -203,7 +206,7 @@ class IAudioManager(ABC):
 
 
 class Vorbis(IAudioManager):
-    def __init__(self, mutagen_object, extension):
+    def __init__(self, mutagen_object: Union[FLAC, OggOpus, OggVorbis], extension: str):
         self.extension = extension.lower()
         self.audio = mutagen_object
 
@@ -235,7 +238,7 @@ class Vorbis(IAudioManager):
         picture.desc = pictureNumberToName[pictureType]
         if 'flac' in self.extension:
             self.audio.add_picture(picture)
-        elif 'ogg' in self.extension:
+        else:
             self.audio["metadata_block_picture"] = base64.b64encode(picture.write()).decode("ascii")
 
     def hasPictureOfType(self, pictureType):
@@ -252,7 +255,7 @@ class Vorbis(IAudioManager):
         # i couldn't find any proper method to remove only one picture
         if 'flac' in self.extension:
             self.audio.clear_pictures()
-        elif 'ogg' in self.extension and "metadata_block_picture" in self.audio:
+        elif "metadata_block_picture" in self.audio:
             self.audio.pop("metadata_block_picture")
 
     def setDate(self, date):
@@ -352,7 +355,7 @@ class ID_3(IAudioManager):
     for wav files -> only getting tags is functional currently, cannot set tags
     """
 
-    def __init__(self, mutagen_object, extension):
+    def __init__(self, mutagen_object: Union[ID3, WAVE], extension: str):
         self.audio = mutagen_object
         self.extension = extension.lower()
 
@@ -529,8 +532,7 @@ supportedExtensions = audioFileHandler.keys()
 
 class AudioFactory():
     @staticmethod
-    def buildAudioManager(filePath) -> IAudioManager:
-
+    def buildAudioManager(filePath: str) -> IAudioManager:
         _, extension = os.path.splitext(filePath)
         codec = audioFileHandler[extension.lower()][0]
         handler = audioFileHandler[extension.lower()][1]

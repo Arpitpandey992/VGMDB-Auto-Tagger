@@ -1,19 +1,19 @@
 from Imports.flagsAndSettings import *
 import os
 from tabulate import tabulate
-
+from typing import Union, Optional
 from Utility.mutagenWrapper import AudioFactory, supportedExtensions
 from Utility.utilityFunctions import getBest, splitAndGetFirst
 from Utility.translate import translate
 
 
-def getYearFromDate(date):
+def getYearFromDate(date: Optional[str]) -> Optional[str]:
     if not date:
         return None
     return date[0:4] if len(date) >= 4 else None
 
 
-def getOneAudioFile(folderPath):
+def getOneAudioFile(folderPath: str) -> Optional[str]:
     for root, dirs, files in os.walk(folderPath):
         for file in files:
             _, extension = os.path.splitext(file)
@@ -22,7 +22,7 @@ def getOneAudioFile(folderPath):
     return None
 
 
-def getSearchTermAndDate(folderPath: str):
+def getSearchTermAndDate(folderPath: str) -> tuple[Optional[str], Optional[str]]:
     filePath = getOneAudioFile(folderPath)
     if filePath is None:
         return None, None

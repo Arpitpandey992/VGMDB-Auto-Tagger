@@ -1,11 +1,12 @@
 import os
+from typing import Union, Optional, List, Dict, Any
 import requests
 from math import ceil, log10
 import urllib.request
-from Imports.flagsAndSettings import *
+from Imports.flagsAndSettings import APICALLRETRIES, languages
 
 
-def Request(url):
+def Request(url: str) -> Optional[Dict[str, Any]]:
     countLeft = APICALLRETRIES
     while countLeft > 0:
         try:
@@ -18,15 +19,15 @@ def Request(url):
     return None
 
 
-def getAlbumDetails(albumID):
+def getAlbumDetails(albumID: str):
     return Request(f'https://vgmdb.info/album/{albumID}')
 
 
-def searchAlbum(albumName):
+def searchAlbum(albumName: str):
     return Request(f'https://vgmdb.info/search?q={albumName}')
 
 
-def getBest(languageObject, languageOrder):
+def getBest(languageObject: Dict[str, str], languageOrder: List[str]) -> str:
     for currentLanguage in languageOrder:
         for languageKey in languages[currentLanguage]:
             if languageKey in languageObject:
@@ -78,7 +79,7 @@ def getProperCount(count, totalCount):
             count = int(count)
         if isString(totalCount):
             totalCount = int(totalCount)
-        upperBound = int(ceil(log10(totalCount+1)))
+        upperBound = int(ceil(log10(totalCount + 1)))
         return str(count).zfill(upperBound)
 
     except Exception:
@@ -109,14 +110,14 @@ def downloadPicture(URL, path, name=None):
         imagePath = os.path.join(path, pictureName)
         originalURLName, extension = os.path.splitext(imagePath)
         if name:
-            finalImageName = name+extension
+            finalImageName = name + extension
             if os.path.exists(os.path.join(path, finalImageName)):
                 print(f'FileExists : {finalImageName}')
                 return
         urllib.request.urlretrieve(URL, imagePath)
         if name is not None:
             originalURLName = name
-            os.rename(imagePath, os.path.join(path, originalURLName+extension))
+            os.rename(imagePath, os.path.join(path, originalURLName + extension))
         print(f'Downloaded : {originalURLName}{extension}')
     except Exception as e:
         print(e)
