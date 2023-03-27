@@ -1,7 +1,6 @@
 BACKUPFOLDER = '~/Music/Backups'
 APICALLRETRIES = 5
 tableFormat = 'pretty'
-SEE_FLAGS = False
 
 languages = {
     'romaji': ['ja-latn', 'Romaji'],
@@ -45,3 +44,6 @@ class Flags:
 
         # languages to be probed from VGMDB in the given order of priority
         self.languageOrder = ['english', 'romaji', 'japanese']
+
+        # misc flags
+        self.SEE_FLAGS = False

@@ -2,11 +2,12 @@ import os
 import argparse
 import shutil
 import json
-
+from typing import Optional, Dict, List
 from tabulate import tabulate
 
-from Imports.flagsAndSettings import *
-from Utility.utilityFunctions import *
+
+from Imports.flagsAndSettings import Flags, tableFormat, BACKUPFOLDER, APICALLRETRIES
+from Utility.utilityFunctions import getAlbumDetails, yesNoUserInput, noYesUserInput, getBest, searchAlbum, fixDate, cleanSearchTerm
 
 from Modules.Tag.tagFiles import tagFiles
 from Modules.Rename.renameFiles import renameFiles
@@ -14,11 +15,15 @@ from Modules.Rename.renameFolder import renameFolder
 from Utility.audioUtilityFunctions import getSearchTermAndDate, getAlbumTrackData, getFolderTrackData, doTracksAlign, getYearFromDate
 from Modules.vgmdbrip.vgmdbrip import getPictures, getPicturesTheOldWay
 
+from Types.albumData import AlbumData
+from Types.search import SearchAlbumData
+from Types.otherData import OtherData
 
-def argumentParser():
+
+def argumentParser() -> tuple[argparse.Namespace, Flags, str]:
     parser = argparse.ArgumentParser(description='Automatically Tag Music folders using data from VGMDB.net!')
 
-    parser.add_argument('folderPath', help='Album directory path (Required Argument)')
+    parser.add_argument('folderPath', type=str, help='Album directory path (Required Argument)')
 
     parser.add_argument('--id', '-i', type=str, default=None,
                         help='Provide Album ID')
@@ -82,7 +87,7 @@ def argumentParser():
                         help='Give Priority to Romaji')
     args = parser.parse_args()
 
-    folderPath = args.folderPath
+    folderPath: str = args.folderPath
 
     while folderPath[-1] == '/':
         folderPath = folderPath[:-1]
@@ -148,45 +153,43 @@ def argumentParser():
         flags.RENAME_FOLDER = False  # type: ignore
         flags.RENAME_FILES = False  # type: ignore
 
-    if SEE_FLAGS:
+    if flags.SEE_FLAGS:
         print(json.dumps(vars(flags), indent=4))
     return args, flags, folderPath
 
 
-def tagAndRenameFiles(folderPath, albumID, flags: Flags):
+def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
     print('\n', end='')
     print('Getting album Data')
     try:
-        data = getAlbumDetails(albumID)
-        if data is None:
-            print('Failed, Please Try Again.')
+        albumData: AlbumData = getAlbumDetails(albumID)
+        if albumData is None:
+            print('could not fetch album details, Please Try Again.')
             return False
     except Exception as e:
-        print('Failed, Please Try Again.')
         print(e)
         return False
 
-    albumLink = data["vgmdb_link"]
-    while albumLink and albumLink[-1] != '?':
-        albumLink = albumLink[:-1]
-    albumLink = albumLink[:-1]
+    albumData["vgmdb_link"] = albumData["vgmdb_link"].split("?")[0]
     # Setting crucial info for passing further
-    data['albumLink'] = albumLink
-    data['folderPath'] = folderPath
-    data['albumID'] = albumID
-    data['flags'] = flags
-    if 'catalog' in data and (data['catalog'] == 'N/A' or data['catalog'] == 'NA'):
-        del data['catalog']
+    albumData["album_id"] = albumID
+    otherData: OtherData = {
+        "flags": flags,
+        "folder_path": folderPath
+    }
+
+    if 'catalog' in albumData and (albumData['catalog'] == 'N/A' or albumData['catalog'] == 'NA'):
+        del albumData['catalog']
 
     if flags.CONFIRM:
-        print(f'Link - {albumLink}')
-        print(f'Album - {getBest(data["names"], flags.languageOrder)}')
+        print(f'Link - {albumData["vgmdb_link"]}')
+        print(f'Album - {getBest(albumData["names"], flags.languageOrder)}')
         if not yesNoUserInput():
             print('\n', end='')
             return False
         print('\n', end='')
 
-    albumTrackData = getAlbumTrackData(data)
+    albumTrackData = getAlbumTrackData(albumData, otherData)
     folderTrackData = getFolderTrackData(folderPath)
     print('Done getting TrackData')
     print('\n', end='')
@@ -207,7 +210,7 @@ def tagAndRenameFiles(folderPath, albumID, flags: Flags):
     print('\n', end='')
 
     # Fixing date in data to be in the form YYYY-MM-DD (MM and DD will be Zero if not present)
-    data['release_date'] = fixDate(data['release_date'])
+    albumData['release_date'] = fixDate(albumData['release_date'])
 
     if flags.BACKUP:
         try:
@@ -235,9 +238,9 @@ def tagAndRenameFiles(folderPath, albumID, flags: Flags):
         if not flags.NO_AUTH:
             # New Algorithm for downloading Scans -> All scans are downloaded, requires Authentication
             getPictures(folderPath, albumID)
-        elif 'covers' in data:
+        elif 'covers' in albumData:
             # Old algorithm for downloading -> no Authentication -> less covers available!
-            getPicturesTheOldWay(data)
+            getPicturesTheOldWay(albumData, otherData)
 
         print('Downloaded Available Pictures :)', end='\n\n')
 
@@ -245,7 +248,7 @@ def tagAndRenameFiles(folderPath, albumID, flags: Flags):
     if flags.TAG:
         print('Tagging files')
         print('\n', end='')
-        tagFiles(albumTrackData, folderTrackData, data)
+        tagFiles(albumTrackData, folderTrackData, albumData, otherData)
         print('Finished Tagging operation')
         print('\n', end='')
         print('\n', end='')
@@ -253,7 +256,7 @@ def tagAndRenameFiles(folderPath, albumID, flags: Flags):
     if flags.RENAME_FILES:
         print('Renaming Files')
         print('\n', end='')
-        renameFiles(albumTrackData, folderTrackData, data)
+        renameFiles(albumTrackData, folderTrackData, otherData)
         print('Finished Renaming Files')
         print('\n', end='')
         print('\n', end='')
@@ -261,10 +264,12 @@ def tagAndRenameFiles(folderPath, albumID, flags: Flags):
     if flags.RENAME_FOLDER:
         print('Renaming Folder')
         print('\n', end='')
-        renameFolder(data)
+        renameFolder(albumData, otherData)
+
+    return True
 
 
-def getSearchInput():
+def getSearchInput() -> Optional[str]:
     print("Enter 'exit' to exit or give a new search term : ", end='')
     answer = input()
     if (answer.lower() == 'exit'):
@@ -274,40 +279,39 @@ def getSearchInput():
     return answer
 
 
-def findAlbumID(folderPath, searchTerm, searchYear, flags: Flags):
+def findAlbumID(folderPath: str, searchTerm: Optional[str], searchYear: Optional[str], flags: Flags) -> Optional[str]:
     if flags.NO_INPUT and not searchTerm:
         return None
     folderName = os.path.basename(folderPath)
     print(f'Folder Name : {folderName}')
     if searchTerm is None:
         searchTerm = getSearchInput()
+    # if searchTerm is still None -> user typed Exit
     if searchTerm is None:
         return None
     print(f'Searching for : {searchTerm}, Year = {searchYear}')
     print('\n', end='')
-    data = searchAlbum(searchTerm)
-    if data is None or not data['results']['albums']:
+    albums = searchAlbum(searchTerm)
+    if not albums:
         print("No results found!, Please change search term!")
         return findAlbumID(folderPath, None, None, flags)
 
-    albumData = {}
+    albumData: Dict[int, SearchAlbumData] = {}
     tableData = []
-    serialNumber = 1
-    for album in data['results']['albums']:  # type:ignore
+    serialNumber: int = 1
+    for album in albums:
         albumID = album['link'].split('/')[1]
-        albumLink = f"https://vgmdb.net/{album['link']}"
+        albumLink: str = f"https://vgmdb.net/{album['link']}"
         albumTitle = getBest(album['titles'], flags.languageOrder)
         releaseDate = album['release_date']
         year = getYearFromDate(releaseDate)
         catalog = album['catalog']
         if not searchYear or searchYear == year:
             albumData[serialNumber] = {
-                'Link': albumLink,
-                'Title': albumTitle,
-                'ID': albumID,
-                'Date': releaseDate,
-                'Year': year,
-                'Catalog': catalog
+                **album,
+                "album_id": albumID,
+                "release_year": year,
+                "title": albumTitle
             }
             tableData.append((serialNumber, catalog, albumTitle, albumLink, year))
             serialNumber += 1
@@ -337,30 +341,28 @@ def findAlbumID(folderPath, searchTerm, searchYear, flags: Flags):
             print('Invalid Choice, using that as search term!\n')
             return findAlbumID(folderPath, choice, None, flags)
 
-    return albumData[int(choice)]['ID']
+    return albumData[int(choice)]['album_id']
 
 
 def main():
     args, flags, folderPath = argumentParser()
-
+    print(f"Working Folder : {folderPath}")
     albumID = args.id
     if albumID is None:
         searchTerm = args.search
         date = None
         if searchTerm is None:
-            albumName, date = getSearchTermAndDate(folderPath)
-            if albumName is None:
-                print('Could not obtain album name from files in the directory, please provide custom search term!')
-            searchTerm = cleanSearchTerm(albumName)
+            albumNameOrCatalog, date = getSearchTermAndDate(folderPath)
+            if albumNameOrCatalog is None:
+                print('Could not obtain either album name or catalog number from files in the directory, please provide custom search term!')
+            searchTerm = cleanSearchTerm(albumNameOrCatalog)
         albumID = findAlbumID(folderPath, searchTerm, getYearFromDate(date), flags)
-    # if album-ID is still not found, script cannot do anything :(
-
-    if albumID is not None:
+    if albumID:
         tagAndRenameFiles(folderPath, albumID, flags)
         print('Finished all <Possible> Operations')
     else:
+        # if album-ID is still not found, script cannot do anything :(
         print(f'Operations failed at {folderPath}')
 
 
-if __name__ == '__main__':
-    main()
+main()

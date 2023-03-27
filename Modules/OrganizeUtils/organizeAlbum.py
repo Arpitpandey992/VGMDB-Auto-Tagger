@@ -1,9 +1,8 @@
 import os
 
 from Utility.mutagenWrapper import AudioFactory, supportedExtensions
-from Utility.utilityFunctions import getProperCount, cleanName
+from Utility.utilityFunctions import getProperCount, cleanName, fixDate
 from Utility.audioUtilityFunctions import getOneAudioFile
-from Modules.Tag.tagUtilityFunctions import standardizeDate
 
 """
 Organize a single album contained in a single folder. 
@@ -93,9 +92,9 @@ def renameFolder(folderPath, sameFolderName: bool = False):
         if albumName is None:
             print(f'No Album Name in {filePath}, aborting')
             return
-    date = standardizeDate(audio.getDate())
+    date = fixDate(audio.getDate())
     if date == "":
-        date = standardizeDate(audio.getCustomTag('year'))
+        date = fixDate(audio.getCustomTag('year'))
     date = date.replace('-', '.')
     catalog = audio.getCatalog()
     newFolderName = albumName

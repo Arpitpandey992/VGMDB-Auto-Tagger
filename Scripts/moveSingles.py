@@ -2,7 +2,7 @@ import os
 import shutil
 
 # Specify the directory to search
-directory = "/run/media/arpit/DATA/Music/Deemix/Super Mario 64 Lofi/Qumu"
+directory = "/run/media/arpit/DATA/Downloads/Browser Downloads/yurisa"
 DELETE_AS_WELL = True
 
 

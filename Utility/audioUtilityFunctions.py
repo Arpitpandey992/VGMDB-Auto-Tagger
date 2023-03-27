@@ -1,19 +1,21 @@
 from Imports.flagsAndSettings import *
 import os
 from tabulate import tabulate
-
+from typing import Dict, Optional
+from Types.albumData import AlbumData
+from Types.otherData import OtherData
 from Utility.mutagenWrapper import AudioFactory, supportedExtensions
 from Utility.utilityFunctions import getBest, splitAndGetFirst
 from Utility.translate import translate
 
 
-def getYearFromDate(date):
+def getYearFromDate(date: Optional[str]) -> Optional[str]:
     if not date:
         return None
     return date[0:4] if len(date) >= 4 else None
 
 
-def getOneAudioFile(folderPath):
+def getOneAudioFile(folderPath: str) -> Optional[str]:
     for root, dirs, files in os.walk(folderPath):
         for file in files:
             _, extension = os.path.splitext(file)
@@ -22,7 +24,7 @@ def getOneAudioFile(folderPath):
     return None
 
 
-def getSearchTermAndDate(folderPath: str):
+def getSearchTermAndDate(folderPath: str) -> tuple[Optional[str], Optional[str]]:
     filePath = getOneAudioFile(folderPath)
     if filePath is None:
         return None, None
@@ -36,11 +38,11 @@ def getSearchTermAndDate(folderPath: str):
     return albumName, date
 
 
-def getAlbumTrackData(data):
-    flags: Flags = data['flags']
-    trackData = {}
+def getAlbumTrackData(albumData: AlbumData, otherData: OtherData) -> Dict[int, Dict[int, Dict[str, str]]]:
+    flags: Flags = otherData['flags']
+    trackData: Dict[int, Dict[int, Dict[str, str]]] = {}
     discNumber = 1
-    for disc in data['discs']:
+    for disc in albumData['discs']:
         trackData[discNumber] = {}
         trackNumber = 1
         for track in disc['tracks']:
@@ -55,8 +57,8 @@ def getAlbumTrackData(data):
     return trackData
 
 
-def getFolderTrackData(folderPath):
-    folderTrackData = {}
+def getFolderTrackData(folderPath: str) -> Dict[int, Dict[int, str]]:
+    folderTrackData: Dict[int, Dict[int, str]] = {}
     for root, dirs, files in os.walk(folderPath):
         for file in files:
             _, extension = os.path.splitext(file)
@@ -91,7 +93,9 @@ def getFolderTrackData(folderPath):
     return folderTrackData
 
 
-def doTracksAlign(albumTrackData, folderTrackData, flags: Flags):
+def doTracksAlign(albumTrackData: Dict[int, Dict[int, Dict[str, str]]],
+                  folderTrackData: Dict[int, Dict[int, str]],
+                  flags: Flags) -> bool:
     flag = True
     tableData = []
     for discNumber, tracks in albumTrackData.items():
