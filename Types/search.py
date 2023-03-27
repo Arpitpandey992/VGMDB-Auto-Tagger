@@ -15,7 +15,6 @@ class SearchAlbumData(SearchAlbum):
     title: str
     release_year: Optional[str]
     album_id: str
-    damn: NotRequired[str]
 
 
 if __name__ == '__main__':
@@ -30,4 +29,3 @@ if __name__ == '__main__':
         "release_year": "",
         "titles": {}
     }
-    print(test.get("damn"))

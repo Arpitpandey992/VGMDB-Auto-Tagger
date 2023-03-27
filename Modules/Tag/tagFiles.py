@@ -1,56 +1,66 @@
 import os
-import math
-from PIL import Image
 from tabulate import tabulate
-
-from Imports.flagsAndSettings import Flags, tableFormat
+from typing import Dict
+from Imports.flagsAndSettings import tableFormat
+from Types.albumData import AlbumData, TrackData
+from Types.otherData import OtherData
 from Utility.utilityFunctions import getBest
 from Modules.Tag.tagUtilityFunctions import tagAudioFile
 from Utility.mutagenWrapper import supportedExtensions
 
 
-def tagFiles(albumTrackData, folderTrackData, data):
-    flags: Flags = data['flags']
-    albumData = {
-        'totalDiscs': len(albumTrackData),
-        # 'discsUpperBound': int(math.ceil(math.log10(len(albumTrackData)+1))),
-        'albumName': getBest(data['names'], flags.languageOrder),
-        'albumNames': data['names'],
-        'folderPath': data['folderPath'],
-        'albumID': data['albumID'],
-    }
+def tagFiles(albumTrackData: Dict[int, Dict[int, Dict[str, str]]],
+             folderTrackData: Dict[int, Dict[int, str]],
+             albumData: AlbumData,
+             otherData: OtherData):
+    flags = otherData.get('flags')
+    totalDiscs = len(albumTrackData)
 
     tableData = []
-    for albumData['discNumber'], tracks in albumTrackData.items():
+    for discNumber, tracks in albumTrackData.items():
 
-        albumData['totalTracks'] = len(tracks)
+        totalTracks = len(tracks)
 
-        for albumData['trackNumber'], albumData['trackTitles'] in tracks.items():
-            if albumData['discNumber'] not in folderTrackData or albumData['trackNumber'] not in folderTrackData[albumData['discNumber']]:
+        for trackNumber, trackTitles in tracks.items():
+            if discNumber not in folderTrackData or trackNumber not in folderTrackData[discNumber]:
                 continue
 
-            albumData['filePath'] = folderTrackData[albumData['discNumber']
-                                                    ][albumData['trackNumber']]
-            albumData['fileName'] = os.path.basename(albumData['filePath'])
-            albumData['fileNameWithoutExtension'], albumData['extension'] = os.path.splitext(albumData['fileName'])
-            albumData['extension'] = albumData['extension'].lower()
+            filePath = folderTrackData[discNumber][trackNumber]
+            fileName = os.path.basename(filePath)
+            fileNameWithoutExtension, extension = os.path.splitext(fileName)
+            extension = extension.lower()
 
-            if albumData['extension'] not in supportedExtensions:
-                print(f"Couldn't tag : {albumData['fileName']}, {albumData['extension']} Not Supported Yet :(")
-                tableData.append(
-                    ('XX', 'XX', 'XX', albumData['fileName']))
+            if extension not in supportedExtensions:
+                print(f"Couldn't tag : {fileName}, {extension} Not Supported Yet :(")
+                tableData.append(('XX', 'XX', 'XX', fileName))
                 continue
 
+            trackData: TrackData = {
+                **albumData,
+                'track_number': trackNumber,
+                'total_tracks': totalTracks,
+                'disc_number': discNumber,
+                'total_discs': totalDiscs,
+                'file_path': filePath,
+                'track_titles': trackTitles,
+                'album_link': albumData.get('vgmdb_link'),
+                'album_names': albumData.get('names'),
+                'album_name': getBest(albumData.get('names'), flags.languageOrder)
+            }
             # Tagging the file
-            audioTagged = tagAudioFile(data, albumData)
+            audioTagged = tagAudioFile(trackData, flags)
 
             if audioTagged:
-                print(f"Tagged : {albumData['fileName']}")
-                tableData.append((albumData['discNumber'], albumData['trackNumber'], getBest(albumData['trackTitles'], flags.languageOrder), albumData['fileName']))
+                print(f"Tagged : {fileName}")
+                tableData.append((
+                    discNumber,
+                    trackNumber,
+                    getBest(trackTitles, flags.languageOrder),
+                    fileName
+                ))
             else:
-                print(f"Couldn't tag : {albumData['fileName']}")
-                tableData.append(
-                    ('XX', 'XX', 'XX', albumData['fileName']))
+                print(f"Couldn't tag : {fileName}")
+                tableData.append(('XX', 'XX', 'XX', fileName))
 
     if not tableData:
         return

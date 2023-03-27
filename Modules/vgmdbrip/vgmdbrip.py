@@ -6,6 +6,8 @@ import getpass
 import pickle
 import requests
 from bs4 import BeautifulSoup
+from Types.albumData import AlbumData
+from Types.otherData import OtherData
 from Utility.utilityFunctions import downloadPicture
 session = requests.Session()
 
@@ -24,9 +26,9 @@ def login(config):
             password = getpass.getpass('VGMdb password:\t')
             base_url = 'https://vgmdb.net/forums/'
             x = session.post(base_url + 'login.php?do=login', {
-                'vb_login_username':        username,
-                'vb_login_password':        password,
-                'vb_login_md5password':     hashlib.md5(password.encode()).hexdigest(),
+                'vb_login_username': username,
+                'vb_login_password': password,
+                'vb_login_md5password': hashlib.md5(password.encode()).hexdigest(),
                 'vb_login_md5password_utf': hashlib.md5(password.encode()).hexdigest(),
                 'cookieuser': 1,
                 'do': 'login',
@@ -62,7 +64,7 @@ def ensure_dir(f):
         os.makedirs(d)
 
 
-def getPictures(folder, albumID):
+def getPictures(folder: str, albumID: str):
     cwd = os.path.abspath(__file__)
     scriptdir = os.path.dirname(cwd)
     config = os.path.join(scriptdir, 'vgmdbrip.pkl')
@@ -86,16 +88,15 @@ def getPictures(folder, albumID):
     pickle.dump(session, open(config, "wb"))
 
 
-def getPicturesTheOldWay(data):
+def getPicturesTheOldWay(albumData: AlbumData, otherData: OtherData):
     frontPictureExists = False
-    coverPath = os.path.join(data['folderPath'], 'Scans')
+    coverPath = os.path.join(otherData['folder_path'], 'Scans')
     if not os.path.exists(coverPath):
         os.makedirs(coverPath)
-    for cover in data['covers']:
-        downloadPicture(URL=cover['full'],
-                        path=coverPath, name=cover['name'])
+    for cover in albumData.get('covers', []):
+        downloadPicture(URL=cover['full'], path=coverPath, name=cover['name'])
         if cover['name'].lower() == 'front' or cover['name'].lower == 'cover':
             frontPictureExists = True
-    if not frontPictureExists and 'picture_full' in data:
-        downloadPicture(URL=data['picture_full'],
+    if not frontPictureExists and 'picture_full' in albumData:
+        downloadPicture(URL=albumData['picture_full'],
                         path=coverPath, name='Front')

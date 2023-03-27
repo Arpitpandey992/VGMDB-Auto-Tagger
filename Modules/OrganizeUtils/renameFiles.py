@@ -3,9 +3,8 @@ import shutil
 import os
 
 from Utility.mutagenWrapper import AudioFactory, supportedExtensions
-from Utility.utilityFunctions import getProperCount, cleanName
+from Utility.utilityFunctions import getProperCount, cleanName, fixDate
 from Utility.audioUtilityFunctions import getOneAudioFile
-from Modules.Tag.tagUtilityFunctions import standardizeDate
 
 """
 Rename all files recursively or iteratively in a directory.
@@ -34,9 +33,9 @@ def renameFiles(folderPath):
                 totalTracks = '99'
 
             trackNumber = getProperCount(trackNumber, totalTracks)
-            date = standardizeDate(audio.getDate())
+            date = fixDate(audio.getDate())
             if date == "":
-                date = standardizeDate(audio.getCustomTag('year'))
+                date = fixDate(audio.getCustomTag('year'))
             date = date.replace('-', '.')
             year = date[:4] if len(date) >= 4 else ""
             oldName = file

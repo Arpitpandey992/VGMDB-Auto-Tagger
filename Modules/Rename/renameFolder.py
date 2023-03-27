@@ -1,17 +1,19 @@
 import os
 from Imports.flagsAndSettings import Flags
+from Types.albumData import AlbumData
+from Types.otherData import OtherData
 from Utility.utilityFunctions import getBest, cleanName
 
 
-def renameFolder(data):
-    flags: Flags = data['flags']
-    albumName = getBest(data['names'], flags.languageOrder)
-    folderPath = data['folderPath']
-    date = data['release_date'].replace('-', '.')
+def renameFolder(albumData: AlbumData, otherData: OtherData):
+    flags: Flags = otherData['flags']
+    albumName = getBest(albumData['names'], flags.languageOrder)
+    folderPath = otherData['folder_path']
+    date = albumData['release_date'].replace('-', '.')
 
-    if 'catalog' in data and data['catalog'] != 'N/A':
-        newFolderName = f'[{date}] {albumName} [{data["catalog"]}]'
-        # newFolderName = f'[{data["catalog"]}] {albumName} [{date}]'
+    if 'catalog' in albumData and albumData['catalog'] != 'N/A':
+        newFolderName = f'[{date}] {albumName} [{albumData["catalog"]}]'
+        newFolderName = f'[{albumData["catalog"]}] {albumName} [{date}]'
     else:
         newFolderName = f'[{date}] {albumName}'
 

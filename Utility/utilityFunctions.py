@@ -4,6 +4,8 @@ import requests
 from math import ceil, log10
 import urllib.request
 from Imports.flagsAndSettings import APICALLRETRIES, languages
+from Types.search import *
+from Types.albumData import *
 
 
 def Request(url: str) -> Optional[Dict[str, Any]]:
@@ -19,12 +21,15 @@ def Request(url: str) -> Optional[Dict[str, Any]]:
     return None
 
 
-def getAlbumDetails(albumID: str):
+def getAlbumDetails(albumID: str) -> AlbumData:
     return Request(f'https://vgmdb.info/album/{albumID}')
 
 
-def searchAlbum(albumName: str):
-    return Request(f'https://vgmdb.info/search?q={albumName}')
+def searchAlbum(albumName: str) -> Optional[List[SearchAlbum]]:
+    searchResult = Request(f'https://vgmdb.info/search?q={albumName}')
+    if not searchResult:
+        return None
+    return searchResult['results']['albums']
 
 
 def getBest(languageObject: Dict[str, str], languageOrder: List[str]) -> str:
@@ -72,14 +77,10 @@ def splitAndGetSecond(discNumber):
     return discNumber
 
 
-def getProperCount(count, totalCount):
+def getProperCount(count: Union[str, int], totalCount: Union[str, int]) -> str:
     # if total tracks = 100, then this function will convert 1 to 001 for consistent sorting
     try:
-        if isString(count):
-            count = int(count)
-        if isString(totalCount):
-            totalCount = int(totalCount)
-        upperBound = int(ceil(log10(totalCount + 1)))
+        upperBound = int(ceil(log10(int(totalCount) + 1)))
         return str(count).zfill(upperBound)
 
     except Exception:
@@ -88,7 +89,7 @@ def getProperCount(count, totalCount):
     return str(count)
 
 
-def yesNoUserInput():
+def yesNoUserInput() -> bool:
     print('Continue? (Y/n) : ', end='')
     resp = input()
     if resp == 'n' or resp == 'N':
@@ -96,7 +97,7 @@ def yesNoUserInput():
     return True
 
 
-def noYesUserInput():
+def noYesUserInput() -> bool:
     print('Continue? (y/N) : ', end='')
     resp = input()
     if resp == 'y' or resp == 'Y':
@@ -104,7 +105,7 @@ def noYesUserInput():
     return False
 
 
-def downloadPicture(URL, path, name=None):
+def downloadPicture(URL: str, path: str, name=None):
     try:
         pictureName = os.path.basename(URL)
         imagePath = os.path.join(path, pictureName)
@@ -123,42 +124,46 @@ def downloadPicture(URL, path, name=None):
         print(e)
 
 
-def cleanName(name: str):
-    forbiddenCharacters = {
-        '<': 'ᐸ',
-        '>': 'ᐳ',
-        ':': '꞉',
-        '"': 'ˮ',
-        '\'': 'ʻ',
-        # '/': '／', # Looks far too stretched, but is more popular for some reason
-        '/': 'Ⳇ',  # This one looks more natural
-        '\\': '∖',
-        '|': 'ǀ',
-        '?': 'ʔ',
-        '*': '∗',
-        '+': '᛭',
-        '%': '٪',
-        '!': 'ⵑ',
-        '`': '՝',
-        '&': '&',  # keeping same as it is not forbidden, but it may cause problems
-        '{': '❴',
-        '}': '❵',
-        '=': '᐀',
-        # Not using this because it could be present in catalog number as well, may cause problems though
-        # '~': '～',
-        '#': '#',  # couldn't find alternative
-        '$': '$',  # couldn't find alternative
-        '@': '@'  # couldn't find alternative
-    }
+forbiddenCharacters = {
+    '<': 'ᐸ',
+    '>': 'ᐳ',
+    ':': '꞉',
+    '"': 'ˮ',
+    '\'': 'ʻ',
+    # '/': '／', # Looks far too stretched, but is more popular for some reason
+    '/': 'Ⳇ',  # This one looks more natural
+    '\\': '∖',
+    '|': 'ǀ',
+    '?': 'ʔ',
+    '*': '∗',
+    '+': '᛭',
+    '%': '٪',
+    '!': 'ⵑ',
+    '`': '՝',
+    '&': '&',  # keeping same as it is not forbidden, but it may cause problems
+    '{': '❴',
+    '}': '❵',
+    '=': '᐀',
+    # Not using this because it could be present in catalog number as well, may cause problems though
+    # '~': '～',
+    '#': '#',  # couldn't find alternative
+    '$': '$',  # couldn't find alternative
+    '@': '@'  # couldn't find alternative
+}
+
+
+def cleanName(name: str) -> str:
     output = name
     for invalidCharacter, validAlternative in forbiddenCharacters.items():
         output = output.replace(invalidCharacter, validAlternative)
     return output
 
 
-def fixDate(date):
-    if date is None:
-        return None
+def fixDate(date: str) -> str:
+    """
+    Makes sure that date is in the form YYYY-MM-DD
+    fills unknows fields with 00
+    """
     date = date.strip()
     parts = date.split('-')
     parts += ['00'] * (3 - len(parts))
