@@ -56,7 +56,7 @@ def tagAudioFile(trackData: TrackData, flags=Flags()):
         res: List[str] = []
         [res.append(x) for x in ans if x not in res]
         if len(res) == 0:
-            res = [list(languageObject.items())[0][0]]
+            res = [list(languageObject.items())[0][1]]
         return res
 
     # Tagging Album specific Details

@@ -4,7 +4,7 @@ sys.path.append(os.getcwd())
 from Utility.mutagenWrapper import AudioFactory, IAudioManager
 import traceback
 
-SEE_PASSED = True
+SEE_PASSED = False
 
 
 def testMutagenWrapper(audio: IAudioManager):
@@ -151,9 +151,11 @@ def testMutagenWrapper(audio: IAudioManager):
         print('')
 
 
+extensions = ["flac", "mp3", "m4a", "wav", "ogg", "opus"]
 baseFolder = "/run/media/arpit/DATA/Downloads/test"
 # change this
 extension = "ogg"
-filePath = os.path.join(baseFolder, f"{extension}_test.{extension}")
-testMutagenWrapper(AudioFactory.buildAudioManager(filePath))
-print(f"Tests completed for {extension} file")
+for extension in extensions:
+    filePath = os.path.join(baseFolder, f"{extension}_test.{extension}")
+    testMutagenWrapper(AudioFactory.buildAudioManager(filePath))
+    print(f"Tests completed for {extension} file")

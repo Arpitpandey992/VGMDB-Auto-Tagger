@@ -69,7 +69,7 @@ def getFolderTrackData(folderPath: str) -> Dict[int, Dict[int, str]]:
             discNumber = 1
             trackNumber = 1
             discNumber = audio.getDiscNumber()
-            if discNumber is not None:
+            if discNumber:
                 discNumber = int(splitAndGetFirst(discNumber))
             else:
                 print(f'Disc Number not Present in file : {file}, Taking Default Value = 01')

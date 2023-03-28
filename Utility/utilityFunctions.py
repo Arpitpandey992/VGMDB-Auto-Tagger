@@ -159,11 +159,13 @@ def cleanName(name: str) -> str:
     return output
 
 
-def fixDate(date: str) -> str:
+def fixDate(date: Optional[str]) -> Optional[str]:
     """
     Makes sure that date is in the form YYYY-MM-DD
     fills unknows fields with 00
     """
+    if not date:
+        return date
     date = date.strip()
     parts = date.split('-')
     parts += ['00'] * (3 - len(parts))

@@ -63,9 +63,7 @@ def splitAndGetSecond(discNumber: Optional[str]) -> Optional[str]:
 def getFirstElement(listVariable: Optional[Union[List, Any]]) -> Any:
     if not listVariable:
         return None
-    elif isinstance(listVariable, list):
-        return listVariable[0]
-    return listVariable
+    return listVariable[0]
 
 
 pictureNumberToName = {
@@ -239,16 +237,16 @@ class VorbisWrapper(IAudioManager):
         picture.type = pictureType
         picture.mime = 'image/jpeg'
         picture.desc = pictureNumberToName[pictureType]
-        if isinstance(self.audio, FLAC):
+        if self.extension == '.flac':
             self.audio.add_picture(picture)
         else:
             import base64
             self.audio["metadata_block_picture"] = base64.b64encode(picture.write()).decode("ascii")
 
     def hasPictureOfType(self, pictureType):
-        if (isinstance(self.audio, OggOpus) or isinstance(self.audio, OggVorbis)) and "metadata_block_picture" in self.audio:
+        if (self.extension == '.opus' or self.extension == '.ogg') and "metadata_block_picture" in self.audio:
             return True
-        elif isinstance(self.audio, FLAC):
+        elif self.extension == '.flac':
             for picture in self.audio.pictures:
                 if picture.type == pictureType:
                     return True
@@ -257,7 +255,7 @@ class VorbisWrapper(IAudioManager):
     def deletePictureOfType(self, pictureType):
         # This will remove all pictures sadly,
         # i couldn't find any proper method to remove only one picture
-        if isinstance(self.audio, FLAC):
+        if self.extension == '.flac':
             self.audio.clear_pictures()
         elif "metadata_block_picture" in self.audio:
             self.audio.pop("metadata_block_picture")
@@ -578,24 +576,22 @@ class MP4Wrapper(IAudioManager):
 
     def getDiscNumber(self):
         disk = getFirstElement(self.audio.get("disk"))
-        return str(disk[0]) if disk else ""
+        return str(disk[0]) if disk else None
 
     def getTotalDiscs(self):
         disk = getFirstElement(self.audio.get("disk"))
-        return str(disk[1]) if disk else ""
+        return str(disk[1]) if disk else None
 
     def getTrackNumber(self):
         trkn = getFirstElement(self.audio.get("trkn"))
-        return str(trkn[0]) if trkn else ""
+        return str(trkn[0]) if trkn else None
 
     def getTotalTracks(self):
         trkn = getFirstElement(self.audio.get("trkn"))
-        return str(trkn[1]) if trkn else ""
+        return str(trkn[1]) if trkn else None
 
     def getComment(self):
         return getFirstElement(self.audio.get("\xa9cmt"))
-
-    # Todo from here
 
     def getDate(self):
         return self.audio.get("\xa9day", None)
