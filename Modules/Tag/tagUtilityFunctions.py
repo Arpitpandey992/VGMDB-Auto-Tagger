@@ -93,8 +93,10 @@ def tagAudioFile(trackData: TrackData, flags=Flags()):
             else:
                 audio.setPictureOfType(imageData, 3)
 
-    if flags.DATE and 'release_date' in trackData:
-        audio.setDate(fixDate(trackData['release_date']))
+    if flags.DATE:
+        fixed_date = fixDate(trackData.get('release_date'))
+        if fixed_date:
+            audio.setDate(fixed_date)
 
     if flags.YEAR and 'release_date' in trackData and len(trackData['release_date']) >= 4:
         audio.setCustomTag('Year', trackData['release_date'][0:4])

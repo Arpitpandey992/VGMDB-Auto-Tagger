@@ -116,7 +116,7 @@ class IAudioManager(ABC):
 
     @abstractmethod
     def setComment(self, trackNumber: str):
-        """ Set a comment """
+        """ Set comment """
 
     @abstractmethod
     def setPictureOfType(self, imageData: bytes, pictureType: int):
@@ -124,11 +124,11 @@ class IAudioManager(ABC):
 
     @abstractmethod
     def hasPictureOfType(self, pictureType: int):
-        """ Set a picture of some type (3 = front Cover) """
+        """ check whether a picture of some type (3 = front Cover) is present"""
 
     @abstractmethod
     def deletePictureOfType(self, pictureType: int) -> bool:
-        """ Set a picture of some type (3 = front Cover) """
+        """ delete a picture of some type (3 = front Cover) """
 
     @abstractmethod
     def setDate(self, date: str):
@@ -136,7 +136,7 @@ class IAudioManager(ABC):
 
     @abstractmethod
     def setCatalog(self, value: str):
-        """ Set a custom tag as Key = value """
+        """ Set Catalog number """
 
     @abstractmethod
     def setCustomTag(self, key: str, value: Union[str, List[str]]):
@@ -156,31 +156,31 @@ class IAudioManager(ABC):
 
     @abstractmethod
     def getArtist(self) -> Optional[str]:
-        """ get the album name of the track """
+        """ get the artist name of the track """
 
     @abstractmethod
     def getAlbumArtist(self) -> Optional[str]:
-        """ get the album Artist name of the track """
+        """ get the album Artist name """
 
     @abstractmethod
     def getDiscNumber(self) -> Optional[str]:
-        """ get disc number and total number of discs """
+        """ get disc number """
 
     @abstractmethod
     def getTotalDiscs(self) -> Optional[str]:
-        """ get disc number and total number of discs """
+        """ get total number of discs """
 
     @abstractmethod
     def getTrackNumber(self) -> Optional[str]:
-        """ get Track number and total number of tracks """
+        """ get Track number """
 
     @abstractmethod
     def getTotalTracks(self) -> Optional[str]:
-        """ get Track number and total number of tracks """
+        """ get Total number of tracks """
 
     @abstractmethod
     def getComment(self) -> Optional[str]:
-        """ get a comment """
+        """ get comment """
 
     @abstractmethod
     def getDate(self) -> Optional[str]:
@@ -192,7 +192,7 @@ class IAudioManager(ABC):
 
     @abstractmethod
     def getCatalog(self) -> Optional[str]:
-        """ get Catalog Value """
+        """ get Catalog number """
 
     @abstractmethod
     def getDiscName(self) -> Optional[str]:
