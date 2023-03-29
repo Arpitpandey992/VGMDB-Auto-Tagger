@@ -1,8 +1,8 @@
 # Importing abstract methods
 from abc import ABC, abstractmethod
-
 import os
 from typing import Union, Optional, List, Any
+import base64
 
 from mutagen.flac import Picture as PictureFLAC, FLAC
 from mutagen.wave import WAVE
@@ -115,7 +115,7 @@ class IAudioManager(ABC):
         """
 
     @abstractmethod
-    def setComment(self, trackNumber: str):
+    def setComment(self, comment: str):
         """ Set comment """
 
     @abstractmethod
@@ -207,8 +207,44 @@ class IAudioManager(ABC):
         """ Apply metadata changes """
 
 
+class OggPicture():
+    def __init__(self, picture):
+        self.picture = picture
+        self.type = 3
+
+
+class CustomOgg(OggVorbis):
+    def add_picture(self, picture: PictureFLAC):
+        self["metadata_block_picture"] = base64.b64encode(picture.write()).decode("ascii")
+
+    def clear_pictures(self):
+        if "metadata_block_picture" in self:
+            self.pop("metadata_block_picture")
+
+    @property
+    def pictures(self):
+        if "metadata_block_picture" in self:
+            return [OggPicture(self.get("metadata_block_picture"))]
+        return []
+
+
+class CustomOpus(OggOpus):
+    def add_picture(self, picture: PictureFLAC):
+        self["metadata_block_picture"] = base64.b64encode(picture.write()).decode("ascii")
+
+    def clear_pictures(self):
+        if "metadata_block_picture" in self:
+            self.pop("metadata_block_picture")
+
+    @property
+    def pictures(self):
+        if "metadata_block_picture" in self:
+            return [OggPicture(self.get("metadata_block_picture"))]
+        return []
+
+
 class VorbisWrapper(IAudioManager):
-    def __init__(self, mutagen_object: Union[FLAC, OggVorbis, OggOpus], extension: str):
+    def __init__(self, mutagen_object: Union[FLAC, CustomOgg, CustomOpus], extension: str):
         self.extension = extension.lower()
         self.audio = mutagen_object
 
@@ -237,28 +273,19 @@ class VorbisWrapper(IAudioManager):
         picture.type = pictureType
         picture.mime = 'image/jpeg'
         picture.desc = pictureNumberToName[pictureType]
-        if self.extension == '.flac':
-            self.audio.add_picture(picture)
-        else:
-            import base64
-            self.audio["metadata_block_picture"] = base64.b64encode(picture.write()).decode("ascii")
+        self.audio.add_picture(picture)
 
     def hasPictureOfType(self, pictureType):
-        if (self.extension == '.opus' or self.extension == '.ogg') and "metadata_block_picture" in self.audio:
-            return True
-        elif self.extension == '.flac':
-            for picture in self.audio.pictures:
-                if picture.type == pictureType:
-                    return True
+        for picture in self.audio.pictures:
+            if picture.type == pictureType:
+                return True
+
         return False
 
     def deletePictureOfType(self, pictureType):
         # This will remove all pictures sadly,
         # i couldn't find any proper method to remove only one picture
-        if self.extension == '.flac':
-            self.audio.clear_pictures()
-        elif "metadata_block_picture" in self.audio:
-            self.audio.pop("metadata_block_picture")
+        self.audio.clear_pictures()
         return True
 
     def setDate(self, date):
@@ -591,7 +618,7 @@ class MP4Wrapper(IAudioManager):
         return str(trkn[1]) if trkn else None
 
     def getComment(self):
-        return getFirstElement(self.audio.get("\xa9cmt"))
+        return self.audio.get("\xa9cmt")
 
     def getDate(self):
         return self.audio.get("\xa9day", None)
@@ -634,8 +661,8 @@ audioFileHandler = {
     '.flac': [VorbisWrapper, FLAC],
     '.wav': [ID3Wrapper, CustomWAVE],
     '.mp3': [ID3Wrapper, ID3],
-    '.ogg': [VorbisWrapper, OggVorbis],
-    '.opus': [VorbisWrapper, OggOpus],
+    '.ogg': [VorbisWrapper, CustomOgg],
+    '.opus': [VorbisWrapper, CustomOpus],
     '.m4a': [MP4Wrapper, MP4]
 }
 supportedExtensions = audioFileHandler.keys()
