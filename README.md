@@ -59,7 +59,7 @@ During picture grabbing stage, it is required to give username and password, sin
 ## Progress and Future Plans
 - [X] Making the program more fail-safe and "trustable".
 - [X] Adding support for FLAC.
-- [X] Adding support for MP3.
+- [X] Adding support for MP3 and WAV.
 - [X] Adding support for OGG and OPUS.
 - [X] Adding support for M4A.
 - [ ] Integrating some other API (Like Musicbrainz) to get tags such as `artist`, `album artist`, etc.
