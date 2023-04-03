@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 from tabulate import tabulate
 from Utility.audioUtils import getFolderTrackData, getOneAudioFile
 from Utility.generalUtils import cleanName, fixDate, getProperCount
@@ -7,8 +7,21 @@ from Imports.flagsAndSettings import tableFormat
 import os
 
 
-def countAudioFiles(folderTrackData: Dict[int, Dict[int, str]]) -> int:
-    return sum([len(tracks) for _, tracks in folderTrackData.items()])
+def countAudioFiles(folderPath: Optional[str] = None, folderTrackData: Optional[Dict[int, Dict[int, str]]] = None) -> int:
+    """
+    count the number of audio files present inside a directory (not recursive),
+    or return the count of tracks given in folderTrackData format
+    """
+    if folderTrackData:
+        return sum([len(tracks) for _, tracks in folderTrackData.items()])
+    if folderPath:
+        count = 0
+        for filename in os.listdir(folderPath):
+            _, extension = os.path.splitext(filename)
+            if extension.lower() in supportedExtensions:
+                count += 1
+        return count
+    return 0
 
 
 def renameAlbumFolder(folderPath, sameFolderName: bool = False):
@@ -58,7 +71,7 @@ def renameAlbumFolder(folderPath, sameFolderName: bool = False):
 def renameAlbumFiles(folderPath: str, noMove: bool = False, verbose: bool = False):
     """Rename all files present inside a directory which contains files corresponding to ONE album only"""
     folderTrackData = getFolderTrackData(folderPath)
-    audioFilesCount = countAudioFiles(folderTrackData)
+    audioFilesCount = countAudioFiles(folderTrackData=folderTrackData)
     isSingle = audioFilesCount == 1
     totalDiscs = len(folderTrackData)
 
@@ -128,13 +141,18 @@ def renameAlbumFiles(folderPath: str, noMove: bool = False, verbose: bool = Fals
         )
 
 
-def renameFiles(folderPath):
+def renameFiles(folderPath, verbose: bool = False):
     """
     Rename all files recursively or iteratively in a directory.
-    Change file names to {Track Number} - {Track Name}
+    Considers no particular relatioship between files (unlike the albumRename function)
+    Does not move files (in Disc folders or anything)
+    Use for general folders containing files from various albums
     """
+    tableData = []
+    renameCount = 1
     for root, dirs, files in os.walk(folderPath):
-        for file in sorted(files):
+        totalTracks = countAudioFiles(folderPath=root)
+        for file in files:
             _, extension = os.path.splitext(file)
             if extension.lower() not in supportedExtensions:
                 print(f"{file} has unsupported extension ({extension})")
@@ -143,17 +161,10 @@ def renameFiles(folderPath):
             audio = AudioFactory.buildAudioManager(filePath)
 
             title = audio.getTitle()
-            if title is None:
+            if not title:
                 print(f'Title not present in {file}, Skipping!')
                 continue
-            trackNumber = audio.getTrackNumber()
-            totalTracks = audio.getTotalTracks()
             artist = audio.getArtist()
-            if totalTracks is None:
-                totalTracks = '99'
-            if not trackNumber:
-                trackNumber = "1"
-            trackNumber = getProperCount(trackNumber, totalTracks)
             date = fixDate(audio.getDate())
             if not date:
                 date = fixDate(audio.getCustomTag('year'))
@@ -162,19 +173,17 @@ def renameFiles(folderPath):
             year = date[:4] if date and len(date) >= 4 else ""
             oldName = file
             names = {
-                # For Albums
-                1: f"{trackNumber} - {title}{extension}" if trackNumber is not None else f"{title}{extension}",
-                # For Single Tracks:
-                2: f"{artist} - {title}{extension}" if artist is not None else f"{title}{extension}",
-                3: f"{title}{extension}",
-                4: f"[{date}] {title}{extension}",
-                5: f"[{year}] {title}{extension}"
+                1: f"{artist} - {title}{extension}" if artist else f"{title}{extension}",
+                2: f"{title}{extension}",
+                3: f"[{date}] {title}{extension}",
+                4: f"[{year}] {title}{extension}"
             }
-            albumTrackName, singleTrackName = 1, 3
+            multiTrackName, singleTrackName = 1, 1
 
             # Change the naming template here :
-            isSingle = int(totalTracks) == 1
-            nameChoice = singleTrackName if isSingle else albumTrackName
+            # Single here means that the folder itself contains only one file
+            isSingle = totalTracks == 1
+            nameChoice = singleTrackName if isSingle else multiTrackName
 
             newName = cleanName(names[nameChoice])
 
@@ -185,11 +194,25 @@ def renameFiles(folderPath):
                         print(f'{newFilePath} Exists, cannot rename {file}')
                     else:
                         os.rename(filePath, newFilePath)
-                        print(f'Renamed {oldName} to {newName}')
+                        tableData.append((renameCount, oldName, newName))
+                        renameCount += 1
                 except Exception as e:
                     print(f'Cannot rename {file}')
                     print(e)
-    print("\ndone rename operation")
+    if verbose and tableData:
+        print('Files Renamed as Follows\n')
+        tableData.sort()
+        print(
+            tabulate(
+                tableData,
+                headers=['S.no', 'Old Name', 'New Name'],
+                colalign=('center', 'left', 'left'),
+                maxcolwidths=45,
+                tablefmt=tableFormat
+            ),
+            end='\n\n'
+        )
+    print("\ndone rename operation on the directory")
 
 
 def organizeAlbum(folderPath, sameFolderName: bool = False):

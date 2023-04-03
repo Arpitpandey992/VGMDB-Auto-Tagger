@@ -22,7 +22,7 @@ def Request(url: str) -> Optional[Dict[str, Any]]:
 
 
 def getAlbumDetails(albumID: str) -> AlbumData:
-    return Request(f'https://vgmdb.info/album/{albumID}')
+    return Request(f'https://vgmdb.info/album/{albumID}')  # type: ignore
 
 
 def searchAlbum(albumName: str) -> Optional[List[SearchAlbum]]:

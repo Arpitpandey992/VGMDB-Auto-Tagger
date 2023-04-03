@@ -618,10 +618,10 @@ class MP4Wrapper(IAudioManager):
         return str(trkn[1]) if trkn else None
 
     def getComment(self):
-        return self.audio.get("\xa9cmt")
+        return getFirstElement(self.audio.get("\xa9cmt"))
 
     def getDate(self):
-        return self.audio.get("\xa9day", None)
+        return getFirstElement(self.audio.get("\xa9day", None))
 
     def getCustomTag(self, key):
         newKey = f"----:com.apple.iTunes:{key}"
