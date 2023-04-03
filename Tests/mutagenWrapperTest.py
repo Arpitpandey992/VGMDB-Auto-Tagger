@@ -152,9 +152,9 @@ def testMutagenWrapper(audio: IAudioManager):
 
 
 extensions = ["flac", "mp3", "m4a", "wav", "ogg", "opus"]
-baseFolder = "/run/media/arpit/DATA/Downloads/test"
+__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+baseFolder = os.path.join(__location__, "testSamples")
 # change this
-extension = "ogg"
 for extension in extensions:
     print(f"Testing {extension} file")
     filePath = os.path.join(baseFolder, f"{extension}_test.{extension}")

@@ -62,8 +62,8 @@ def splitAndGetSecond(discNumber: Optional[str]) -> Optional[str]:
 
 
 def getFirstElement(listVariable: Optional[Union[List, Any]]) -> Any:
-    if not listVariable:
-        return None
+    if type(listVariable) is not list:
+        return listVariable
     return listVariable[0]
 
 
@@ -85,7 +85,6 @@ pictureNumberToName = {
     14: u'During recording',
     15: u'During performance',
 }
-
 
 
 class IAudioManager(ABC):
