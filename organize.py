@@ -1,6 +1,7 @@
 import argparse
-from Modules.OrganizeUtils.organizeAlbum import organizeAlbum
-from Modules.OrganizeUtils.renameFiles import renameFiles
+
+from Modules.Rename.renameUtils import renameFiles
+from Modules.Rename.renameUtils import organizeAlbum
 
 parser = argparse.ArgumentParser(description='Organize a music album folder using file tags!')
 parser.add_argument('folderPath', help='Album directory path (Required Argument)')

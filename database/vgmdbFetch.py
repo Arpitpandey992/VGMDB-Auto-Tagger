@@ -1,6 +1,6 @@
 import os
 from Imports.flagsAndSettings import *
-from Utility.utilityFunctions import Request
+from Utility.generalUtils import Request
 
 # Work in progress, trying to decouple the data fetching code to allow the easy integration of other APIs like musicbrainz (for artist names, and other stuff)
 

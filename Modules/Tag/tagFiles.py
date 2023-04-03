@@ -4,25 +4,28 @@ from typing import Dict
 from Imports.flagsAndSettings import tableFormat
 from Types.albumData import AlbumData, TrackData
 from Types.otherData import OtherData
-from Utility.utilityFunctions import getBest
-from Modules.Tag.tagUtilityFunctions import tagAudioFile
+from Utility.generalUtils import getBest
+from Modules.Tag.tagUtils import tagAudioFile
 from Utility.mutagenWrapper import supportedExtensions
 
 
-def tagFiles(albumTrackData: Dict[int, Dict[int, Dict[str, str]]],
-             folderTrackData: Dict[int, Dict[int, str]],
-             albumData: AlbumData,
-             otherData: OtherData):
+def tagFiles(
+    albumTrackData: Dict[int, Dict[int, Dict[str, str]]],
+    folderTrackData: Dict[int, Dict[int, str]],
+    albumData: AlbumData,
+    otherData: OtherData
+):
     flags = otherData.get('flags')
     totalDiscs = len(albumTrackData)
 
     tableData = []
     for discNumber, tracks in albumTrackData.items():
-
+        if discNumber not in folderTrackData:
+            continue
         totalTracks = len(tracks)
 
         for trackNumber, trackTitles in tracks.items():
-            if discNumber not in folderTrackData or trackNumber not in folderTrackData[discNumber]:
+            if trackNumber not in folderTrackData[discNumber]:
                 continue
 
             filePath = folderTrackData[discNumber][trackNumber]

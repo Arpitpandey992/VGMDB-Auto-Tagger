@@ -7,12 +7,11 @@ from tabulate import tabulate
 
 
 from Imports.flagsAndSettings import Flags, tableFormat, BACKUPFOLDER, APICALLRETRIES
-from Utility.utilityFunctions import getAlbumDetails, yesNoUserInput, noYesUserInput, getBest, searchAlbum, fixDate, cleanSearchTerm
+from Modules.Rename.renameUtils import renameAlbumFiles, renameAlbumFolder
+from Utility.generalUtils import getAlbumDetails, yesNoUserInput, noYesUserInput, getBest, searchAlbum, fixDate, cleanSearchTerm
 
 from Modules.Tag.tagFiles import tagFiles
-from Modules.Rename.renameFiles import renameFiles
-from Modules.Rename.renameFolder import renameFolder
-from Utility.audioUtilityFunctions import getSearchTermAndDate, getAlbumTrackData, getFolderTrackData, doTracksAlign, getYearFromDate
+from Utility.audioUtils import getSearchTermAndDate, getAlbumTrackData, getFolderTrackData, doTracksAlign, getYearFromDate
 from Modules.vgmdbrip.vgmdbrip import getPictures, getPicturesTheOldWay
 
 from Types.albumData import AlbumData
@@ -256,7 +255,8 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
     if flags.RENAME_FILES:
         print('Renaming Files')
         print('\n', end='')
-        renameFiles(albumTrackData, folderTrackData, otherData)
+        renameAlbumFiles(folderPath, verbose=True)
+        # renameFiles(albumTrackData, folderTrackData, otherData)
         print('Finished Renaming Files')
         print('\n', end='')
         print('\n', end='')
@@ -264,7 +264,8 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
     if flags.RENAME_FOLDER:
         print('Renaming Folder')
         print('\n', end='')
-        renameFolder(albumData, otherData)
+        renameAlbumFolder(folderPath)
+        # renameFolder(albumData, otherData)
 
     return True
 

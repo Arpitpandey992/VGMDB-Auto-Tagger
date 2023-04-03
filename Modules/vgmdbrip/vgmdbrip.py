@@ -8,7 +8,7 @@ import requests
 from bs4 import BeautifulSoup
 from Types.albumData import AlbumData
 from Types.otherData import OtherData
-from Utility.utilityFunctions import downloadPicture
+from Utility.generalUtils import downloadPicture
 session = requests.Session()
 
 

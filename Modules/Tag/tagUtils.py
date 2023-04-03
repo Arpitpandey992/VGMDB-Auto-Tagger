@@ -5,7 +5,7 @@ from PIL import Image
 
 from Imports.flagsAndSettings import Flags, languages
 from Types.albumData import TrackData
-from Utility.utilityFunctions import fixDate, getBest, getProperCount
+from Utility.generalUtils import fixDate, getBest, getProperCount
 from Utility.mutagenWrapper import AudioFactory
 
 

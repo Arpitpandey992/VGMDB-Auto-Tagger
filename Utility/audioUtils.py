@@ -5,7 +5,7 @@ from typing import Dict, Optional
 from Types.albumData import AlbumData
 from Types.otherData import OtherData
 from Utility.mutagenWrapper import AudioFactory, supportedExtensions
-from Utility.utilityFunctions import getBest, splitAndGetFirst
+from Utility.generalUtils import getBest, splitAndGetFirst
 from Utility.translate import translate
 
 
@@ -66,36 +66,33 @@ def getFolderTrackData(folderPath: str) -> Dict[int, Dict[int, str]]:
                 continue
             filePath = os.path.join(root, file)
             audio = AudioFactory.buildAudioManager(filePath)
-            discNumber = 1
-            trackNumber = 1
-            discNumber = audio.getDiscNumber()
-            if discNumber:
-                discNumber = int(splitAndGetFirst(discNumber))
-            else:
-                print(f'Disc Number not Present in file : {file}, Taking Default Value = 01')
-                discNumber = 1
-
+            
             trackNumber = audio.getTrackNumber()
-            if trackNumber is not None:
-                trackNumber = int(splitAndGetFirst(trackNumber))
-            else:
+            if trackNumber is None:
                 print(f'TrackNumber not Present in file : {file}, Skipped!')
                 continue
+            
+            discNumber = audio.getDiscNumber()
+            if discNumber is None:
+                print(f'Disc Number not Present in file : {file}, Taking Default Value = 01')
+                discNumber = 1
+            trackNumber, discNumber = int(trackNumber), int(discNumber)
 
             if discNumber not in folderTrackData:
                 folderTrackData[discNumber] = {}
             if trackNumber in folderTrackData[discNumber]:
-                print(
-                    f'disc {discNumber}, Track {trackNumber} - {os.path.basename(folderTrackData[discNumber][trackNumber])} Conflicts with {file}')
+                print(f'disc {discNumber}, Track {trackNumber} - {os.path.basename(folderTrackData[discNumber][trackNumber])} Conflicts with {file}')
                 continue
 
             folderTrackData[discNumber][trackNumber] = filePath
     return folderTrackData
 
 
-def doTracksAlign(albumTrackData: Dict[int, Dict[int, Dict[str, str]]],
-                  folderTrackData: Dict[int, Dict[int, str]],
-                  flags: Flags) -> bool:
+def doTracksAlign(
+    albumTrackData: Dict[int, Dict[int, Dict[str, str]]],
+    folderTrackData: Dict[int, Dict[int, str]],
+    flags: Flags
+) -> bool:
     flag = True
     tableData = []
     for discNumber, tracks in albumTrackData.items():
@@ -110,9 +107,12 @@ def doTracksAlign(albumTrackData: Dict[int, Dict[int, Dict[str, str]]],
     for discNumber, tracks in folderTrackData.items():
         for trackNumber, trackTitle in tracks.items():
             if discNumber not in albumTrackData or trackNumber not in albumTrackData[discNumber]:
-                tableData.append(
-                    (discNumber, trackNumber, '', os.path.basename(
-                        folderTrackData[discNumber][trackNumber])))
+                tableData.append((
+                    discNumber,
+                    trackNumber,
+                    '',
+                    os.path.basename(folderTrackData[discNumber][trackNumber])
+                ))
                 flag = False
 
     tableData.sort()
