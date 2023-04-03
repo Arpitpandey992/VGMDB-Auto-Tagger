@@ -158,9 +158,8 @@ def argumentParser() -> tuple[argparse.Namespace, Flags, str]:
 
 
 def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
-    print('\n', end='')
-    print('Getting album Data')
     try:
+        print('\nfetching Album Data from VGMDB...\n')
         albumData: AlbumData = getAlbumDetails(albumID)
         if albumData is None:
             print('could not fetch album details, Please Try Again.')
@@ -190,9 +189,6 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
 
     albumTrackData = getAlbumTrackData(albumData, otherData)
     folderTrackData = getFolderTrackData(folderPath)
-    print('Done getting TrackData')
-    print('\n', end='')
-    print('\n', end='')
 
     if not doTracksAlign(albumTrackData, folderTrackData, flags):
         print('The tracks are not fully fitting the album data received from VGMDB!')
@@ -204,9 +200,6 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
         if not flags.NO_INPUT and not flags.YES and not yesNoUserInput():
             print('\n', end='')
             return False
-
-    print('\n', end='')
-    print('\n', end='')
 
     # Fixing date in data to be in the form YYYY-MM-DD (MM and DD will be Zero if not present)
     fixedDate = fixDate(albumData['release_date'])
@@ -230,44 +223,29 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
             print('error Message :', e)
             if not flags.NO_INPUT and not flags.YES and not yesNoUserInput():
                 return False
-        print('\n', end='')
-        print('\n', end='')
 
     if flags.SCANS:
         print('Downloading Scans...')
-
         if not flags.NO_AUTH:
             # New Algorithm for downloading Scans -> All scans are downloaded, requires Authentication
             getPictures(folderPath, albumID)
         elif 'covers' in albumData:
             # Old algorithm for downloading -> no Authentication -> less covers available!
             getPicturesTheOldWay(albumData, otherData)
-
-        print('Downloaded Available Pictures :)', end='\n\n')
+        print('Downloaded Available Pictures :)\n')
 
     # Tagging
     if flags.TAG:
-        print('Tagging files')
-        print('\n', end='')
+        print('Tagging Files\n')
         tagFiles(albumTrackData, folderTrackData, albumData, otherData)
-        print('Finished Tagging operation')
-        print('\n', end='')
-        print('\n', end='')
     # Renaming Files
     if flags.RENAME_FILES:
-        print('Renaming Files')
-        print('\n', end='')
+        print('Renaming Files\n')
         renameAlbumFiles(folderPath, verbose=True)
-        # renameFiles(albumTrackData, folderTrackData, otherData)
-        print('Finished Renaming Files')
-        print('\n', end='')
-        print('\n', end='')
     # Renaming Folder
     if flags.RENAME_FOLDER:
-        print('Renaming Folder')
-        print('\n', end='')
+        print('Renaming Folder\n')
         renameAlbumFolder(folderPath)
-        # renameFolder(albumData, otherData)
 
     return True
 
@@ -292,8 +270,7 @@ def findAlbumID(folderPath: str, searchTerm: Optional[str], searchYear: Optional
     # if searchTerm is still None -> user typed Exit
     if searchTerm is None:
         return None
-    print(f'Searching for : {searchTerm}, Year = {searchYear}')
-    print('\n', end='')
+    print(f'Searching for : {searchTerm}, Year = {searchYear}\n')
     albums = searchAlbum(searchTerm)
     if not albums:
         print("No results found!, Please change search term!")
@@ -328,13 +305,12 @@ def findAlbumID(folderPath: str, searchTerm: Optional[str], searchYear: Optional
                    colalign=('center', 'left', 'left', 'left', 'center')), end='\n\n')
 
     if (flags.NO_INPUT or flags.YES) and len(tableData) == 1:
-        print('Continuing with this album!', end='\n\n')
+        print('Continuing with this album!\n')
         choice = '1'
     elif flags.NO_INPUT:
         return None
     else:
         print(f'Write another search term (exit allowed) or Choose Album Serial Number (1-{len(tableData)}) : ', end='')
-
         choice = input()
         if choice.lower() == 'exit':
             return None

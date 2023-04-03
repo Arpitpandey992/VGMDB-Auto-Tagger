@@ -1,4 +1,5 @@
 import os
+import sys
 from typing import Union, Optional, List, Dict, Any
 import requests
 from math import ceil, log10
@@ -158,3 +159,9 @@ def updateDict(dictionary: Union[Dict, TrackData, AlbumData], keyValuePairs: Dic
     """In place update some keys present in a dictionary"""
     for key, value in keyValuePairs.items():
         dictionary[key] = value
+
+
+def printAndMoveBack(text: str):
+    sys.stdout.write("\033[K")  # Clear to the end of line
+    print(text, end='\r')
+    sys.stdout.flush()

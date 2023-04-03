@@ -1,7 +1,7 @@
 from typing import Dict, Optional
 from tabulate import tabulate
 from Utility.audioUtils import getFolderTrackData, getOneAudioFile
-from Utility.generalUtils import cleanName, fixDate, getProperCount
+from Utility.generalUtils import cleanName, fixDate, getProperCount, printAndMoveBack
 from Utility.mutagenWrapper import AudioFactory, supportedExtensions
 from Imports.flagsAndSettings import tableFormat
 import os
@@ -116,6 +116,7 @@ def renameAlbumFiles(folderPath: str, noMove: bool = False, verbose: bool = Fals
                         print(f'{newFilePath} Exists, cannot rename {fileName}')
                     else:
                         os.rename(filePath, newFilePath)
+                        printAndMoveBack(f"Renamed : {newName}")
                         tableData.append((
                             discNumberStr,
                             trackNumberStr,
@@ -126,16 +127,16 @@ def renameAlbumFiles(folderPath: str, noMove: bool = False, verbose: bool = Fals
                 except Exception as e:
                     print(f'Cannot rename {fileName}')
                     print(e)
-
+    printAndMoveBack('')
     if verbose and tableData:
-        print('Files Renamed as Follows\n')
+        print('Files Renamed as follows:')
         tableData.sort()
         print(
             tabulate(
                 tableData,
                 headers=['Disc', 'Track', 'Old Name', 'New Name'],
                 colalign=('center', 'center', 'left', 'left'),
-                maxcolwidths=53, tablefmt=tableFormat
+                maxcolwidths=50, tablefmt=tableFormat
             ),
             end='\n\n'
         )
@@ -194,11 +195,13 @@ def renameFilesRecursively(folderPath, verbose: bool = False):
                         print(f'{newFilePath} Exists, cannot rename {file}')
                     else:
                         os.rename(filePath, newFilePath)
+                        printAndMoveBack(f"Renamed : {newName}")
                         tableData.append((renameCount, oldName, newName))
                         renameCount += 1
                 except Exception as e:
                     print(f'Cannot rename {file}')
                     print(e)
+    printAndMoveBack('')
     if verbose and tableData:
         print('Files Renamed as Follows\n')
         tableData.sort()

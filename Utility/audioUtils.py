@@ -119,5 +119,5 @@ def doTracksAlign(
     print(tabulate(tableData,
                    headers=['Disc', 'Track', 'Title (Translated)' if flags.TRANSLATE else 'Title', 'fileName'],
                    colalign=('center', 'center', 'left', 'left'),
-                   maxcolwidths=53, tablefmt=tableFormat), end='\n\n')
+                   maxcolwidths=50, tablefmt=tableFormat), end='\n\n')
     return flag

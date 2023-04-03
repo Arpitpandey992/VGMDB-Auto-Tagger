@@ -70,7 +70,6 @@ def getPictures(folder: str, albumID: str):
     config = os.path.join(scriptdir, 'vgmdbrip.pkl')
     login(config)
     soup = Soup(session.get("https://vgmdb.net/album/" + albumID).content)
-    print('Title: ' + soup.title.text)  # type: ignore
     gallery = soup.find("div", attrs={"class": "covertab",
                                       "id": "cover_gallery"})
 

@@ -67,7 +67,7 @@ def findAlbumID(folderPath, searchTerm, searchYear, flags: Flags):
                    colalign=('center', 'left', 'left', 'left', 'center')), end='\n\n')
 
     if flags.YES and len(tableData) == 1:
-        print('Continuing with this album!', end='\n\n')
+        print('Continuing with this album!\n')
         choice = '1'
     else:
         print(

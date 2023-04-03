@@ -4,7 +4,7 @@ from typing import Dict
 from Imports.flagsAndSettings import tableFormat
 from Types.albumData import AlbumData, TrackData
 from Types.otherData import OtherData
-from Utility.generalUtils import getBest, updateDict
+from Utility.generalUtils import getBest, printAndMoveBack, updateDict
 from Modules.Tag.tagUtils import getImageData, tagAudioFile
 from Utility.mutagenWrapper import supportedExtensions
 import time
@@ -67,7 +67,7 @@ def tagFiles(
             audioTagged = tagAudioFile(trackData, flags)
 
             if audioTagged:
-                print(f"Tagged : {fileName}")
+                printAndMoveBack(f"Tagged : {fileName}")
                 tableData.append((
                     discNumber,
                     trackNumber,
@@ -80,11 +80,10 @@ def tagFiles(
 
     if not tableData:
         return
-    print('\n', end='')
-
-    print('Files Tagged as follows')
+    printAndMoveBack('')
+    print('Files Tagged as follows:')
     tableData.sort()
     print(tabulate(tableData,
                    headers=['Disc', 'Track', 'Title', 'File Name'],
                    colalign=('center', 'center', 'left', 'left'),
-                   maxcolwidths=53, tablefmt=tableFormat), end='\n\n')
+                   maxcolwidths=50, tablefmt=tableFormat), end='\n\n')
