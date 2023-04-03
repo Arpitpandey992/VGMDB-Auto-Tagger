@@ -135,7 +135,7 @@ def fixDate(date: Optional[str]) -> Optional[str]:
     return normalized_date_str
 
 
-def cleanSearchTerm(name):
+def cleanSearchTerm(name: Optional[str]) -> Optional[str]:
     if name is None:
         return None
 
@@ -152,3 +152,9 @@ def cleanSearchTerm(name):
         else:
             ans += ' '
     return ans
+
+
+def updateDict(dictionary: Union[Dict, TrackData, AlbumData], keyValuePairs: Dict) -> None:
+    """In place update some keys present in a dictionary"""
+    for key, value in keyValuePairs.items():
+        dictionary[key] = value

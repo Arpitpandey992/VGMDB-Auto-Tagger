@@ -13,7 +13,8 @@ from mutagen.id3 import ID3
 from mutagen.mp4 import MP4, MP4Cover
 
 """
-This is a wrapper around mutagen module. This basically allows us to call the same functions for any extension, and hence reducing code complexity.
+This is a wrapper around mutagen module. 
+This basically allows us to call the same functions for any extension, and hence reducing code complexity.
 """
 
 
@@ -86,12 +87,11 @@ pictureNumberToName = {
 }
 
 
-"""
-Interface Class for generalizing usage of Mutagen across multiple formats
-"""
-
 
 class IAudioManager(ABC):
+    """
+    Interface Class for generalizing usage of Mutagen across multiple formats
+    """
     @abstractmethod
     def setTitle(self, newTitle: list[str]):
         """ Set the title of track """
@@ -678,9 +678,6 @@ class AudioFactory():
 
 
 if __name__ == '__main__':
-    filePath = "/run/media/arpit/DATA/Music/Visual Novels/Key Sounds Label/To Replace/[FCCM-0066] AIR SOUNDTRACK [2005.03.25]/01.wav"
-    filePath = "/run/media/arpit/DATA/Downloads/test/01. Chiisana Kiseki.m4a"
-    filePath = "/run/media/arpit/DATA/Downloads/test/01 - 幼くて赤い指先.flac"
     filePath = "/run/media/arpit/DATA/Downloads/test/01 - Regrets.mp3"
     audio = AudioFactory.buildAudioManager(filePath)
     audio.setCustomTag('yourssss', 'yepyep')

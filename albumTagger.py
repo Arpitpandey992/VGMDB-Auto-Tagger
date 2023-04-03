@@ -209,7 +209,9 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
     print('\n', end='')
 
     # Fixing date in data to be in the form YYYY-MM-DD (MM and DD will be Zero if not present)
-    albumData['release_date'] = fixDate(albumData['release_date'])
+    fixedDate = fixDate(albumData['release_date'])
+    if fixedDate is not None:
+        albumData['release_date'] = fixedDate
 
     if flags.BACKUP:
         try:
@@ -366,4 +368,5 @@ def main():
         print(f'Operations failed at {folderPath}')
 
 
-main()
+if __name__ == "__main__":
+    main()

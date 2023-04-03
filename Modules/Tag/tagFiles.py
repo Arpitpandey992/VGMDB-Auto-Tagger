@@ -4,9 +4,10 @@ from typing import Dict
 from Imports.flagsAndSettings import tableFormat
 from Types.albumData import AlbumData, TrackData
 from Types.otherData import OtherData
-from Utility.generalUtils import getBest
-from Modules.Tag.tagUtils import tagAudioFile
+from Utility.generalUtils import getBest, updateDict
+from Modules.Tag.tagUtils import getImageData, tagAudioFile
 from Utility.mutagenWrapper import supportedExtensions
+import time
 
 
 def tagFiles(
@@ -16,6 +17,22 @@ def tagFiles(
     otherData: OtherData
 ):
     flags = otherData.get('flags')
+    trackData: TrackData = {
+        **albumData,
+        'track_number': 0,
+        'total_tracks': 0,
+        'disc_number': 0,
+        'total_discs': 0,
+        'file_path': "",
+        'track_titles': {},
+        'album_link': albumData.get('vgmdb_link'),
+        'album_names': albumData.get('names'),
+        'album_name': getBest(albumData.get('names'), flags.languageOrder),
+    }
+    if flags.PICS:
+        imageData = getImageData(albumData)
+        if imageData:
+            trackData['picture_cache'] = imageData
     totalDiscs = len(albumTrackData)
 
     tableData = []
@@ -38,19 +55,15 @@ def tagFiles(
                 tableData.append(('XX', 'XX', 'XX', fileName))
                 continue
 
-            trackData: TrackData = {
-                **albumData,
+            updateDict(trackData, {
                 'track_number': trackNumber,
                 'total_tracks': totalTracks,
                 'disc_number': discNumber,
                 'total_discs': totalDiscs,
                 'file_path': filePath,
                 'track_titles': trackTitles,
-                'album_link': albumData.get('vgmdb_link'),
-                'album_names': albumData.get('names'),
-                'album_name': getBest(albumData.get('names'), flags.languageOrder)
-            }
-            # Tagging the file
+            })
+
             audioTagged = tagAudioFile(trackData, flags)
 
             if audioTagged:

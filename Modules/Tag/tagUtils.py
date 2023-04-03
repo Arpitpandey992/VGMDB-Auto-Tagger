@@ -4,18 +4,16 @@ import io
 from PIL import Image
 
 from Imports.flagsAndSettings import Flags, languages
-from Types.albumData import TrackData
+from Types.albumData import AlbumData, TrackData
 from Utility.generalUtils import fixDate, getBest, getProperCount
 from Utility.mutagenWrapper import AudioFactory
 
 
-def getImageData(trackData: TrackData) -> Optional[bytes]:
-    if 'picture_cache' in trackData:
-        return trackData['picture_cache']
-    if 'picture_full' not in trackData:
+def getImageData(albumData: AlbumData) -> Optional[bytes]:
+    if 'picture_full' not in albumData:
         return None
 
-    response = requests.get(trackData['picture_full'])
+    response = requests.get(albumData['picture_full'])
     imageData = response.content
     image = Image.open(io.BytesIO(imageData))
     image = image.convert('RGB')  # Remove transparency if present
@@ -28,7 +26,6 @@ def getImageData(trackData: TrackData) -> Optional[bytes]:
     imageData = io.BytesIO()
     image.save(imageData, format='JPEG', quality=70)
     imageData = imageData.getvalue()
-    trackData['picture_cache'] = imageData
     return imageData
 
 
@@ -83,15 +80,14 @@ def tagAudioFile(trackData: TrackData, flags=Flags()):
     audio.setDiscNumbers(getProperCount(trackData['disc_number'], trackData['total_discs']), str(trackData['total_discs']))
     audio.setComment(f"Find the tracklist at {trackData['album_link']}")
 
-    if flags.PICS:
-        imageData = getImageData(trackData)
-        if imageData is not None:
-            if audio.hasPictureOfType(3):
-                if flags.PIC_OVERWRITE:
-                    audio.deletePictureOfType(3)
-                    audio.setPictureOfType(imageData, 3)
-            else:
+    if flags.PICS and 'picture_cache' in trackData:
+        imageData = trackData['picture_cache']
+        if audio.hasPictureOfType(3):
+            if flags.PIC_OVERWRITE:
+                audio.deletePictureOfType(3)
                 audio.setPictureOfType(imageData, 3)
+        else:
+            audio.setPictureOfType(imageData, 3)
 
     if flags.DATE:
         fixed_date = fixDate(trackData.get('release_date'))
