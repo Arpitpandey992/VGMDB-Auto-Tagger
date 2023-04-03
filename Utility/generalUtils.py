@@ -8,7 +8,7 @@ from Types.search import *
 from Types.albumData import *
 
 
-def Request(url: str) -> Optional[Dict[str, Any]]:
+def Request(url: str) -> Optional[Dict[Any, Any]]:
     countLeft = APICALLRETRIES
     while countLeft > 0:
         try:
@@ -38,43 +38,6 @@ def getBest(languageObject: Dict[str, str], languageOrder: List[str]) -> str:
             if languageKey in languageObject:
                 return languageObject[languageKey]
     return list(languageObject.items())[0][0]
-
-
-def isString(var):
-    return isinstance(var, str)
-
-
-def splitAndGetFirst(discNumber):
-    # get the count of tracks -> checks if the input is something like 4/20 -> truncates to 4
-    # output is a string, input can be an integer, float, ...
-    if not isString(discNumber):
-        return str(discNumber)
-
-    if '/' in discNumber:
-        discNumber = discNumber.split('/')[0]
-    elif ':' in discNumber:
-        discNumber = discNumber.split(':')[0]
-
-    return discNumber
-
-
-def splitAndGetSecond(discNumber):
-    # get the count of tracks -> checks if the input is something like 4/20 -> truncates to 20
-    # output is a string, input can be an integer, float, ...
-    if not isString(discNumber):
-        return str(discNumber)
-
-    if '/' in discNumber:
-        discNumber = discNumber.split('/')
-        if len(discNumber) < 2:
-            return None
-        discNumber = discNumber[1]
-    elif ':' in discNumber:
-        discNumber = discNumber.split(':')
-        if len(discNumber) < 2:
-            return None
-        discNumber = discNumber[1]
-    return discNumber
 
 
 def getProperCount(count: Union[str, int], totalCount: Union[str, int]) -> str:
@@ -144,8 +107,7 @@ forbiddenCharacters = {
     '{': '❴',
     '}': '❵',
     '=': '᐀',
-    # Not using this because it could be present in catalog number as well, may cause problems though
-    # '~': '～',
+    # '~': '～',  # Not using this because it could be present in catalog number as well, may cause problems though
     '#': '#',  # couldn't find alternative
     '$': '$',  # couldn't find alternative
     '@': '@'  # couldn't find alternative

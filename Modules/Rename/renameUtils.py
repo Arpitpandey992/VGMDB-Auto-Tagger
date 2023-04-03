@@ -141,7 +141,7 @@ def renameAlbumFiles(folderPath: str, noMove: bool = False, verbose: bool = Fals
         )
 
 
-def renameFiles(folderPath, verbose: bool = False):
+def renameFilesRecursively(folderPath, verbose: bool = False):
     """
     Rename all files recursively or iteratively in a directory.
     Considers no particular relatioship between files (unlike the albumRename function)
@@ -216,8 +216,7 @@ def renameFiles(folderPath, verbose: bool = False):
 
 
 def organizeAlbum(folderPath, sameFolderName: bool = False):
-    print(f'Organizing Album : {os.path.basename(folderPath)}')
+    """Organize a folder which represents ONE album"""
     renameAlbumFiles(folderPath, verbose=True)
     renameAlbumFolder(folderPath, sameFolderName)
-    print(f'{os.path.basename(folderPath)} Organized!')
-    print('\n', end='')
+    print(f'{os.path.basename(folderPath)} Organized!\n')

@@ -1,6 +1,6 @@
 import argparse
 
-from Modules.Rename.renameUtils import renameFiles
+from Modules.Rename.renameUtils import renameFilesRecursively
 from Modules.Rename.renameUtils import organizeAlbum
 
 parser = argparse.ArgumentParser(description='Organize a music album folder using file tags!')
@@ -13,6 +13,6 @@ args = parser.parse_args()
 folderPath = args.folderPath
 
 if args.rename_only:
-    renameFiles(folderPath, verbose=True)
+    renameFilesRecursively(folderPath, verbose=True)
 else:
     organizeAlbum(folderPath, sameFolderName=args.same_folder_name)

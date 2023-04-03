@@ -2,11 +2,11 @@ import os
 import argparse
 import shutil
 import json
-from typing import Optional, Dict, List
+from typing import Optional, Dict
 from tabulate import tabulate
 
 
-from Imports.flagsAndSettings import Flags, tableFormat, BACKUPFOLDER, APICALLRETRIES
+from Imports.flagsAndSettings import Flags, tableFormat, BACKUPFOLDER
 from Modules.Rename.renameUtils import renameAlbumFiles, renameAlbumFolder
 from Utility.generalUtils import getAlbumDetails, yesNoUserInput, noYesUserInput, getBest, searchAlbum, fixDate, cleanSearchTerm
 

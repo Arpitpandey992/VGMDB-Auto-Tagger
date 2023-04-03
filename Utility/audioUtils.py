@@ -5,7 +5,7 @@ from typing import Dict, Optional
 from Types.albumData import AlbumData
 from Types.otherData import OtherData
 from Utility.mutagenWrapper import AudioFactory, supportedExtensions
-from Utility.generalUtils import getBest, splitAndGetFirst
+from Utility.generalUtils import getBest
 from Utility.translate import translate
 
 
@@ -66,12 +66,12 @@ def getFolderTrackData(folderPath: str) -> Dict[int, Dict[int, str]]:
                 continue
             filePath = os.path.join(root, file)
             audio = AudioFactory.buildAudioManager(filePath)
-            
+
             trackNumber = audio.getTrackNumber()
             if trackNumber is None:
                 print(f'TrackNumber not Present in file : {file}, Skipped!')
                 continue
-            
+
             discNumber = audio.getDiscNumber()
             if discNumber is None:
                 print(f'Disc Number not Present in file : {file}, Taking Default Value = 01')
