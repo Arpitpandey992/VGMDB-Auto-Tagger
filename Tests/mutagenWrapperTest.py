@@ -1,10 +1,23 @@
 import os
 import sys
+import traceback
+import random
 sys.path.append(os.getcwd())
 from Utility.mutagenWrapper import AudioFactory, IAudioManager
-import traceback
 
+__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+baseFolder = os.path.join(__location__, "testSamples")
+coversPath = os.path.join(baseFolder, "covers")
+covers = [os.path.join(coversPath, coverName) for coverName in os.listdir(coversPath)]
 SEE_PASSED = False
+
+
+def getRandomCover():
+    num_covers = len(covers)
+    cover_index = random.randrange(0, num_covers, 1)
+    path = covers[cover_index]
+    del covers[cover_index]
+    return path
 
 
 def testMutagenWrapper(audio: IAudioManager):
@@ -121,7 +134,7 @@ def testMutagenWrapper(audio: IAudioManager):
 
     try:
         # read the image file
-        with open('/home/arpit/Pictures/Icons/c-plus-plus.png', 'rb') as image_file:
+        with open(getRandomCover(), 'rb') as image_file:
             image_data = image_file.read()
 
         # set the picture of type 3
@@ -135,6 +148,13 @@ def testMutagenWrapper(audio: IAudioManager):
 
         # check if the picture was deleted
         assert audio.hasPictureOfType(3) == False
+
+        # set and check again
+        audio.setPictureOfType(image_data, 3)
+
+        # check if the picture exists
+        assert audio.hasPictureOfType(3) == True
+
     except AssertionError as e:
         print("cover related tests Failed:\n")
         traceback.print_exc()
@@ -152,9 +172,6 @@ def testMutagenWrapper(audio: IAudioManager):
 
 
 extensions = ["flac", "mp3", "m4a", "wav", "ogg", "opus"]
-__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-baseFolder = os.path.join(__location__, "testSamples")
-# change this
 for extension in extensions:
     print(f"Testing {extension} file")
     filePath = os.path.join(baseFolder, f"{extension}_test.{extension}")

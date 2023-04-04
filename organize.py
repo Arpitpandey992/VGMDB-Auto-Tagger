@@ -8,7 +8,7 @@ parser.add_argument('folderPath', help='Album directory path (Required Argument)
 parser.add_argument('--rename-only', dest='rename_only', action='store_true',
                     help='Recursively Rename Files within Directory, considering no relationship between files')
 parser.add_argument('--same-folder-name', dest='same_folder_name', action='store_true',
-                    help='Keep the same folder name as [date] {foldername} [Catalog]')
+                    help='use the current folder name instead of getting it from album name')
 args = parser.parse_args()
 folderPath = args.folderPath
 

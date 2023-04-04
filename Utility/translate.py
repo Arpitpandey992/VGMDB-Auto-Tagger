@@ -1,29 +1,8 @@
 import subprocess
 
-
-from googletrans import Translator
-
-
-def _translate_googletrans(text, dest_language='en'):
-    """
-    Translate the given text to the specified destination language.
-
-    Parameters:
-    text (str): The text to translate.
-    dest_language (str): The destination language code (default: 'en').
-
-    Returns:
-    str: The translated text.
-    """
-    translator = Translator()
-    # detected_lang = translator.detect(text)
-    # if detected_lang == dest_language:
-    # return text
-    translated_text = translator.translate(text, dest=dest_language)
-    return translated_text
-
-
 # This uses 'translate-shell' system process to do the task. make sure it is available and added to path
+
+
 def _translate_translate_shell(oldText: str, target_language: str = 'en') -> str:
     try:
         language = subprocess.run(
@@ -48,7 +27,6 @@ def _translate_translate_shell(oldText: str, target_language: str = 'en') -> str
 
 def translate(text: str) -> str:
     return _translate_translate_shell(text)
-    # return _translate_googletrans(text)
 
 
 if __name__ == '__main__':
