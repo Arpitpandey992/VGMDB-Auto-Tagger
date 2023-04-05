@@ -1,18 +1,16 @@
 import os
 from tabulate import tabulate
-from typing import Dict
 from Imports.flagsAndSettings import tableFormat
 from Types.albumData import AlbumData, TrackData
 from Types.otherData import OtherData
 from Utility.generalUtils import getBest, printAndMoveBack, updateDict
 from Modules.Tag.tagUtils import getImageData, tagAudioFile
 from Utility.mutagenWrapper import supportedExtensions
-import time
 
 
 def tagFiles(
-    albumTrackData: Dict[int, Dict[int, Dict[str, str]]],
-    folderTrackData: Dict[int, Dict[int, str]],
+    albumTrackData: dict[int, dict[int, dict[str, str]]],
+    folderTrackData: dict[int, dict[int, str]],
     albumData: AlbumData,
     otherData: OtherData
 ):
@@ -47,7 +45,7 @@ def tagFiles(
 
             filePath = folderTrackData[discNumber][trackNumber]
             fileName = os.path.basename(filePath)
-            fileNameWithoutExtension, extension = os.path.splitext(fileName)
+            _, extension = os.path.splitext(fileName)
             extension = extension.lower()
 
             if extension not in supportedExtensions:

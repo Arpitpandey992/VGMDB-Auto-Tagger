@@ -3,7 +3,7 @@ APICALLRETRIES = 5
 tableFormat = 'pretty'
 
 languages = {
-    'romaji': ['ja-latn', 'Romaji'],
+    'romaji': ['ja-latn', 'Romaji', 'Romaji Translated'],
     'english': ['en', 'English', 'English (Apple Music)', 'English/German', 'English localized', 'English (alternate)', 'English Translated', 'English [Translation]'],
     'japanese': ['ja', 'Japanese']
 }

@@ -1,12 +1,12 @@
-from Imports.flagsAndSettings import *
+from Imports.flagsAndSettings import Flags, tableFormat
 import os
 from tabulate import tabulate
-from typing import Dict, Optional
+from typing import Optional
 from Types.albumData import AlbumData
 from Types.otherData import OtherData
 from Utility.mutagenWrapper import AudioFactory, supportedExtensions
-from Utility.generalUtils import getBest
-from Utility.translate import translate
+from Utility.generalUtils import getBest, isLanguagePresent
+from Utility.translator import translate
 
 
 def getYearFromDate(date: Optional[str]) -> Optional[str]:
@@ -38,27 +38,34 @@ def getSearchTermAndDate(folderPath: str) -> tuple[Optional[str], Optional[str]]
     return albumName, date
 
 
-def getAlbumTrackData(albumData: AlbumData, otherData: OtherData) -> Dict[int, Dict[int, Dict[str, str]]]:
+def getAlbumTrackData(albumData: AlbumData, otherData: OtherData) -> dict[int, dict[int, dict[str, str]]]:
     flags: Flags = otherData['flags']
-    trackData: Dict[int, Dict[int, Dict[str, str]]] = {}
+    trackData: dict[int, dict[int, dict[str, str]]] = {}
     discNumber = 1
     for disc in albumData['discs']:
         trackData[discNumber] = {}
         trackNumber = 1
         for track in disc['tracks']:
             names = track['names']
-            # This is pretty dangerous, Do not translate unless absolutely sure
             if flags.TRANSLATE:
-                for lang, trackName in names.items():
-                    names[lang] = translate(trackName)
+                # Translating when english is not present
+                otherLanguageTitle = list(names.items())[0][1]
+                translateObject = translate(otherLanguageTitle, 'english')
+                englishName = translateObject['translatedText']
+                romajiName = translateObject['romajiText']
+                if englishName:
+                    names['English Translated'] = englishName
+                if romajiName:
+                    names['Romaji Translated'] = romajiName
+
             trackData[discNumber][trackNumber] = names
             trackNumber += 1
         discNumber += 1
     return trackData
 
 
-def getFolderTrackData(folderPath: str) -> Dict[int, Dict[int, str]]:
-    folderTrackData: Dict[int, Dict[int, str]] = {}
+def getFolderTrackData(folderPath: str) -> dict[int, dict[int, str]]:
+    folderTrackData: dict[int, dict[int, str]] = {}
     for root, dirs, files in os.walk(folderPath):
         for file in files:
             _, extension = os.path.splitext(file)
@@ -89,8 +96,8 @@ def getFolderTrackData(folderPath: str) -> Dict[int, Dict[int, str]]:
 
 
 def doTracksAlign(
-    albumTrackData: Dict[int, Dict[int, Dict[str, str]]],
-    folderTrackData: Dict[int, Dict[int, str]],
+    albumTrackData: dict[int, dict[int, dict[str, str]]],
+    folderTrackData: dict[int, dict[int, str]],
     flags: Flags
 ) -> bool:
     flag = True

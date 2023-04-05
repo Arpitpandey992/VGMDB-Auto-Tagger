@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional
+from typing import Optional
 import requests
 import io
 from PIL import Image
@@ -34,23 +34,20 @@ def tagAudioFile(trackData: TrackData, flags=Flags()):
 
     def addMultiValues(tag: str, tagInFile: str, flag: bool = True) -> None:
         if tag in trackData and flag:
-            listOfValues: List[str] = []
+            listOfValues: list[str] = []
             for val in trackData[tag]:
                 listOfValues.append(getBest(val['names'], flags.languageOrder))
             audio.setCustomTag(tagInFile, listOfValues)
 
-    def getAllLanguages(languageObject: Dict[str, str]) -> List[str]:
-        ans: List[str] = []
+    def getAllLanguages(languageObject: dict[str, str]) -> list[str]:
+        ans: list[str] = []
         for currentLanguage in flags.languageOrder:
-            # Ignoring japanese names
-            if currentLanguage == 'japanese':
-                continue
             for languageKey in languages[currentLanguage]:
                 if languageKey in languageObject:
                     ans.append(languageObject[languageKey])
                     break
         # removing duplicates
-        res: List[str] = []
+        res: list[str] = []
         [res.append(x) for x in ans if x not in res]
         if len(res) == 0:
             res = [list(languageObject.items())[0][1]]
@@ -64,10 +61,10 @@ def tagAudioFile(trackData: TrackData, flags=Flags()):
         if flags.KEEP_TITLE:
             title = audio.getTitle()
             titles.append(title) if title else None
-            # removing duplicate titles
-            res = []
-            [res.append(x) for x in titles if x not in res]
-            titles = res
+        # removing duplicate titles
+        res = []
+        [res.append(x) for x in titles if x not in res]
+        titles = res
 
         audio.setTitle(titles)
 

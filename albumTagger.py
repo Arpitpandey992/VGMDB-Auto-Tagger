@@ -2,7 +2,7 @@ import os
 import argparse
 import shutil
 import json
-from typing import Optional, Dict
+from typing import Optional
 from tabulate import tabulate
 
 
@@ -125,9 +125,6 @@ def argumentParser() -> tuple[argparse.Namespace, Flags, str]:
         flags.ALL_LANG = False  # type: ignore
     if args.translate:
         flags.TRANSLATE = True  # type: ignore
-        # When translating, it is better not to keep multiple names (keeping the original name as it is assumed to not be in english)
-        flags.ALL_LANG = False  # type: ignore
-        flags.KEEP_TITLE = True  # type: ignore
 
     if args.no_scans:
         flags.SCANS = False  # type: ignore
@@ -276,7 +273,7 @@ def findAlbumID(folderPath: str, searchTerm: Optional[str], searchYear: Optional
         print("No results found!, Please change search term!")
         return findAlbumID(folderPath, None, None, flags)
 
-    albumData: Dict[int, SearchAlbumData] = {}
+    albumData: dict[int, SearchAlbumData] = {}
     tableData = []
     serialNumber: int = 1
     for album in albums:

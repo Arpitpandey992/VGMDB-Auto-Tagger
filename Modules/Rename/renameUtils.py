@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Optional
 from tabulate import tabulate
 from Utility.audioUtils import getFolderTrackData, getOneAudioFile
 from Utility.generalUtils import cleanName, fixDate, getProperCount, printAndMoveBack
@@ -7,7 +7,7 @@ from Imports.flagsAndSettings import tableFormat
 import os
 
 
-def countAudioFiles(folderPath: Optional[str] = None, folderTrackData: Optional[Dict[int, Dict[int, str]]] = None) -> int:
+def countAudioFiles(folderPath: Optional[str] = None, folderTrackData: Optional[dict[int, dict[int, str]]] = None) -> int:
     """
     count the number of audio files present inside a directory (not recursive),
     or return the count of tracks given in folderTrackData format

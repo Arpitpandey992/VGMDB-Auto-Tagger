@@ -1,5 +1,5 @@
-from typing_extensions import TypedDict, NotRequired, Required
-from typing import Dict, Optional
+from typing_extensions import TypedDict
+from typing import Optional
 
 
 class SearchAlbum(TypedDict):
@@ -8,7 +8,7 @@ class SearchAlbum(TypedDict):
     link: str
     media_format: str
     release_date: str
-    titles: Dict[str, str]
+    titles: dict[str, str]
 
 
 class SearchAlbumData(SearchAlbum):

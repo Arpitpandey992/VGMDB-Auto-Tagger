@@ -1,15 +1,15 @@
 import os
 import sys
-from typing import Union, Optional, List, Dict, Any
+from typing import Union, Optional, Any
 import requests
 from math import ceil, log10
 import urllib.request
 from Imports.flagsAndSettings import APICALLRETRIES, languages
-from Types.search import *
-from Types.albumData import *
+from Types.search import SearchAlbum
+from Types.albumData import AlbumData, TrackData
 
 
-def Request(url: str) -> Optional[Dict[Any, Any]]:
+def Request(url: str) -> Optional[dict[Any, Any]]:
     countLeft = APICALLRETRIES
     while countLeft > 0:
         try:
@@ -26,19 +26,19 @@ def getAlbumDetails(albumID: str) -> AlbumData:
     return Request(f'https://vgmdb.info/album/{albumID}')  # type: ignore
 
 
-def searchAlbum(albumName: str) -> Optional[List[SearchAlbum]]:
+def searchAlbum(albumName: str) -> Optional[list[SearchAlbum]]:
     searchResult = Request(f'https://vgmdb.info/search?q={albumName}')
     if not searchResult:
         return None
     return searchResult['results']['albums']
 
 
-def getBest(languageObject: Dict[str, str], languageOrder: List[str]) -> str:
+def getBest(languageObject: dict[str, str], languageOrder: list[str]) -> str:
     for currentLanguage in languageOrder:
         for languageKey in languages[currentLanguage]:
             if languageKey in languageObject:
                 return languageObject[languageKey]
-    return list(languageObject.items())[0][0]
+    return list(languageObject.items())[0][1]
 
 
 def getProperCount(count: Union[str, int], totalCount: Union[str, int]) -> str:
@@ -155,7 +155,7 @@ def cleanSearchTerm(name: Optional[str]) -> Optional[str]:
     return ans
 
 
-def updateDict(dictionary: Union[Dict, TrackData, AlbumData], keyValuePairs: Dict) -> None:
+def updateDict(dictionary: Union[dict, TrackData, AlbumData], keyValuePairs: dict) -> None:
     """In place update some keys present in a dictionary"""
     for key, value in keyValuePairs.items():
         dictionary[key] = value
@@ -165,3 +165,11 @@ def printAndMoveBack(text: str):
     sys.stdout.write("\033[K")  # Clear to the end of line
     print(text, end='\r')
     sys.stdout.flush()
+
+def isLanguagePresent(languageObject: dict[str, str], language: str) -> bool:
+    presentLanguages = [key.lower().strip() for key in languageObject]
+    if language in languages:
+        for languageSynonym in languages[language]:
+            if languageSynonym.lower().strip() in presentLanguages:
+                return True
+    return False

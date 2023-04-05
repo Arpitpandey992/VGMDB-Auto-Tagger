@@ -1,7 +1,6 @@
-# Importing abstract methods
-from abc import ABC, abstractmethod
 import os
-from typing import Union, Optional, List, Any
+from abc import ABC, abstractmethod
+from typing import Union, Optional, Any
 import base64
 
 from mutagen.flac import Picture as PictureFLAC, FLAC
@@ -61,7 +60,7 @@ def splitAndGetSecond(discNumber: Optional[str]) -> Optional[str]:
     return discNumber
 
 
-def getFirstElement(listVariable: Optional[Union[List, Any]]) -> Any:
+def getFirstElement(listVariable: Optional[Union[list, Any]]) -> Any:
     if type(listVariable) is not list:
         return listVariable
     return listVariable[0]
@@ -138,7 +137,7 @@ class IAudioManager(ABC):
         """ Set Catalog number """
 
     @abstractmethod
-    def setCustomTag(self, key: str, value: Union[str, List[str]]):
+    def setCustomTag(self, key: str, value: Union[str, list[str]]):
         """ Set a custom tag as Key = value """
 
     @abstractmethod
