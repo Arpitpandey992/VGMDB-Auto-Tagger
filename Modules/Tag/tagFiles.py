@@ -34,16 +34,16 @@ def tagFiles(
     totalDiscs = len(albumTrackData)
 
     tableData = []
-    for discNumber, tracks in albumTrackData.items():
-        if discNumber not in folderTrackData:
+    for discNumber, tracks in folderTrackData.items():
+        if not flags.IGNORE_MISMATCH and discNumber not in albumTrackData:
             continue
-        totalTracks = len(tracks)
+        totalTracks = len(albumTrackData.get(discNumber, tracks))
 
-        for trackNumber, trackTitles in tracks.items():
-            if trackNumber not in folderTrackData[discNumber]:
+        for trackNumber, filePath in tracks.items():
+            if not flags.IGNORE_MISMATCH and trackNumber not in albumTrackData.get(discNumber, {}):
                 continue
+            trackTitles = albumTrackData.get(discNumber, {}).get(trackNumber, {})
 
-            filePath = folderTrackData[discNumber][trackNumber]
             fileName = os.path.basename(filePath)
             _, extension = os.path.splitext(fileName)
             extension = extension.lower()

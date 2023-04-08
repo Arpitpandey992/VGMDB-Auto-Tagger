@@ -21,6 +21,9 @@ class Flags:
         self.NO_AUTH = False
         self.NO_INPUT = False
         self.TRANSLATE = False
+        self.DISC_NUMBERS = True
+        self.TRACK_NUMBERS = True
+        self.IGNORE_MISMATCH = False  # Dangerous, keep false
 
         # Metadata Flags
         self.PICS = True

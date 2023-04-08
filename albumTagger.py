@@ -66,6 +66,8 @@ def argumentParser() -> tuple[argparse.Namespace, Flags, str]:
                         help='Only keep the best names')
     parser.add_argument('--translate', dest='translate', action='store_true',
                         help='Translate all text to english')
+    parser.add_argument('--album-data-only', dest='album_data_only', action='store_true',
+                        help='Only tag album specific details to ALL files in the folder, this option will tag those files as well which are not matching with any track in albumData received from VGMDB. Thus, this is a dangerous option, be careful')
 
     parser.add_argument('--single', action='store_true',
                         help='enable this if there is only one track in the album')
@@ -125,6 +127,12 @@ def argumentParser() -> tuple[argparse.Namespace, Flags, str]:
         flags.ALL_LANG = False  # type: ignore
     if args.translate:
         flags.TRANSLATE = True  # type: ignore
+
+    if args.album_data_only:
+        flags.TITLE = False  # type: ignore
+        flags.DISC_NUMBERS = False  # type: ignore
+        flags.TRACK_NUMBERS = False  # type: ignore
+        flags.IGNORE_MISMATCH = True  # type:ignore
 
     if args.no_scans:
         flags.SCANS = False  # type: ignore

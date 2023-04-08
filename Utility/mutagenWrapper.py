@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Union, Optional, Any
 import base64
 
+from mutagen.mp3 import MP3
 from mutagen.flac import Picture as PictureFLAC, FLAC
 from mutagen.wave import WAVE
 from mutagen.oggvorbis import OggVorbis
@@ -389,6 +390,18 @@ class CustomWAVE(WAVE):
             return [v for s, v in self.items() if s.startswith(key)]
 
 
+class CustomMP3(ID3):
+    def __init__(self, *args, **kwargs):
+        if args:
+            filePath = args[0]
+            # ensuring that the file contains an ID3 tag beforehand
+            audio = MP3(filePath)
+            if audio.tags is None:
+                audio.add_tags()
+                audio.save()
+        super().__init__(*args, **kwargs)
+
+
 class ID3Wrapper(IAudioManager):
 
     def __init__(self, mutagen_object: Union[ID3, CustomWAVE], extension: str):
@@ -658,7 +671,7 @@ class MP4Wrapper(IAudioManager):
 audioFileHandler = {
     '.flac': [VorbisWrapper, FLAC],
     '.wav': [ID3Wrapper, CustomWAVE],
-    '.mp3': [ID3Wrapper, ID3],
+    '.mp3': [ID3Wrapper, CustomMP3],
     '.ogg': [VorbisWrapper, CustomOgg],
     '.opus': [VorbisWrapper, CustomOpus],
     '.m4a': [MP4Wrapper, MP4]

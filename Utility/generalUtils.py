@@ -38,7 +38,11 @@ def getBest(languageObject: dict[str, str], languageOrder: list[str]) -> str:
         for languageKey in languages[currentLanguage]:
             if languageKey in languageObject:
                 return languageObject[languageKey]
-    return list(languageObject.items())[0][1]
+    languageObjectTuples = languageObject.items()
+    if languageObjectTuples:
+        return list(languageObjectTuples)[0][1]
+    # We should never reach this point, and if we do, then we are not updating track title
+    return ""
 
 
 def getProperCount(count: Union[str, int], totalCount: Union[str, int]) -> str:
@@ -165,6 +169,7 @@ def printAndMoveBack(text: str):
     sys.stdout.write("\033[K")  # Clear to the end of line
     print(text, end='\r')
     sys.stdout.flush()
+
 
 def isLanguagePresent(languageObject: dict[str, str], language: str) -> bool:
     presentLanguages = [key.lower().strip() for key in languageObject]

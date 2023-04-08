@@ -47,7 +47,7 @@ def renameAlbumFolder(folderPath, sameFolderName: bool = False):
     newFolderName = albumName
     if catalog and date:
         newFolderName = f'[{date}] {albumName} [{catalog}]'
-        # newFolderName = f'[{catalog]}] {albumName} [{date}]'
+        # newFolderName = f'[{catalog}] {albumName} [{date}]'
     elif catalog:
         newFolderName = f'{albumName} [{catalog}]'
     elif date:

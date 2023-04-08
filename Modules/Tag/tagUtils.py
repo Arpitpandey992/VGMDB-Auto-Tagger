@@ -73,8 +73,10 @@ def tagAudioFile(trackData: TrackData, flags=Flags()):
         audio.setAlbum(albumNames)
     else:
         audio.setAlbum([trackData['album_name']])
-    audio.setTrackNumbers(getProperCount(trackData['track_number'], trackData['total_tracks']), str(trackData['total_tracks']))
-    audio.setDiscNumbers(getProperCount(trackData['disc_number'], trackData['total_discs']), str(trackData['total_discs']))
+    if flags.TRACK_NUMBERS:
+        audio.setTrackNumbers(getProperCount(trackData['track_number'], trackData['total_tracks']), str(trackData['total_tracks']))
+    if flags.DISC_NUMBERS:
+        audio.setDiscNumbers(getProperCount(trackData['disc_number'], trackData['total_discs']), str(trackData['total_discs']))
     audio.setComment(f"Find the tracklist at {trackData['album_link']}")
 
     if flags.PICS and 'picture_cache' in trackData:
