@@ -120,7 +120,7 @@ forbiddenCharacters = {
 
 
 def cleanName(name: str) -> str:
-    output = name
+    output = name.strip()
     for invalidCharacter, validAlternative in forbiddenCharacters.items():
         output = output.replace(invalidCharacter, validAlternative)
     return output
@@ -133,6 +133,8 @@ def fixDate(date: Optional[str]) -> Optional[str]:
     """
     if not date:
         return date
+    date.replace('/', '-')
+    date.replace('_', '-')
     date = date.strip()
     parts = date.split('-')
     parts += ['00'] * (3 - len(parts))

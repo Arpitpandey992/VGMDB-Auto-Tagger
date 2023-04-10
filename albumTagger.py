@@ -17,6 +17,7 @@ from Modules.vgmdbrip.vgmdbrip import getPictures, getPicturesTheOldWay
 from Types.albumData import AlbumData
 from Types.search import SearchAlbumData
 from Types.otherData import OtherData
+from Utility.template import isValidTemplate
 
 
 def argumentParser() -> tuple[argparse.Namespace, Flags, str]:
@@ -33,6 +34,8 @@ def argumentParser() -> tuple[argparse.Namespace, Flags, str]:
                         help='Do not change the title of tracks')
     parser.add_argument('--keep-title', dest='keep_title', action='store_true',
                         help='keep the current title as well, and add other available titles')
+    parser.add_argument('--same-folder-name', dest='same_folder_name', action='store_true',
+                        help='While renaming the folder, use the current folder name instead of getting it from album name')
     parser.add_argument('--no-auth', dest='no_auth', action='store_true',
                         help='Do not authenticate for downloading Scans')
     parser.add_argument('--yes', '-y', action='store_true',
@@ -86,6 +89,13 @@ def argumentParser() -> tuple[argparse.Namespace, Flags, str]:
                         help='Give Priority to English')
     parser.add_argument('--romaji', '-ro', action='store_true',
                         help='Give Priority to Romaji')
+
+    parser.add_argument('--folder-naming-template',
+                        dest='folder_naming_template',
+                        type=str,
+                        default=None,
+                        help='Give a folder naming template like {catalog}{foldername}{date}')
+
     args = parser.parse_args()
 
     folderPath: str = args.folderPath
@@ -123,6 +133,8 @@ def argumentParser() -> tuple[argparse.Namespace, Flags, str]:
         flags.TITLE = False  # type: ignore
     if args.keep_title:
         flags.KEEP_TITLE = True  # type: ignore
+    if args.same_folder_name:
+        flags.SAME_FOLDER_NAME = True  # type: ignore
     if args.one_lang:
         flags.ALL_LANG = False  # type: ignore
     if args.translate:
@@ -133,6 +145,7 @@ def argumentParser() -> tuple[argparse.Namespace, Flags, str]:
         flags.DISC_NUMBERS = False  # type: ignore
         flags.TRACK_NUMBERS = False  # type: ignore
         flags.IGNORE_MISMATCH = True  # type:ignore
+        flags.RENAME_FILES = False  # type:ignore
 
     if args.no_scans:
         flags.SCANS = False  # type: ignore
@@ -156,6 +169,13 @@ def argumentParser() -> tuple[argparse.Namespace, Flags, str]:
         flags.TAG = False  # type: ignore
         flags.RENAME_FOLDER = False  # type: ignore
         flags.RENAME_FILES = False  # type: ignore
+
+    if args.folder_naming_template:
+        template = args.folder_naming_template
+        if not isValidTemplate(template):
+            print("Provided Folder Template is imbalanced, hence invalid, aborting!")
+            return args, flags, ""
+        flags.folderNamingTemplate = args.folder_naming_template
 
     if flags.SEE_FLAGS:
         print(json.dumps(vars(flags), indent=4))
@@ -250,7 +270,11 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
     # Renaming Folder
     if flags.RENAME_FOLDER:
         print('Renaming Folder\n')
-        renameAlbumFolder(folderPath)
+        if flags.SAME_FOLDER_NAME:
+            # NOT recommended to use this option, just provide the template in CLI argument itself and use foldername instead of albumname
+            renameAlbumFolder(folderPath, renameTemplate="{[{date}]} {foldername} {[{catalog}]}")
+        else:
+            renameAlbumFolder(folderPath, renameTemplate=flags.folderNamingTemplate)
 
     return True
 
@@ -330,6 +354,8 @@ def findAlbumID(folderPath: str, searchTerm: Optional[str], searchYear: Optional
 
 def main():
     args, flags, folderPath = argumentParser()
+    if not folderPath:
+        return
     print(f"Working Folder : {folderPath}")
     albumID = args.id
     if albumID is None:

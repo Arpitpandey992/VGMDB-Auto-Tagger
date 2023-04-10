@@ -35,6 +35,7 @@ class Flags:
         self.BARCODE = True
         self.TITLE = True
         self.KEEP_TITLE = False
+        self.SAME_FOLDER_NAME = False
         self.ALL_LANG = True
 
         self.ORGANIZATIONS = True
@@ -45,6 +46,8 @@ class Flags:
         self.PERFORMERS = False
         self.LYRICISTS = False
 
+        # default naming templates
+        self.folderNamingTemplate = "{[{date}]} {albumname} {[{catalog}]}"
         # languages to be probed from VGMDB in the given order of priority
         self.languageOrder = ['english', 'romaji', 'japanese']
 

@@ -6,6 +6,8 @@ from Utility.mutagenWrapper import AudioFactory, supportedExtensions
 from Imports.flagsAndSettings import tableFormat
 import os
 
+from Utility.template import TemplateResolver
+
 
 def countAudioFiles(folderPath: Optional[str] = None, folderTrackData: Optional[dict[int, dict[int, str]]] = None) -> int:
     """
@@ -24,60 +26,64 @@ def countAudioFiles(folderPath: Optional[str] = None, folderTrackData: Optional[
     return 0
 
 
-def renameAlbumFolder(folderPath, sameFolderName: bool = False):
+def renameAlbumFolder(
+    folderPath: str,
+    renameTemplate: str
+) -> None:
     """Rename the folder which contains ONE album"""
+
     filePath = getOneAudioFile(folderPath)
     if not filePath:
         print('No Audio file in directory!, aborting')
         return
+
     audio = AudioFactory.buildAudioManager(filePath)
-    if sameFolderName:
-        albumName = os.path.basename(folderPath)
-    else:
-        albumName = audio.getAlbum()
-        if albumName is None:
-            print(f'No Album Name in {filePath}, aborting')
-            return
+    folderName = os.path.basename(folderPath)
+    albumName = audio.getAlbum()
+    if albumName is None and "foldername" not in renameTemplate.lower():
+        print(f'No Album Name in {filePath}, aborting!')
+        return
     date = fixDate(audio.getDate())
     if not date:
         date = fixDate(audio.getCustomTag('year'))
     if date:
         date = date.replace('-', '.')
-    catalog = audio.getCatalog()
-    newFolderName = albumName
-    if catalog and date:
-        newFolderName = f'[{date}] {albumName} [{catalog}]'
-        # newFolderName = f'[{catalog}] {albumName} [{date}]'
-    elif catalog:
-        newFolderName = f'{albumName} [{catalog}]'
-    elif date:
-        newFolderName = f'[{date}] {albumName}'
-    else:
-        newFolderName = f'{albumName}'
 
-    oldFolderName = os.path.basename(folderPath)
+    templateMapping: dict[str, Optional[str]] = {
+        "albumname": albumName,
+        "catalog": audio.getCatalog(),
+        "date": date,
+        "foldername": folderName,
+        "barcode": audio.getCustomTag('barcode')
+    }
+
+    templateResolver = TemplateResolver(templateMapping)
+    newFolderName = templateResolver.evaluate(renameTemplate)
     newFolderName = cleanName(newFolderName)
 
     baseFolderPath = os.path.dirname(folderPath)
     newFolderPath = os.path.join(baseFolderPath, newFolderName)
-    if (oldFolderName != newFolderName):
+    if (folderName != newFolderName):
         if os.path.exists(newFolderPath):
-            print(f'{newFolderName} Exists, cannot rename {oldFolderName}')
+            print(f'{newFolderName} Exists, cannot rename {folderName}')
         else:
             os.rename(folderPath, newFolderPath)
-            print(f'Successfully Renamed {oldFolderName} to {newFolderName}')
+            print(f'Successfully Renamed {folderName} to {newFolderName}')
 
 
-def renameAlbumFiles(folderPath: str, noMove: bool = False, verbose: bool = False):
+def renameAlbumFiles(
+    folderPath: str,
+    noMove: bool = False,
+    verbose: bool = False
+):
     """Rename all files present inside a directory which contains files corresponding to ONE album only"""
     folderTrackData = getFolderTrackData(folderPath)
-    audioFilesCount = countAudioFiles(folderTrackData=folderTrackData)
-    isSingle = audioFilesCount == 1
     totalDiscs = len(folderTrackData)
 
     tableData = []
     for discNumber, tracks in folderTrackData.items():
         totalTracks = len(tracks)
+        isSingle = totalTracks == 1
         for trackNumber, filePath in tracks.items():
             fullFileName = os.path.basename(filePath)
             fileName, extension = os.path.splitext(fullFileName)
@@ -218,8 +224,8 @@ def renameFilesRecursively(folderPath, verbose: bool = False):
     print("\ndone rename operation on the directory")
 
 
-def organizeAlbum(folderPath, sameFolderName: bool = False):
+def organizeAlbum(folderPath, folderNamingtemplate):
     """Organize a folder which represents ONE album"""
     renameAlbumFiles(folderPath, verbose=True)
-    renameAlbumFolder(folderPath, sameFolderName)
+    renameAlbumFolder(folderPath, folderNamingtemplate)
     print(f'{os.path.basename(folderPath)} Organized!\n')
