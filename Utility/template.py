@@ -10,6 +10,9 @@ class TemplateResolver:
         return self._evaluate(expression)[0]
 
     def _evaluate(self, expression: str) -> tuple[str, bool]:
+        """
+        Recursively evaluate a given expression, not extremely optimized, but it's not needed here
+        """
         if expression.lower().strip() in self.mapping:
             expressionValue = self.mapping[expression.lower().strip()]
             # checking for both None, and ""

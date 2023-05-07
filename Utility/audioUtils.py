@@ -30,12 +30,12 @@ def getSearchTermAndDate(folderPath: str) -> tuple[Optional[str], Optional[str]]
         return None, None
 
     audio = AudioFactory.buildAudioManager(filePath)
-    albumName = audio.getAlbum()
+    possibleValues = [audio.getCatalog(), audio.getCustomTag('barcode'), audio.getAlbum()]
     date = audio.getDate()
-    catalog = audio.getCatalog()
-    if catalog:
-        return catalog, date
-    return albumName, date
+    for value in possibleValues:
+        if value:
+            return value, date
+    return None, date
 
 
 def getAlbumTrackData(albumData: AlbumData, otherData: OtherData) -> dict[int, dict[int, dict[str, str]]]:

@@ -2,7 +2,11 @@ beautifulsoup4==4.12.0
 bs4==0.0.1
 certifi==2022.12.7
 charset-normalizer==3.1.0
+cutlet==0.1.19
+fugashi==1.2.1
 idna==3.4
+jaconv==0.3.4
+mojimoji==0.0.12
 musicbrainzngs==0.7.1
 mutagen==1.46.0
 Pillow==9.5.0
