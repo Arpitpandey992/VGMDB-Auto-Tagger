@@ -76,6 +76,27 @@ options:
   --same-folder-name  Keep the same folder name as [date] {foldername} [Catalog]
 
 ```
+
+### For providing naming template in CLI argument
+we have variables like `catalog` `foldername` `date` `albumname` `barcode`
+
+in template, anything written inside curly braces is evaluated as a variable, and if anything inside the curly brace evaluates to false, then it evaluates to blank character.
+evaluating to false means that the key written inside the curly brace was valid, but it did not exist in the file.
+
+for example, consider naming template : `{[{catalog}] }{[{albumname}]}`
+
+here, we have catalog inside bracket and the entire [catalog] block inside another bracket. 
+
+This means that if file contains a `catalog` tag, then the name will be like: `[<catalog>] [<albumname>]`
+
+otherwise,  it will be like `[<albumname>]`
+
+note that albumname will also be evaluated in a similar way here. Also, note that since square brackets are put inside another curly brackets, they only appear if the variable in the innermost layer is available. This is desirable because:
+
+consider naming template like: `[{catalog}] [{albumname}]`
+
+this will work fine when both of these variables are present, but if catalog is not present, then the name will evaluate to: `[] [<albumname>]` which is not desirable
+
 ## Progress and Future Plans
 - [X] Making the program more fail-safe and "trustable".
 - [X] Adding support for FLAC.
