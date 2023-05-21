@@ -1,6 +1,7 @@
 #  VGMDB-Auto-Tagger
 Python script to automatically tag an album using data fetched from VGMDB.info
 
+This project uses api from [hufman VGMDB.info](https://github.com/hufman/vgmdb). Respect+
 ## Some Important Requirements
 * The music files must have proper `tracknumber` and `discnumber` tags for this to work.
 * Tags like `artist`, `album artist` are not supported as this data is not present in VGMDB itself.

@@ -185,7 +185,7 @@ def renameFilesRecursively(folderPath, verbose: bool = False):
                 3: f"[{date}] {title}{extension}",
                 4: f"[{year}] {title}{extension}"
             }
-            multiTrackName, singleTrackName = 1, 1
+            multiTrackName, singleTrackName = 2, 2
 
             # Change the naming template here :
             # Single here means that the folder itself contains only one file

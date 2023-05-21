@@ -4,9 +4,33 @@ from typing import Union, Optional, Any
 import requests
 from math import ceil, log10
 import urllib.request
+
+from Modules.vgmdb_info.docker_commands import run_server
 from Imports.flagsAndSettings import APICALLRETRIES, languages
 from Types.search import SearchAlbum
 from Types.albumData import AlbumData, TrackData
+
+USE_LOCAL_SERVER = True
+baseUrl = "https://vgmdb.info"
+
+if USE_LOCAL_SERVER:
+    try:
+        print("-----------")
+        baseAddress = run_server()
+        baseUrl = baseAddress
+        print("-----------")
+    except Exception as e:
+        print(f'''
+-----------
+could not run local server
+****make sure docker is installed and it's service is running in system****
+-----------
+error:
+{e}
+-----------
+'''.strip())
+
+print(f'\nusing {baseUrl} for VGMDB API\n')
 
 
 def Request(url: str) -> Optional[dict[Any, Any]]:
@@ -23,11 +47,11 @@ def Request(url: str) -> Optional[dict[Any, Any]]:
 
 
 def getAlbumDetails(albumID: str) -> AlbumData:
-    return Request(f'https://vgmdb.info/album/{albumID}')  # type: ignore
+    return Request(f'{baseUrl}/album/{albumID}')  # type: ignore
 
 
 def searchAlbum(albumName: str) -> Optional[list[SearchAlbum]]:
-    searchResult = Request(f'https://vgmdb.info/search?q={albumName}')
+    searchResult = Request(f'{baseUrl}/search?q={albumName}')
     if not searchResult:
         return None
     return searchResult['results']['albums']
