@@ -47,7 +47,7 @@ class Flags:
         self.LYRICISTS = False
 
         # default naming templates
-        self.folderNamingTemplate = "{[{date}]} {albumname} {[{catalog}]}"
+        self.folderNamingTemplate = "{[{date}] }{albumname}{ [{catalog}]}"
         # languages to be probed from VGMDB in the given order of priority
         self.languageOrder = ['english', 'romaji', 'japanese']
 

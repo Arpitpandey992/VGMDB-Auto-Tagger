@@ -2,8 +2,8 @@ import os
 import shutil
 
 # Specify the directory to search
-directory = "/run/media/arpit/DATA/Downloads/Browser Downloads/yurisa"
-DELETE_AS_WELL = True
+directory = "/run/media/arpit/DATA/Downloads/Music/Soulseek/trinfinity/Xeuphoria_"
+DELETE_AS_WELL = False
 
 
 for item in os.listdir(directory):

@@ -94,7 +94,9 @@ def argumentParser() -> tuple[argparse.Namespace, Flags, str]:
                         dest='folder_naming_template',
                         type=str,
                         default=None,
-                        help='Give a folder naming template like {catalog}{foldername}{date}')
+                        help='Give a folder naming template like "{[{catalog}] }{albumname}{ [{date}]}"')
+    parser.add_argument('--ksl', action='store_true',
+                        help='for KSL folder, (custom setting), keep catalog first in naming')
 
     args = parser.parse_args()
 
@@ -176,6 +178,9 @@ def argumentParser() -> tuple[argparse.Namespace, Flags, str]:
             print("Provided Folder Template is imbalanced, hence invalid, aborting!")
             return args, flags, ""
         flags.folderNamingTemplate = args.folder_naming_template
+
+    if args.ksl:
+        flags.folderNamingTemplate = "{[{catalog}] }{albumname}{ [{date}]}"
 
     if flags.SEE_FLAGS:
         print(json.dumps(vars(flags), indent=4))
