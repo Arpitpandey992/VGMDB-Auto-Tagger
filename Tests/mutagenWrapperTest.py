@@ -123,7 +123,7 @@ def testMutagenWrapper(audio: IAudioManager):
 
     # Test getting information
     try:
-        info = audio.getInformation()
+        info = audio.printInfo()
         assert isinstance(info, str)
         if SEE_PASSED:
             print("getInformation test passed")

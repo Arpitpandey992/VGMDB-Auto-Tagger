@@ -1,8 +1,9 @@
 from typing import Optional
 from tabulate import tabulate
+from mutagen.flac import StreamInfo
 from Utility.audioUtils import getFolderTrackData, getOneAudioFile
 from Utility.generalUtils import cleanName, fixDate, getProperCount, printAndMoveBack
-from Utility.mutagenWrapper import AudioFactory, supportedExtensions
+from Utility.mutagenWrapper import AudioFactory, supportedExtensions, IAudioManager
 from Imports.flagsAndSettings import tableFormat
 import os
 
@@ -24,6 +25,39 @@ def countAudioFiles(folderPath: Optional[str] = None, folderTrackData: Optional[
                 count += 1
         return count
     return 0
+
+
+def deduceAudioDetails(audio: IAudioManager) -> str:
+    extension = audio.getExtension()
+    # Flac contains most info variables, hence using it here for type hints only
+    info: StreamInfo = audio.getInfo()  # type:ignore
+    if extension in ['.flac', '.wav']:
+        format = 'FLAC' if extension == '.flac' else 'WAV'
+        bits = info.bits_per_sample
+        sample_rate = info.sample_rate / 1000
+        if sample_rate.is_integer():
+            sample_rate = int(sample_rate)
+        source = 'CD' if bits == 16 else 'WEB'
+        if sample_rate >= 192 or bits > 24:
+            source = "VINYL"  # Scuffed way, but assuming Vinyl rips have extremely high sample rate, but Qobuz does provide 192kHz files so yeah...
+        # Edge cases should be edited manually later
+        return f"{source}-{format} {bits}bit {sample_rate}kHz"
+    elif extension == '.mp3':
+        # CD-MP3 because in 99% cases, an mp3 album is a lossy cd rip
+        bitrate = int(info.bitrate / 1000)
+        return f"CD-MP3 {bitrate}kbps"
+    elif extension == '.m4a':
+        # aac files are usually provided by websites directly for lossy versions. apple music files are also m4a
+        bitrate = int(info.bitrate / 1000)
+        return f"WEB-AAC {bitrate}kbps"
+    elif extension == '.ogg':
+        # Usually from spotify
+        bitrate = int(info.bitrate / 1000)
+        return f"WEB-OGG {bitrate}kbps"
+    elif extension == '.opus':
+        # YouTube bruh, couldn't figure out a way to retrieve bitrate
+        return f"YT-OPUS"
+    return ""
 
 
 def renameAlbumFolder(
@@ -54,7 +88,8 @@ def renameAlbumFolder(
         "catalog": audio.getCatalog(),
         "date": date,
         "foldername": folderName,
-        "barcode": audio.getCustomTag('barcode')
+        "barcode": audio.getCustomTag('barcode'),
+        "format": deduceAudioDetails(audio)
     }
 
     templateResolver = TemplateResolver(templateMapping)
@@ -68,7 +103,7 @@ def renameAlbumFolder(
             print(f'{newFolderName} Exists, cannot rename {folderName}')
         else:
             os.rename(folderPath, newFolderPath)
-            print(f'Successfully Renamed {folderName} to {newFolderName}')
+            print(f'Renamed {folderName} to {newFolderName}')
 
 
 def renameAlbumFiles(
@@ -228,4 +263,3 @@ def organizeAlbum(folderPath, folderNamingtemplate):
     """Organize a folder which represents ONE album"""
     renameAlbumFiles(folderPath, verbose=True)
     renameAlbumFolder(folderPath, folderNamingtemplate)
-    print(f'{os.path.basename(folderPath)} Organized!\n')

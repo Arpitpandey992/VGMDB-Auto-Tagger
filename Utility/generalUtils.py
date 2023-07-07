@@ -128,7 +128,7 @@ forbiddenCharacters = {
     '|': 'ǀ',
     '?': 'ʔ',
     '*': '∗',
-    '+': '᛭',
+    # '+': '᛭', # Not needed, and it looks garbage
     '%': '٪',
     '!': 'ⵑ',
     '`': '՝',
@@ -136,7 +136,7 @@ forbiddenCharacters = {
     '{': '❴',
     '}': '❵',
     '=': '᐀',
-    # '~': '～',  # Not using this because it could be present in catalog number as well, may cause problems though
+    '~': '～',  # Not using this because it could be present in catalog number as well, may cause problems though
     '#': '#',  # couldn't find alternative
     '$': '$',  # couldn't find alternative
     '@': '@'  # couldn't find alternative

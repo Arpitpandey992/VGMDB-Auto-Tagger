@@ -180,7 +180,7 @@ def argumentParser() -> tuple[argparse.Namespace, Flags, str]:
         flags.folderNamingTemplate = args.folder_naming_template
 
     if args.ksl:
-        flags.folderNamingTemplate = "{[{catalog}] }{albumname}{ [{date}]}"
+        flags.folderNamingTemplate = "{[{catalog}] }{albumname}{ [{date}]}{ [{format}]}"
 
     if flags.SEE_FLAGS:
         print(json.dumps(vars(flags), indent=4))

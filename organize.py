@@ -1,4 +1,5 @@
 import argparse
+from Imports.flagsAndSettings import Flags
 
 from Modules.Rename.renameUtils import renameFilesRecursively
 from Modules.Rename.renameUtils import organizeAlbum
@@ -14,10 +15,13 @@ parser.add_argument('--folder-naming-template',
                     dest='folder_naming_template',
                     type=str,
                     help='Give a folder naming template like {catalog}{foldername}{date}')
+parser.add_argument('--ksl', action='store_true',
+                    help='for KSL folder, (custom setting), keep catalog first in naming')
 
 args = parser.parse_args()
 folderPath = args.folderPath
-folderNamingTemplate = "{[{date}] }{albumname}{ [{catalog}]}"
+flags = Flags()
+folderNamingTemplate = flags.folderNamingTemplate
 
 if args.folder_naming_template:
     template = args.folder_naming_template
@@ -27,7 +31,9 @@ if args.folder_naming_template:
     folderNamingTemplate = args.folder_naming_template
 
 if args.same_folder_name:
-    folderNamingTemplate = "{[{date}] }{foldername}{ [{catalog}]}"
+    folderNamingTemplate = "{[{date}] }{foldername}{ [{catalog}]}{ [{format}]}"
+if args.ksl:
+    folderNamingTemplate = "{[{catalog}] }{albumname}{ [{date}]}{ [{format}]}"
 
 
 if args.rename_only:

@@ -198,8 +198,16 @@ class IAudioManager(ABC):
         """ get the name of the disc """
 
     @abstractmethod
-    def getInformation(self) -> str:
+    def printInfo(self) -> str:
         """ See the metadata information in Human Readable Format """
+
+    @abstractmethod
+    def getInfo(self):
+        """ get the info metadata object """
+
+    @abstractmethod
+    def getExtension(self) -> str:
+        """get the extension name of the file"""
 
     @abstractmethod
     def save(self):
@@ -370,11 +378,17 @@ class VorbisWrapper(IAudioManager):
                 return ans
         return None
 
+    def printInfo(self):
+        return self.audio.pprint()
+
+    def getInfo(self):
+        return self.audio.info
+
+    def getExtension(self):
+        return self.extension
+
     def save(self):
         self.audio.save()
-
-    def getInformation(self):
-        return self.audio.pprint()
 
 
 class CustomWAVE(WAVE):
@@ -399,12 +413,14 @@ class CustomMP3(ID3):
             if audio.tags is None:
                 audio.add_tags()
                 audio.save()
+            self.info = audio.info
+
         super().__init__(*args, **kwargs)
 
 
 class ID3Wrapper(IAudioManager):
 
-    def __init__(self, mutagen_object: Union[ID3, CustomWAVE], extension: str):
+    def __init__(self, mutagen_object: Union[CustomMP3, CustomWAVE], extension: str):
         self.audio = mutagen_object
         self.extension = extension.lower()
 
@@ -541,11 +557,17 @@ class ID3Wrapper(IAudioManager):
                 return ans
         return None
 
+    def printInfo(self):
+        return self.audio.pprint()
+
+    def getInfo(self):
+        return self.audio.info
+
+    def getExtension(self):
+        return self.extension
+
     def save(self):
         self.audio.save()
-
-    def getInformation(self):
-        return self.audio.pprint()
 
 
 class MP4Wrapper(IAudioManager):
@@ -661,11 +683,17 @@ class MP4Wrapper(IAudioManager):
                 return ans
         return None
 
+    def printInfo(self):
+        return self.audio.pprint()
+
+    def getInfo(self):
+        return self.audio.info
+
+    def getExtension(self):
+        return self.extension
+
     def save(self):
         self.audio.save()
-
-    def getInformation(self):
-        return self.audio.pprint()
 
 
 audioFileHandler = {
