@@ -16,8 +16,8 @@ def getYearFromDate(date: Optional[str]) -> Optional[str]:
 
 
 def getOneAudioFile(folderPath: str) -> Optional[str]:
-    for root, dirs, files in os.walk(folderPath):
-        for file in files:
+    for root, dirs, files in sorted(os.walk(folderPath)):
+        for file in sorted(files):
             _, extension = os.path.splitext(file)
             if extension.lower() in supportedExtensions:
                 return os.path.join(root, file)

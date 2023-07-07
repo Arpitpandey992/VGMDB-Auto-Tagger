@@ -222,14 +222,27 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
 
     if not doTracksAlign(albumTrackData, folderTrackData, flags):
         print('The tracks are not fully fitting the album data received from VGMDB!')
-        if flags.NO_INPUT or not noYesUserInput():
-            print('\n', end='')
+        if flags.NO_INPUT:
+            return False
+        print('Continue? (y/N/no-title/no-tag) : ', end='')
+        resp = input()
+        if resp == 'no-title':
+            flags.TITLE = False  # type:ignore
+        elif resp == 'no-tag':
+            flags.TAG = False  # type:ignore
+        elif resp.lower() != 'y':
             return False
     else:
         print('Tracks are perfectly aligning with the album data received from VGMDB!')
-        if not flags.NO_INPUT and not flags.YES and not yesNoUserInput():
-            print('\n', end='')
-            return False
+        if not flags.NO_INPUT and not flags.YES:
+            print('Continue? (Y/n/no-title/no-tag) : ', end='')
+            resp = input()
+            if resp == 'no-title':
+                flags.TITLE = False  # type:ignore
+            elif resp == 'no-tag':
+                flags.TAG = False  # type:ignore
+            elif resp.lower() == 'n':
+                return False
 
     # Fixing date in data to be in the form YYYY-MM-DD (MM and DD will be Zero if not present)
     fixedDate = fixDate(albumData['release_date'])
