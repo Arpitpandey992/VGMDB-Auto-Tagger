@@ -175,5 +175,4 @@ def getBest(languageObject: dict[str, str], languageOrder: list[str]) -> str:
                 return languageObject[languageKey]
     if languageObject:
         return list(languageObject.items())[0][1]
-    # If we reach here, the it means there are no title available
     return "(no title available)"

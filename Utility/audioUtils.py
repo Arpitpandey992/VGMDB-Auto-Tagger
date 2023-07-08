@@ -49,7 +49,7 @@ def getAlbumTrackData(albumData: AlbumData, otherData: OtherData) -> dict[int, d
             names = {key: val for key, val in track['names'].items() if val != 'None'}
             if flags.TRANSLATE:
                 # Translating when english is not present
-                otherLanguageTitle = list(names.items())[0][1]
+                otherLanguageTitle = getBest(names, flags.languageOrder)
                 translateObject = translate(otherLanguageTitle, 'english')
                 englishName = translateObject['translatedText']
                 romajiName = translateObject['romajiText']
