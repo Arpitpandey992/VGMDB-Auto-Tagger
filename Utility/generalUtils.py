@@ -6,6 +6,9 @@ from math import ceil, log10
 import urllib.request
 from Imports.flagsAndSettings import languages
 from Types.albumData import AlbumData, TrackData
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def get_default_logger(name: str, logging_level='info') -> logging.Logger:
@@ -90,7 +93,7 @@ forbiddenCharacters = {
     '|': 'ǀ',
     '?': 'ʔ',
     '*': '∗',
-    # '+': '᛭', # Not needed, and it looks garbage
+    '+': '＋',
     '%': '٪',
     '!': 'ⵑ',
     '`': '՝',

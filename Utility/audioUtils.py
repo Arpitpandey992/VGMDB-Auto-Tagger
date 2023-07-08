@@ -5,7 +5,7 @@ from typing import Optional
 from Types.albumData import AlbumData
 from Types.otherData import OtherData
 from Utility.mutagenWrapper import AudioFactory, supportedExtensions
-from Utility.translator import translate
+from Modules.Translate.translator import translate
 from Utility.generalUtils import getBest
 
 

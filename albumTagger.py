@@ -190,7 +190,10 @@ def argumentParser() -> tuple[argparse.Namespace, Flags, str]:
 
 def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
     try:
-        print('\nfetching Album Data from VGMDB...\n')
+        if flags.TRANSLATE:
+            print('\nfetching and translating album data from VGMDB, it will take a while...\n')
+        else:
+            print('\nfetching Album Data from VGMDB...\n')
         albumData: AlbumData = getAlbumDetails(albumID)
         if albumData is None:
             print('could not fetch album details, Please Try Again.')
