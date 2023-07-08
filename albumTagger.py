@@ -8,7 +8,7 @@ from tabulate import tabulate
 
 from Imports.flagsAndSettings import Flags, tableFormat, BACKUPFOLDER
 from Modules.Rename.renameUtils import renameAlbumFiles, renameAlbumFolder
-from Utility.generalUtils import getAlbumDetails, yesNoUserInput, noYesUserInput, getBest, searchAlbum, fixDate, cleanSearchTerm
+from Utility.generalUtils import getBest, yesNoUserInput, noYesUserInput, fixDate, cleanSearchTerm
 
 from Modules.Tag.tagFiles import tagFiles
 from Utility.audioUtils import getSearchTermAndDate, getAlbumTrackData, getFolderTrackData, doTracksAlign, getYearFromDate
@@ -18,6 +18,7 @@ from Types.albumData import AlbumData
 from Types.search import SearchAlbumData
 from Types.otherData import OtherData
 from Utility.template import isValidTemplate
+from Utility.vgmdbUtils import getAlbumDetails, searchAlbum
 
 
 def argumentParser() -> tuple[argparse.Namespace, Flags, str]:
@@ -213,9 +214,7 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
         print(f'Link - {albumData["vgmdb_link"]}')
         print(f'Album - {getBest(albumData["names"], flags.languageOrder)}')
         if not yesNoUserInput():
-            print('\n', end='')
             return False
-        print('\n', end='')
 
     albumTrackData = getAlbumTrackData(albumData, otherData)
     folderTrackData = getFolderTrackData(folderPath)
@@ -255,7 +254,6 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
             if not os.path.exists(destinationFolder):
                 os.makedirs(destinationFolder)
             print(f'Backing Up {folderPath}...')
-            print('\n', end='')
             backupFolder = os.path.join(
                 destinationFolder, os.path.basename(folderPath))
             shutil.copytree(folderPath, backupFolder, dirs_exist_ok=False)
@@ -301,9 +299,7 @@ def getSearchInput() -> Optional[str]:
     print("Enter 'exit' to exit or give a new search term : ", end='')
     answer = input()
     if (answer.lower() == 'exit'):
-        print('\n', end='')
         return None
-    print('\n', end='')
     return answer
 
 

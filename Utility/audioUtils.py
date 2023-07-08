@@ -5,8 +5,8 @@ from typing import Optional
 from Types.albumData import AlbumData
 from Types.otherData import OtherData
 from Utility.mutagenWrapper import AudioFactory, supportedExtensions
-from Utility.generalUtils import getBest, isLanguagePresent
 from Utility.translator import translate
+from Utility.generalUtils import getBest
 
 
 def getYearFromDate(date: Optional[str]) -> Optional[str]:
@@ -46,7 +46,7 @@ def getAlbumTrackData(albumData: AlbumData, otherData: OtherData) -> dict[int, d
         trackData[discNumber] = {}
         trackNumber = 1
         for track in disc['tracks']:
-            names = track['names']
+            names = {key: val for key, val in track['names'].items() if val != 'None'}
             if flags.TRANSLATE:
                 # Translating when english is not present
                 otherLanguageTitle = list(names.items())[0][1]

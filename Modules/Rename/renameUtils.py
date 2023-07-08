@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 from tabulate import tabulate
 from mutagen.flac import StreamInfo
@@ -5,9 +6,10 @@ from Utility.audioUtils import getFolderTrackData, getOneAudioFile
 from Utility.generalUtils import cleanName, fixDate, getProperCount, printAndMoveBack
 from Utility.mutagenWrapper import AudioFactory, supportedExtensions, IAudioManager
 from Imports.flagsAndSettings import tableFormat
-import os
-
 from Utility.template import TemplateResolver
+from Utility.generalUtils import get_default_logger
+
+logger = get_default_logger(__name__, 'info')
 
 
 def countAudioFiles(folderPath: Optional[str] = None, folderTrackData: Optional[dict[int, dict[int, str]]] = None) -> int:
@@ -64,18 +66,18 @@ def renameAlbumFolder(
     folderPath: str,
     renameTemplate: str
 ) -> None:
-    """Rename the folder which contains ONE album"""
+    """rename a folder contains exactly ONE album"""
 
     filePath = getOneAudioFile(folderPath)
     if not filePath:
-        print('No Audio file in directory!, aborting')
+        logger.error('no audio file in directory!, aborting')
         return
 
     audio = AudioFactory.buildAudioManager(filePath)
     folderName = os.path.basename(folderPath)
     albumName = audio.getAlbum()
     if albumName is None and "foldername" not in renameTemplate.lower():
-        print(f'No Album Name in {filePath}, aborting!')
+        logger.error(f'no album Name in {filePath}, aborting!')
         return
     date = fixDate(audio.getDate())
     if not date:
@@ -100,10 +102,10 @@ def renameAlbumFolder(
     newFolderPath = os.path.join(baseFolderPath, newFolderName)
     if (folderName != newFolderName):
         if os.path.exists(newFolderPath):
-            print(f'{newFolderName} Exists, cannot rename {folderName}')
+            logger.error(f'{newFolderName} exists, cannot rename {folderName}')
         else:
             os.rename(folderPath, newFolderPath)
-            print(f'Renamed {folderName} to {newFolderName}')
+            logger.info(f'rename: {folderName} => {newFolderName}')
 
 
 def renameAlbumFiles(
@@ -126,18 +128,18 @@ def renameAlbumFiles(
             audio = AudioFactory.buildAudioManager(filePath)
             title = audio.getTitle()
             if not title:
-                print(f'Title not Present in file : {fileName} Skipped!')
+                logger.error(f'title not present in file: {fileName}, skipped!')
                 continue
 
             trackNumberStr = getProperCount(trackNumber, totalTracks)
             discNumberStr = getProperCount(discNumber, totalDiscs)
 
-            oldName = fileName
+            oldName = fullFileName
 
             if isSingle:
-                newName = cleanName(f"{title}{extension}")
+                newName = f"{cleanName(f'{title}')}{extension}"
             else:
-                newName = cleanName(f"{trackNumberStr} - {title}{extension}")
+                newName = f"{cleanName(f'{trackNumberStr} - {title}')}{extension}"
             discName = audio.getDiscName()
 
             if discName:
@@ -154,10 +156,10 @@ def renameAlbumFiles(
             if filePath != newFilePath:
                 try:
                     if os.path.exists(newFilePath):
-                        print(f'{newFilePath} Exists, cannot rename {fileName}')
+                        logger.error(f'{newFilePath} exists, cannot rename {fileName}')
                     else:
                         os.rename(filePath, newFilePath)
-                        printAndMoveBack(f"Renamed : {newName}")
+                        printAndMoveBack(f"renamed: {newName}")
                         tableData.append((
                             discNumberStr,
                             trackNumberStr,
@@ -166,24 +168,22 @@ def renameAlbumFiles(
                         ))
 
                 except Exception as e:
-                    print(f'Cannot rename {fileName}')
-                    print(e)
+                    logger.exception(f'cannot rename {fileName}\n{e}')
     printAndMoveBack('')
     if verbose and tableData:
-        print('Files Renamed as follows:')
+        logger.info('files renamed as follows:')
         tableData.sort()
-        print(
-            tabulate(
+        logger.info(
+            '\n' + tabulate(
                 tableData,
                 headers=['Disc', 'Track', 'Old Name', 'New Name'],
                 colalign=('center', 'center', 'left', 'left'),
                 maxcolwidths=50, tablefmt=tableFormat
-            ),
-            end='\n\n'
+            ) + '\n'
         )
 
 
-def renameFilesRecursively(folderPath, verbose: bool = False):
+def renameFilesRecursively(folderPath, verbose: bool = False, pauseOnFinish: bool = False):
     """
     Rename all files recursively or iteratively in a directory.
     Considers no particular relatioship between files (unlike the albumRename function)
@@ -197,14 +197,14 @@ def renameFilesRecursively(folderPath, verbose: bool = False):
         for file in files:
             _, extension = os.path.splitext(file)
             if extension.lower() not in supportedExtensions:
-                print(f"{file} has unsupported extension ({extension})")
+                logger.info(f"{file} has unsupported extension ({extension})")
                 continue
             filePath = os.path.join(root, file)
             audio = AudioFactory.buildAudioManager(filePath)
 
             title = audio.getTitle()
             if not title:
-                print(f'Title not present in {file}, Skipping!')
+                logger.info(f'title not present in {file}, skipping!')
                 continue
             artist = audio.getArtist()
             date = fixDate(audio.getDate())
@@ -233,33 +233,34 @@ def renameFilesRecursively(folderPath, verbose: bool = False):
             if oldName != newName:
                 try:
                     if os.path.exists(newFilePath):
-                        print(f'{newFilePath} Exists, cannot rename {file}')
+                        logger.error(f'{newFilePath} exists, cannot rename {file}')
                     else:
                         os.rename(filePath, newFilePath)
-                        printAndMoveBack(f"Renamed : {newName}")
+                        printAndMoveBack(f"renamed : {newName}")
                         tableData.append((renameCount, oldName, newName))
                         renameCount += 1
                 except Exception as e:
-                    print(f'Cannot rename {file}')
-                    print(e)
+                    logger.exception(f'cannot rename {file}\n{e}')
     printAndMoveBack('')
     if verbose and tableData:
-        print('Files Renamed as Follows\n')
+        logger.info('files renamed as follows:')
         tableData.sort()
-        print(
-            tabulate(
+        logger.info(
+            '\n' + tabulate(
                 tableData,
                 headers=['S.no', 'Old Name', 'New Name'],
                 colalign=('center', 'left', 'left'),
                 maxcolwidths=45,
                 tablefmt=tableFormat
-            ),
-            end='\n\n'
+            ) + '\n'
         )
-    print("\ndone rename operation on the directory")
+    if pauseOnFinish:
+        input("Press Enter to continue...")
 
 
-def organizeAlbum(folderPath, folderNamingtemplate):
+def organizeAlbum(folderPath: str, folderNamingtemplate: str, pauseOnFinish: bool = False):
     """Organize a folder which represents ONE album"""
     renameAlbumFiles(folderPath, verbose=True)
     renameAlbumFolder(folderPath, folderNamingtemplate)
+    if pauseOnFinish:
+        input("Press Enter to continue...")

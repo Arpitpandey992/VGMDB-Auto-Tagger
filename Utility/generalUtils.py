@@ -1,72 +1,35 @@
 import os
 import sys
-from typing import Union, Optional, Any
-import requests
+from typing import Union, Optional
+import logging
 from math import ceil, log10
 import urllib.request
-
-from Modules.vgmdb_info.docker_commands import run_server
-from Imports.flagsAndSettings import APICALLRETRIES, languages
-from Types.search import SearchAlbum
+from Imports.flagsAndSettings import languages
 from Types.albumData import AlbumData, TrackData
 
-USE_LOCAL_SERVER = True
-baseUrl = "https://vgmdb.info"
 
-if USE_LOCAL_SERVER:
-    try:
-        print("-----------")
-        baseAddress = run_server()
-        baseUrl = baseAddress
-        print("-----------")
-    except Exception as e:
-        print(f'''
------------
-could not run local server
-****make sure docker is installed and it's service is running in system****
------------
-error:
-{e}
------------
-'''.strip())
-
-print(f'\nusing {baseUrl} for VGMDB API\n')
-
-
-def Request(url: str) -> Optional[dict[Any, Any]]:
-    countLeft = APICALLRETRIES
-    while countLeft > 0:
-        try:
-            response = requests.get(url)
-            if response.status_code == 200:
-                return response.json()
-        except Exception:
-            pass
-        countLeft -= 1
-    return None
+def get_default_logger(name: str, logging_level='info') -> logging.Logger:
+    logging_levels = {
+        'info': logging.INFO,
+        'debug': logging.DEBUG,
+        'error': logging.ERROR,
+        'critical': logging.CRITICAL,
+        'fatal': logging.FATAL
+    }
+    if logging_level not in logging_levels:
+        raise Exception(f'invalid logging level: {logging_level}, choose among {", ".join(logging_levels.keys())}')
+    level = logging_levels[logging_level]
+    logging.basicConfig(format='%(levelname)s:\t  %(name)s: %(message)s')
+    logger = logging.getLogger(name)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    logs_dir = os.path.abspath(os.path.join(script_dir, "..", "logs"))
+    os.makedirs(logs_dir) if not os.path.exists(logs_dir) else None
+    logger.addHandler(logging.FileHandler(os.path.join(logs_dir, f"{name}.log")))
+    logger.setLevel(level)
+    return logger
 
 
-def getAlbumDetails(albumID: str) -> AlbumData:
-    return Request(f'{baseUrl}/album/{albumID}')  # type: ignore
-
-
-def searchAlbum(albumName: str) -> Optional[list[SearchAlbum]]:
-    searchResult = Request(f'{baseUrl}/search?q={albumName}')
-    if not searchResult:
-        return None
-    return searchResult['results']['albums']
-
-
-def getBest(languageObject: dict[str, str], languageOrder: list[str]) -> str:
-    for currentLanguage in languageOrder:
-        for languageKey in languages[currentLanguage]:
-            if languageKey in languageObject:
-                return languageObject[languageKey]
-    languageObjectTuples = languageObject.items()
-    if languageObjectTuples:
-        return list(languageObjectTuples)[0][1]
-    # We should never reach this point, and if we do, then we are not updating track title
-    return ""
+logger = get_default_logger(__name__, 'info')
 
 
 def getProperCount(count: Union[str, int], totalCount: Union[str, int]) -> str:
@@ -74,9 +37,8 @@ def getProperCount(count: Union[str, int], totalCount: Union[str, int]) -> str:
     try:
         upperBound = int(ceil(log10(int(totalCount) + 1)))
         return str(count).zfill(upperBound)
-
-    except Exception:
-        print(Exception)
+    except Exception as e:
+        logger.exception(e)
 
     return str(count)
 
@@ -105,15 +67,15 @@ def downloadPicture(URL: str, path: str, name=None):
         if name:
             finalImageName = name + extension
             if os.path.exists(os.path.join(path, finalImageName)):
-                print(f'FileExists : {finalImageName}')
+                logger.info(f'FileExists : {finalImageName}')
                 return
         urllib.request.urlretrieve(URL, imagePath)
         if name is not None:
             originalURLName = name
             os.rename(imagePath, os.path.join(path, originalURLName + extension))
-        print(f'Downloaded : {originalURLName}{extension}')
+        logger.info(f'Downloaded : {originalURLName}{extension}')
     except Exception as e:
-        print(e)
+        logger.error(f"error during picture download: {e}")
 
 
 forbiddenCharacters = {
@@ -204,3 +166,14 @@ def isLanguagePresent(languageObject: dict[str, str], language: str) -> bool:
             if languageSynonym.lower().strip() in presentLanguages:
                 return True
     return False
+
+
+def getBest(languageObject: dict[str, str], languageOrder: list[str]) -> str:
+    for currentLanguage in languageOrder:
+        for languageKey in languages[currentLanguage]:
+            if languageKey in languageObject:
+                return languageObject[languageKey]
+    if languageObject:
+        return list(languageObject.items())[0][1]
+    # If we reach here, the it means there are no title available
+    return "(no title available)"

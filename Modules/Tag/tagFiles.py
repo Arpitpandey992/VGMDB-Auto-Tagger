@@ -3,9 +3,10 @@ from tabulate import tabulate
 from Imports.flagsAndSettings import tableFormat
 from Types.albumData import AlbumData, TrackData
 from Types.otherData import OtherData
-from Utility.generalUtils import getBest, printAndMoveBack, updateDict
+from Utility.generalUtils import printAndMoveBack, updateDict
 from Modules.Tag.tagUtils import getImageData, tagAudioFile
 from Utility.mutagenWrapper import supportedExtensions
+from Utility.generalUtils import getBest
 
 
 def tagFiles(

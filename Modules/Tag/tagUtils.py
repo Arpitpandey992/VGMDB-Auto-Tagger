@@ -5,8 +5,9 @@ from PIL import Image
 
 from Imports.flagsAndSettings import Flags, languages
 from Types.albumData import AlbumData, TrackData
-from Utility.generalUtils import fixDate, getBest, getProperCount
+from Utility.generalUtils import fixDate, getProperCount
 from Utility.mutagenWrapper import AudioFactory
+from Utility.generalUtils import getBest
 
 
 def getImageData(albumData: AlbumData) -> Optional[bytes]:
@@ -50,7 +51,7 @@ def tagAudioFile(trackData: TrackData, flags=Flags()):
         res: list[str] = []
         [res.append(x) for x in ans if x not in res]
         if len(res) == 0:
-            res = [list(languageObject.items())[0][1]]
+            res = [getBest(languageObject, flags.languageOrder)]
         return res
 
     # Tagging Album specific Details

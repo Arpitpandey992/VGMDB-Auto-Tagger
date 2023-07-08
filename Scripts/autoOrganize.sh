@@ -4,6 +4,6 @@ CWD=$(pwd)
 for d in */ ; do
     cd "$d"
     source /home/arpit/Programming/Python/VGMDB-Auto-Tagger/.venv/bin/activate
-    python ~/Programming/Python/VGMDB-Auto-Tagger/organize.py "$(pwd)"
+    python ~/Programming/Python/VGMDB-Auto-Tagger/organize.py "$(pwd)" --ksl --wait
     cd "$CWD"
 done

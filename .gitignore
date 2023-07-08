@@ -5,3 +5,4 @@ __pycache__
 tempcoderunnerfile.py
 .vscode
 .venv
+logs/
