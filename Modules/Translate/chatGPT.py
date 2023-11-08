@@ -108,12 +108,12 @@ def retry_on_exceptions_with_backoff(
         try:
             return lambda_fn()
         except exception_class_tuples as e:
-            print("exception with lambda function , tries-", tries, e)
+            logger.error(f"exception with lambda function, tries: {tries}. error: {e}")
             tries += 1
             if tries >= max_tries:
                 raise e
             time.sleep(backoff_secs)
-            print("retrying after backoff of ", backoff_secs, "secs")
+            logger.info(f"retrying after backoff of {backoff_secs} secs")
             backoff_secs = min(backoff_secs * 2, max_backoff_secs)
 
 

@@ -1,7 +1,7 @@
 import argparse
 from Imports.flagsAndSettings import Flags
 
-from Modules.Rename.renameUtils import renameFilesRecursively
+from Modules.Rename.renameUtils import organizeFiles, renameFilesInternal
 from Modules.Rename.renameUtils import organizeAlbum
 from Utility.generalUtils import get_default_logger
 from Utility.template import isValidTemplate
@@ -28,7 +28,7 @@ def argumentParser():
 
 def main():
     args = argumentParser()
-    logger = get_default_logger('Organize', 'info')
+    logger = get_default_logger('organize', 'info')
     folderPath = args.folderPath
     flags = Flags()
     folderNamingTemplate = flags.folderNamingTemplate
@@ -47,7 +47,7 @@ def main():
     pauseOnFinish = args.wait
     logger.info(f"organizing {folderPath}")
     if args.rename_only:
-        renameFilesRecursively(folderPath, verbose=True, pauseOnFinish=pauseOnFinish)
+        organizeFiles(folderPath, verbose=True, pauseOnFinish=pauseOnFinish)
     else:
         organizeAlbum(folderPath, folderNamingtemplate=folderNamingTemplate, pauseOnFinish=pauseOnFinish)
 

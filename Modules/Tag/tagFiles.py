@@ -3,10 +3,12 @@ from tabulate import tabulate
 from Imports.flagsAndSettings import tableFormat
 from Types.albumData import AlbumData, TrackData
 from Types.otherData import OtherData
-from Utility.generalUtils import printAndMoveBack, updateDict
+from Utility.generalUtils import get_default_logger, printAndMoveBack, updateDict
 from Modules.Tag.tagUtils import getImageData, tagAudioFile
 from Utility.mutagenWrapper import supportedExtensions
 from Utility.generalUtils import getBest
+
+logger = get_default_logger(__name__, 'info')
 
 
 def tagFiles(
@@ -50,7 +52,7 @@ def tagFiles(
             extension = extension.lower()
 
             if extension not in supportedExtensions:
-                print(f"Couldn't tag : {fileName}, {extension} Not Supported Yet :(")
+                logger.error(f"couldn't tag: {fileName}, {extension} Not Supported Yet :(")
                 tableData.append(('XX', 'XX', 'XX', fileName))
                 continue
 
@@ -74,15 +76,20 @@ def tagFiles(
                     fileName
                 ))
             else:
-                print(f"Couldn't tag : {fileName}")
+                logger.error(f"couldn't tag: {fileName}")
                 tableData.append(('XX', 'XX', 'XX', fileName))
 
     if not tableData:
         return
     printAndMoveBack('')
-    print('Files Tagged as follows:')
+    logger.info('files Tagged as follows:')
     tableData.sort()
-    print(tabulate(tableData,
-                   headers=['Disc', 'Track', 'Title', 'File Name'],
-                   colalign=('center', 'center', 'left', 'left'),
-                   maxcolwidths=50, tablefmt=tableFormat), end='\n\n')
+    logger.info(
+        '\n' + tabulate(
+            tableData,
+            headers=['Disc', 'Track', 'Title', 'File Name'],
+            colalign=('center', 'center', 'left', 'left'),
+            maxcolwidths=50,
+            tablefmt=tableFormat
+        )
+    )

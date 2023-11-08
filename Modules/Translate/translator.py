@@ -25,7 +25,7 @@ def getLanguageInfo(text: str) -> Optional[str]:
         ).stdout.strip()
         return sourceLanguage.lower()
     except Exception as e:
-        print(f'Could not identify language - {e}')
+        logger.exception(f'could not identify language: {e}')
         return None
 
 
@@ -41,7 +41,7 @@ def getTranslation(text: str, targetLanguage: str) -> Optional[str]:
         return translatedText
 
     except Exception as e:
-        print(f'Could not translate - {e}')
+        logger.exception(f'could not translate, error: {e}')
         return None
 
 
@@ -62,7 +62,7 @@ def _getRomajiGoogleTranslate(text: str) -> Optional[str]:
         return None
 
     except Exception as e:
-        print(f'Could not get romaji - {e}')
+        logger.exception(f'could not get romaji, error: {e}')
         return None
 
 
@@ -130,7 +130,7 @@ def translate(text: str, targetLanguage: str = 'english', textType: Optional[str
     """targetLanguage must be full language name, like Hindi, English, Japanses, etc (not abbreviation)"""
     translatedText = translateShell(text, targetLanguage.lower().strip())
     # chatGPT is good for romaji
-    useChatGPT = True
+    useChatGPT = False
     if useChatGPT:
         try:
             romajiText = translateGPT(text, "Romaji")

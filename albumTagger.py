@@ -8,7 +8,7 @@ from tabulate import tabulate
 
 from Imports.flagsAndSettings import Flags, tableFormat, BACKUPFOLDER
 from Modules.Rename.renameUtils import renameAlbumFiles, renameAlbumFolder
-from Utility.generalUtils import getBest, yesNoUserInput, noYesUserInput, fixDate, cleanSearchTerm
+from Utility.generalUtils import get_default_logger, getBest, yesNoUserInput, fixDate, cleanSearchTerm
 
 from Modules.Tag.tagFiles import tagFiles
 from Utility.audioUtils import getSearchTermAndDate, getAlbumTrackData, getFolderTrackData, doTracksAlign, getYearFromDate
@@ -19,6 +19,8 @@ from Types.search import SearchAlbumData
 from Types.otherData import OtherData
 from Utility.template import isValidTemplate
 from Utility.vgmdbUtils import getAlbumDetails, searchAlbum
+
+logger = get_default_logger('albumTagger')
 
 
 def argumentParser() -> tuple[argparse.Namespace, Flags, str]:
@@ -176,7 +178,7 @@ def argumentParser() -> tuple[argparse.Namespace, Flags, str]:
     if args.folder_naming_template:
         template = args.folder_naming_template
         if not isValidTemplate(template):
-            print("Provided Folder Template is imbalanced, hence invalid, aborting!")
+            logger.info("provided Folder template is imbalanced, hence invalid, aborting!")
             return args, flags, ""
         flags.folderNamingTemplate = args.folder_naming_template
 
@@ -184,22 +186,22 @@ def argumentParser() -> tuple[argparse.Namespace, Flags, str]:
         flags.folderNamingTemplate = "{[{catalog}] }{albumname}{ [{date}]}{ [{format}]}"
 
     if flags.SEE_FLAGS:
-        print(json.dumps(vars(flags), indent=4))
+        logger.info('\n' + json.dumps(vars(flags), indent=4))
     return args, flags, folderPath
 
 
 def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
     try:
         if flags.TRANSLATE:
-            print('\nfetching and translating album data from VGMDB, it will take a while...\n')
+            logger.info('fetching and translating album data from VGMDB, it will take a while')
         else:
-            print('\nfetching Album Data from VGMDB...\n')
+            logger.info('fetching Album Data from VGMDB')
         albumData: AlbumData = getAlbumDetails(albumID)
         if albumData is None:
-            print('could not fetch album details, Please Try Again.')
+            logger.error('could not fetch album details, Please Try Again.')
             return False
     except Exception as e:
-        print(e)
+        logger.exception(e)
         return False
 
     albumData["vgmdb_link"] = albumData["vgmdb_link"].split("?")[0]
@@ -214,8 +216,8 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
         del albumData['catalog']
 
     if flags.CONFIRM:
-        print(f'Link - {albumData["vgmdb_link"]}')
-        print(f'Album - {getBest(albumData["names"], flags.languageOrder)}')
+        logger.info(f'link - {albumData["vgmdb_link"]}')
+        logger.info(f'album - {getBest(albumData["names"], flags.languageOrder)}')
         if not yesNoUserInput():
             return False
 
@@ -223,10 +225,10 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
     folderTrackData = getFolderTrackData(folderPath)
 
     if not doTracksAlign(albumTrackData, folderTrackData, flags):
-        print('The tracks are not fully fitting the album data received from VGMDB!')
+        logger.info('The tracks are not fully fitting the album data received from VGMDB!')
         if flags.NO_INPUT:
             return False
-        print('Continue? (y/N/no-title/no-tag) : ', end='')
+        print('continue? (y/N/no-title/no-tag): ', end='')
         resp = input()
         if resp == 'no-title':
             flags.TITLE = False  # type:ignore
@@ -235,9 +237,9 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
         elif resp.lower() != 'y':
             return False
     else:
-        print('Tracks are perfectly aligning with the album data received from VGMDB!')
+        logger.info('tracks are perfectly aligning with the album data received from VGMDB!')
         if not flags.NO_INPUT and not flags.YES:
-            print('Continue? (Y/n/no-title/no-tag) : ', end='')
+            print('continue? (Y/n/no-title/no-tag): ', end='')
             resp = input()
             if resp == 'no-title':
                 flags.TITLE = False  # type:ignore
@@ -256,50 +258,48 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
             destinationFolder = BACKUPFOLDER
             if not os.path.exists(destinationFolder):
                 os.makedirs(destinationFolder)
-            print(f'Backing Up {folderPath}...')
+            logger.info(f'backing Up {folderPath}...')
             backupFolder = os.path.join(
                 destinationFolder, os.path.basename(folderPath))
             shutil.copytree(folderPath, backupFolder, dirs_exist_ok=False)
-            print(f'Successfully copied {folderPath} to {backupFolder}')
-
+            logger.info(f'successfully copied {folderPath} to {backupFolder}')
         except Exception as e:
-            print("Backup Couldn't Be Completed, but this probably means that this folder was already backed up, so it 'should' be safe ;)")
-            print('error Message :', e)
+            logger.error("backup couldn't Be completed, but this probably means that this folder was already backed up, so it 'should' be safe ;)")
+            logger.exception(e)
             if not flags.NO_INPUT and not flags.YES and not yesNoUserInput():
                 return False
 
     if flags.SCANS:
-        print('Downloading Scans...')
+        logger.info('downloading scans...')
         if not flags.NO_AUTH:
             # New Algorithm for downloading Scans -> All scans are downloaded, requires Authentication
             getPictures(folderPath, albumID)
         elif 'covers' in albumData:
             # Old algorithm for downloading -> no Authentication -> less covers available!
             getPicturesTheOldWay(albumData, otherData)
-        print('Downloaded Available Pictures :)\n')
+        logger.info('downloaded available scans :)')
 
     # Tagging
     if flags.TAG:
-        print('Tagging Files\n')
+        logger.info('tagging files\n')
         tagFiles(albumTrackData, folderTrackData, albumData, otherData)
     # Renaming Files
     if flags.RENAME_FILES:
-        print('Renaming Files\n')
+        logger.info('renaming files\n')
         renameAlbumFiles(folderPath, verbose=True)
     # Renaming Folder
     if flags.RENAME_FOLDER:
-        print('Renaming Folder\n')
+        logger.info('renaming folder\n')
         if flags.SAME_FOLDER_NAME:
             # NOT recommended to use this option, just provide the template in CLI argument itself and use foldername instead of albumname
             renameAlbumFolder(folderPath, renameTemplate="{[{date}]} {foldername} {[{catalog}]}")
         else:
             renameAlbumFolder(folderPath, renameTemplate=flags.folderNamingTemplate)
-
     return True
 
 
 def getSearchInput() -> Optional[str]:
-    print("Enter 'exit' to exit or give a new search term : ", end='')
+    print("enter 'exit' to exit or give a new search term: ", end='')
     answer = input()
     if (answer.lower() == 'exit'):
         return None
@@ -310,16 +310,16 @@ def findAlbumID(folderPath: str, searchTerm: Optional[str], searchYear: Optional
     if flags.NO_INPUT and not searchTerm:
         return None
     folderName = os.path.basename(folderPath)
-    print(f'Folder Name : {folderName}')
+    logger.info(f'searching album in folder: {folderName}')
     if searchTerm is None:
         searchTerm = getSearchInput()
     # if searchTerm is still None -> user typed Exit
     if searchTerm is None:
         return None
-    print(f'Searching for : {searchTerm}, Year = {searchYear}\n')
+    logger.info(f'searching for: {searchTerm}, year: {searchYear}')
     albums = searchAlbum(searchTerm)
     if not albums:
-        print("No results found!, Please change search term!")
+        logger.error("no results found!, please change search term!")
         return findAlbumID(folderPath, None, None, flags)
 
     albumData: dict[int, SearchAlbumData] = {}
@@ -344,26 +344,28 @@ def findAlbumID(folderPath: str, searchTerm: Optional[str], searchYear: Optional
     if not tableData:
         # if we are here then that means we are getting some results but none are in the year provided
         return findAlbumID(folderPath, searchTerm, None, flags)
-    print(tabulate(tableData,
-                   headers=['S.No', 'Catalog', 'Title', 'Link', 'Year'],
-                   maxcolwidths=52,
-                   tablefmt=tableFormat,
-                   colalign=('center', 'left', 'left', 'left', 'center')), end='\n\n')
+    logger.info('\n' + tabulate(
+        tableData,
+        headers=['S.No', 'Catalog', 'Title', 'Link', 'Year'],
+        maxcolwidths=52,
+        tablefmt=tableFormat,
+        colalign=('center', 'left', 'left', 'left', 'center')
+    ))
 
     if (flags.NO_INPUT or flags.YES) and len(tableData) == 1:
-        print('Continuing with this album!\n')
+        logger.info('continuing with this album!')
         choice = '1'
     elif flags.NO_INPUT:
         return None
     else:
-        print(f'Write another search term (exit allowed) or Choose Album Serial Number (1-{len(tableData)}) : ', end='')
+        print(f'give another search term (exit allowed) or choose album serial number (1-{len(tableData)}): ', end='')
         choice = input()
         if choice.lower() == 'exit':
             return None
         if choice == '':
             choice = '1'
         if not choice.isdigit() or int(choice) not in albumData:
-            print('Invalid Choice, using that as search term!\n')
+            logger.info('invalid choice, using that as search term!')
             return findAlbumID(folderPath, choice, None, flags)
 
     return albumData[int(choice)]['album_id']
@@ -373,7 +375,7 @@ def main():
     args, flags, folderPath = argumentParser()
     if not folderPath:
         return
-    print(f"Working Folder : {folderPath}")
+    logger.info(f"working folder: {folderPath}")
     albumID = args.id
     if albumID is None:
         searchTerm = args.search
@@ -381,15 +383,15 @@ def main():
         if searchTerm is None:
             albumNameOrCatalog, date = getSearchTermAndDate(folderPath)
             if albumNameOrCatalog is None:
-                print('Could not obtain either album name or catalog number from files in the directory, please provide custom search term!')
+                logger.info('could not obtain either album name or catalog number from files in the directory, please provide custom search term!')
             searchTerm = cleanSearchTerm(albumNameOrCatalog)
         albumID = findAlbumID(folderPath, searchTerm, getYearFromDate(date), flags)
     if albumID:
         tagAndRenameFiles(folderPath, albumID, flags)
-        print('Finished all <Possible> Operations')
+        logger.info('finished all <Possible> operations')
     else:
         # if album-ID is still not found, script cannot do anything :(
-        print(f'Operations failed at {folderPath}')
+        logger.info(f'cannot tag album in {folderPath} as albumID cannot be deduced :(')
 
 
 if __name__ == "__main__":

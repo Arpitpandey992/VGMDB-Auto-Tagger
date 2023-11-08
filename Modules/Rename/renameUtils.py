@@ -1,5 +1,6 @@
 import os
 from typing import Optional
+from typing_extensions import TypedDict
 from tabulate import tabulate
 from mutagen.flac import StreamInfo
 from Utility.audioUtils import getFolderTrackData, getOneAudioFile
@@ -10,6 +11,23 @@ from Utility.template import TemplateResolver
 from Utility.generalUtils import get_default_logger
 
 logger = get_default_logger(__name__, 'info')
+
+
+class TableData(TypedDict):
+    table_data: list[tuple]
+    headers: list[str]
+    colalign: tuple
+    maxcolwidths: int
+    tablefmt: str
+
+
+class RenameMetadata(TypedDict):
+    recursive: bool
+    verbose: bool
+    file_naming_template: str
+    folder_naming_template: str
+    results_table: list[TableData]
+
 
 
 def countAudioFiles(folderPath: Optional[str] = None, folderTrackData: Optional[dict[int, dict[int, str]]] = None) -> int:
@@ -179,27 +197,28 @@ def renameAlbumFiles(
                 headers=['Disc', 'Track', 'Old Name', 'New Name'],
                 colalign=('center', 'center', 'left', 'left'),
                 maxcolwidths=50, tablefmt=tableFormat
-            ) + '\n'
+            )
         )
 
 
-def renameFilesRecursively(folderPath, verbose: bool = False, pauseOnFinish: bool = False):
+def renameFilesInternal(folderPath, verbose: bool, pauseOnFinish: bool, recur: bool, tableData: list):
     """
     Rename all files recursively or iteratively in a directory.
     Considers no particular relatioship between files (unlike the albumRename function)
     Does not move files (in Disc folders or anything)
     Use for general folders containing files from various albums
     """
-    tableData = []
-    renameCount = 1
-    for root, dirs, files in os.walk(folderPath):
-        totalTracks = countAudioFiles(folderPath=root)
-        for file in files:
+    for item in os.listdir(folderPath):
+        totalTracks = countAudioFiles(folderPath)
+        if recur and os.path.isdir(item):
+            renameFilesInternal(item, verbose, pauseOnFinish, recur, tableData)
+        else:
+            file = item
             _, extension = os.path.splitext(file)
             if extension.lower() not in supportedExtensions:
                 logger.info(f"{file} has unsupported extension ({extension})")
                 continue
-            filePath = os.path.join(root, file)
+            filePath = os.path.join(folderPath, file)
             audio = AudioFactory.buildAudioManager(filePath)
 
             title = audio.getTitle()
@@ -229,7 +248,7 @@ def renameFilesRecursively(folderPath, verbose: bool = False, pauseOnFinish: boo
 
             newName = cleanName(names[nameChoice])
 
-            newFilePath = os.path.join(root, newName)
+            newFilePath = os.path.join(folderPath, newName)
             if oldName != newName:
                 try:
                     if os.path.exists(newFilePath):
@@ -237,10 +256,23 @@ def renameFilesRecursively(folderPath, verbose: bool = False, pauseOnFinish: boo
                     else:
                         os.rename(filePath, newFilePath)
                         printAndMoveBack(f"renamed : {newName}")
-                        tableData.append((renameCount, oldName, newName))
-                        renameCount += 1
+                        tableData.append((len(tableData) + 1, oldName, newName))
                 except Exception as e:
                     logger.exception(f'cannot rename {file}\n{e}')
+
+
+def organizeAlbum(folderPath: str, folderNamingtemplate: str, pauseOnFinish: bool = False):
+    """Organize a folder which represents ONE album"""
+    renameAlbumFiles(folderPath, verbose=True)
+    renameAlbumFolder(folderPath, folderNamingtemplate)
+    if pauseOnFinish:
+        input("Press Enter to continue...")
+
+
+def organizeFiles(folderPath: str, verbose: bool = True, pauseOnFinish: bool = False, recur: bool = False):
+    tableData = []
+    renameFilesInternal(folderPath, verbose, pauseOnFinish, recur, tableData)
+
     printAndMoveBack('')
     if verbose and tableData:
         logger.info('files renamed as follows:')
@@ -252,15 +284,7 @@ def renameFilesRecursively(folderPath, verbose: bool = False, pauseOnFinish: boo
                 colalign=('center', 'left', 'left'),
                 maxcolwidths=45,
                 tablefmt=tableFormat
-            ) + '\n'
+            )
         )
-    if pauseOnFinish:
-        input("Press Enter to continue...")
-
-
-def organizeAlbum(folderPath: str, folderNamingtemplate: str, pauseOnFinish: bool = False):
-    """Organize a folder which represents ONE album"""
-    renameAlbumFiles(folderPath, verbose=True)
-    renameAlbumFolder(folderPath, folderNamingtemplate)
     if pauseOnFinish:
         input("Press Enter to continue...")

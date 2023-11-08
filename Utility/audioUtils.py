@@ -6,7 +6,9 @@ from Types.albumData import AlbumData
 from Types.otherData import OtherData
 from Utility.mutagenWrapper import AudioFactory, supportedExtensions
 from Modules.Translate.translator import translate
-from Utility.generalUtils import getBest
+from Utility.generalUtils import get_default_logger, getBest
+
+logger = get_default_logger(__name__, 'info')
 
 
 def getYearFromDate(date: Optional[str]) -> Optional[str]:
@@ -76,19 +78,19 @@ def getFolderTrackData(folderPath: str) -> dict[int, dict[int, str]]:
 
             trackNumber = audio.getTrackNumber()
             if trackNumber is None:
-                print(f'TrackNumber not Present in file : {file}, Skipped!')
+                logger.error(f'track number not present in file: {file}, skipped!')
                 continue
 
             discNumber = audio.getDiscNumber()
             if discNumber is None:
-                print(f'Disc Number not Present in file : {file}, Taking Default Value = 01')
+                logger.error(f'disc number not present in file: {file}, taking default value = 1')
                 discNumber = 1
             trackNumber, discNumber = int(trackNumber), int(discNumber)
 
             if discNumber not in folderTrackData:
                 folderTrackData[discNumber] = {}
             if trackNumber in folderTrackData[discNumber]:
-                print(f'disc {discNumber}, Track {trackNumber} - {os.path.basename(folderTrackData[discNumber][trackNumber])} Conflicts with {file}')
+                logger.error(f'disc {discNumber}, track {trackNumber} - {os.path.basename(folderTrackData[discNumber][trackNumber])} conflicts with {file}')
                 continue
 
             folderTrackData[discNumber][trackNumber] = filePath
@@ -123,8 +125,13 @@ def doTracksAlign(
                 flag = False
 
     tableData.sort()
-    print(tabulate(tableData,
-                   headers=['Disc', 'Track', 'Title (Translated)' if flags.TRANSLATE else 'Title', 'fileName'],
-                   colalign=('center', 'center', 'left', 'left'),
-                   maxcolwidths=50, tablefmt=tableFormat), end='\n\n')
+    logger.info(
+        '\n' + tabulate(
+            tableData,
+            headers=['Disc', 'Track', 'Title (Translated)' if flags.TRANSLATE else 'Title', 'fileName'],
+            colalign=('center', 'center', 'left', 'left'),
+            maxcolwidths=50,
+            tablefmt=tableFormat
+        )
+    )
     return flag

@@ -2,7 +2,7 @@ import os
 import shutil
 
 # Specify the directory to search
-directory = "/run/media/arpit/DATA/Downloads/Music/Soulseek/trinfinity/Xeuphoria_"
+directory = "/run/media/arpit/Seagate Backup Plus Slim 1TB/Music/Indie Creators/Epic Mountain"
 DELETE_AS_WELL = False
 
 

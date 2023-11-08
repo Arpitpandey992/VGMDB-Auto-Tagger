@@ -5,9 +5,11 @@ from PIL import Image
 
 from Imports.flagsAndSettings import Flags, languages
 from Types.albumData import AlbumData, TrackData
-from Utility.generalUtils import fixDate, getProperCount
+from Utility.generalUtils import fixDate, get_default_logger, getProperCount
 from Utility.mutagenWrapper import AudioFactory
 from Utility.generalUtils import getBest
+
+logger = get_default_logger(__name__)
 
 
 def getImageData(albumData: AlbumData) -> Optional[bytes]:
@@ -116,5 +118,5 @@ def tagAudioFile(trackData: TrackData, flags=Flags()):
         audio.save()
         return True
     except Exception as e:
-        print(e)
+        logger.exception(e)
     return False
