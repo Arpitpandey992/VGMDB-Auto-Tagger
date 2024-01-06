@@ -327,24 +327,31 @@ class VorbisWrapper(IAudioManager):
         return getFirstElement(ans)
 
     def getDiscNumber(self):
-        ans = self.audio.get('discnumber')
-        return getFirstElement(ans)
+        ans = getFirstElement(self.audio.get('discnumber'))
+        # Usually the track number will be a simple number for Vorbis files, but sometimes it is like 01/23 which is wrong but to avoid the corner case, we are splitting it regardless
+        return splitAndGetFirst(ans)
 
     def getTotalDiscs(self):
         ans = self.audio.get('disctotal')
         if ans is None:
             ans = self.audio.get('totaldiscs')
+        if ans is None:
+            ans = splitAndGetSecond(getFirstElement(self.audio.get('discnumber')))
         return getFirstElement(ans)
 
     def getTrackNumber(self):
-        ans = self.audio.get('tracknumber')
-        return getFirstElement(ans)
+        ans = getFirstElement(self.audio.get('tracknumber'))
+        # Usually the track number will be a simple number for Vorbis files, but sometimes it is like 01/23 which is wrong but to avoid the corner case, we are splitting it
+        return splitAndGetFirst(ans)
 
     def getTotalTracks(self):
         ans = self.audio.get('tracktotal')
         if ans is None:
             ans = self.audio.get('totaltracks')
-        return getFirstElement(ans)
+        # If the answer is still None, it might be possible that the track number is instead written like 01/23 from where we can get the total tracks. However, this format of writing track number is wrong in Vorbis files.
+        if ans is None:
+            ans = splitAndGetSecond(getFirstElement(self.audio.get('tracknumber')))
+        return ans
 
     def getComment(self):
         ans = self.audio.get('comment')
