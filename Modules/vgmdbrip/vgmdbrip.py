@@ -1,11 +1,9 @@
-from sys import argv
 import os
-import json
 import hashlib
 import getpass
 import pickle
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from Types.albumData import AlbumData
 from Types.otherData import OtherData
 from Utility.generalUtils import downloadPicture
@@ -16,11 +14,22 @@ def Soup(data):
     return BeautifulSoup(data, "html.parser")
 
 
+def is_logged_in(current_session) -> bool:
+    x = current_session.get('https://vgmdb.net/forums/private.php')
+    soup = Soup(x.content)
+    login_element = soup.find('a', href='#', string='Login')
+    return login_element is None
+
+
 def login(config):
     global session
+    logged_in = False
     if os.path.isfile(config):
-        session = pickle.load(open(config, "rb"))
-    else:
+        temp_session = pickle.load(open(config, "rb"))
+        if is_logged_in(temp_session):
+            logged_in = True
+            session = temp_session
+    if not logged_in:
         while True:
             username = input('VGMdb username:\t')
             password = getpass.getpass('VGMdb password:\t')
@@ -70,10 +79,12 @@ def getPictures(folder: str, albumID: str):
     config = os.path.join(scriptdir, 'vgmdbrip.pkl')
     login(config)
     soup = Soup(session.get("https://vgmdb.net/album/" + albumID).content)
-    gallery = soup.find("div", attrs={"class": "covertab",
-                                      "id": "cover_gallery"})
+    gallery = soup.find("div", attrs={"class": "covertab", "id": "cover_gallery"})
 
-    scans = gallery.find_all("a", attrs={"class": "highslide"})  # type:ignore
+    if not isinstance(gallery, Tag):
+        return
+
+    scans = gallery.find_all("a", attrs={"class": "highslide"})
     pictureCount = len(scans)
 
     finalScanFolder = os.path.join(folder, 'Scans') if pictureCount > 1 else folder
@@ -84,6 +95,7 @@ def getPictures(folder: str, albumID: str):
         url = scan["href"]
         title = remove(scan.text.strip(), "\"*/:<>?\|")  # type: ignore
         downloadPicture(URL=url, path=finalScanFolder, name=title)
+
     pickle.dump(session, open(config, "wb"))
 
 
@@ -99,3 +111,8 @@ def getPicturesTheOldWay(albumData: AlbumData, otherData: OtherData):
     if not frontPictureExists and 'picture_full' in albumData:
         downloadPicture(URL=albumData['picture_full'],
                         path=coverPath, name='Front')
+
+
+if __name__ == "__main__":
+    folder = "/Users/arpit/Downloads/test"
+    getPictures(folder, "135540")
