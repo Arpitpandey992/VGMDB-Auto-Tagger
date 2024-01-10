@@ -127,7 +127,7 @@ def translateGPT(text: str, targetLanguage: str):
 
 
 def translate(text: str, targetLanguage: str = 'english', textType: Optional[str] = None) -> TranslateResponse:
-    """targetLanguage must be full language name, like Hindi, English, Japanses, etc (not abbreviation)"""
+    """targetLanguage must be full language name, like Hindi, English, Japanese, etc (not abbreviation)"""
     translatedText = translateShell(text, targetLanguage.lower().strip())
     # chatGPT is good for romaji
     useChatGPT = False

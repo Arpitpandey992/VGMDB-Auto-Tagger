@@ -7,3 +7,4 @@ tempCodeRunnerFile.py
 .venv
 logs/
 .env
+.DS_STORE

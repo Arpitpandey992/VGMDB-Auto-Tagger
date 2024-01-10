@@ -4,8 +4,7 @@ import getpass
 import pickle
 import requests
 from bs4 import BeautifulSoup, Tag
-from Types.albumData import AlbumData
-from Types.otherData import OtherData
+from Types.vgmdbAlbumData import VgmdbAlbumData
 from Utility.generalUtils import downloadPicture
 session = requests.Session()
 
@@ -99,17 +98,17 @@ def getPictures(folder: str, albumID: str):
     pickle.dump(session, open(config, "wb"))
 
 
-def getPicturesTheOldWay(albumData: AlbumData, otherData: OtherData):
+def getPicturesTheOldWay(albumData: VgmdbAlbumData, folderPath: str):
     frontPictureExists = False
-    coverPath = os.path.join(otherData['folder_path'], 'Scans')
+    coverPath = os.path.join(folderPath, 'Scans')
     if not os.path.exists(coverPath):
         os.makedirs(coverPath)
-    for cover in albumData.get('covers', []):
-        downloadPicture(URL=cover['full'], path=coverPath, name=cover['name'])
-        if cover['name'].lower() == 'front' or cover['name'].lower == 'cover':
+    for cover in albumData.covers:
+        downloadPicture(URL=cover.full, path=coverPath, name=cover.name)
+        if cover.name.lower() == 'front' or cover.name.lower == 'cover':
             frontPictureExists = True
-    if not frontPictureExists and 'picture_full' in albumData:
-        downloadPicture(URL=albumData['picture_full'],
+    if not frontPictureExists and albumData.picture_full:
+        downloadPicture(URL=albumData.picture_full,
                         path=coverPath, name='Front')
 
 

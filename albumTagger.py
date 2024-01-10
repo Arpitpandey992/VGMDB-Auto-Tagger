@@ -6,18 +6,17 @@ from typing import Optional
 from tabulate import tabulate
 
 
-from Imports.flagsAndSettings import Flags, tableFormat, BACKUPFOLDER
+from Imports.flagsAndSettings import Flags
 from Modules.Rename.renameUtils import renameAlbumFiles, renameAlbumFolder
 from Utility.generalUtils import get_default_logger, getBest, yesNoUserInput, fixDate, cleanSearchTerm
 
 from Modules.Tag.tagFiles import tagFiles
-from Utility.audioUtils import getSearchTermAndDate, getAlbumTrackData, getFolderTrackData, doTracksAlign, getYearFromDate
+from Utility.audioUtils import getSearchTermAndDate, getAlbumTrackData, getFolderTrackData, doTracksAlign
 from Modules.vgmdbrip.vgmdbrip import getPictures, getPicturesTheOldWay
 
-from Types.albumData import AlbumData
+from Types.vgmdbAlbumData import VgmdbAlbumData
 from Types.search import SearchAlbumData
-from Types.otherData import OtherData
-from Utility.template import isValidTemplate
+from Utility.template import TemplateResolver, TemplateValidationException
 from Utility.vgmdbUtils import getAlbumDetails, searchAlbum
 
 logger = get_default_logger('albumTagger')
@@ -117,69 +116,72 @@ def argumentParser() -> tuple[argparse.Namespace, Flags, str]:
         flags.languageOrder = ['romaji', 'english', 'japanese']
 
     if args.yes:
-        flags.YES = True  # type: ignore
+        flags.YES = True
     if args.no_input:
-        flags.NO_INPUT = True  # type: ignore
+        flags.NO_INPUT = True
     if args.backup:
-        flags.BACKUP = True  # type: ignore
+        flags.BACKUP = True
     if args.rename_folder:
-        flags.RENAME_FOLDER = True  # type: ignore
+        flags.RENAME_FOLDER = True
     if args.no_rename_folder:
-        flags.RENAME_FOLDER = False  # type: ignore
+        flags.RENAME_FOLDER = False
     if args.rename_files:
-        flags.RENAME_FILES = True  # type: ignore
+        flags.RENAME_FILES = True
     if args.no_rename_files:
-        flags.RENAME_FILES = False  # type: ignore
+        flags.RENAME_FILES = False
     if args.tag:
-        flags.TAG = True  # type: ignore
+        flags.TAG = True
     if args.no_tag:
-        flags.TAG = False  # type: ignore
+        flags.TAG = False
     if args.no_title:
-        flags.TITLE = False  # type: ignore
+        flags.TITLE = False
     if args.keep_title:
-        flags.KEEP_TITLE = True  # type: ignore
+        flags.KEEP_TITLE = True
     if args.same_folder_name:
-        flags.SAME_FOLDER_NAME = True  # type: ignore
+        flags.SAME_FOLDER_NAME = True
     if args.one_lang:
-        flags.ALL_LANG = False  # type: ignore
+        flags.ALL_LANG = False
     if args.translate:
-        flags.TRANSLATE = True  # type: ignore
+        flags.TRANSLATE = True
 
     if args.album_data_only:
-        flags.TITLE = False  # type: ignore
-        flags.DISC_NUMBERS = False  # type: ignore
-        flags.TRACK_NUMBERS = False  # type: ignore
-        flags.IGNORE_MISMATCH = True  # type:ignore
-        flags.RENAME_FILES = False  # type:ignore
+        flags.TITLE = False
+        flags.DISC_NUMBERS = False
+        flags.TRACK_NUMBERS = False
+        flags.IGNORE_MISMATCH = True
+        flags.RENAME_FILES = False
 
     if args.no_scans:
-        flags.SCANS = False  # type: ignore
+        flags.SCANS = False
     if args.no_pics:
-        flags.PICS = False  # type: ignore
+        flags.PICS = False
     if args.pic_overwrite:
-        flags.PIC_OVERWRITE = True  # type: ignore
+        flags.PIC_OVERWRITE = True
     if args.no_auth:
-        flags.NO_AUTH = True  # type: ignore
+        flags.NO_AUTH = True
 
     if args.single or args.performers:
-        flags.PERFORMERS = True  # type: ignore
+        flags.PERFORMERS = True
     if args.single or args.arrangers:
-        flags.ARRANGERS = True  # type: ignore
+        flags.ARRANGERS = True
     if args.single or args.lyricists:
-        flags.LYRICISTS = True  # type: ignore
+        flags.LYRICISTS = True
     if args.single or args.composers:
-        flags.COMPOSERS = True  # type: ignore
+        flags.COMPOSERS = True
 
     if args.no_modify:
-        flags.TAG = False  # type: ignore
-        flags.RENAME_FOLDER = False  # type: ignore
-        flags.RENAME_FILES = False  # type: ignore
+        flags.TAG = False
+        flags.RENAME_FOLDER = False
+        flags.RENAME_FILES = False
 
     if args.folder_naming_template:
         template = args.folder_naming_template
-        if not isValidTemplate(template):
-            logger.info("provided Folder template is imbalanced, hence invalid, aborting!")
+        try:
+            TemplateResolver.validateTemplate(template)
+        except TemplateValidationException as e:
+            logger.info(f"{e}, aborting")
             return args, flags, ""
+
         flags.folderNamingTemplate = args.folder_naming_template
 
     if args.ksl:
@@ -196,7 +198,7 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
             logger.info('fetching and translating album data from VGMDB, it will take a while')
         else:
             logger.info('fetching Album Data from VGMDB')
-        albumData: AlbumData = getAlbumDetails(albumID)
+        albumData: VgmdbAlbumData = getAlbumDetails(albumID)
         if albumData is None:
             logger.error('could not fetch album details, Please Try Again.')
             return False
@@ -207,10 +209,6 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
     albumData["vgmdb_link"] = albumData["vgmdb_link"].split("?")[0]
     # Setting crucial info for passing further
     albumData["album_id"] = albumID
-    otherData: OtherData = {
-        "flags": flags,
-        "folder_path": folderPath
-    }
 
     if 'catalog' in albumData and (albumData['catalog'] == 'N/A' or albumData['catalog'] == 'NA'):
         del albumData['catalog']
@@ -221,7 +219,7 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
         if not yesNoUserInput():
             return False
 
-    albumTrackData = getAlbumTrackData(albumData, otherData)
+    albumTrackData = getAlbumTrackData(albumData)
     folderTrackData = getFolderTrackData(folderPath)
 
     if not doTracksAlign(albumTrackData, folderTrackData, flags):
@@ -255,7 +253,7 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
 
     if flags.BACKUP:
         try:
-            destinationFolder = BACKUPFOLDER
+            destinationFolder = Flags().BACKUPFOLDER
             if not os.path.exists(destinationFolder):
                 os.makedirs(destinationFolder)
             logger.info(f'backing Up {folderPath}...')
@@ -276,13 +274,13 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Flags) -> bool:
             getPictures(folderPath, albumID)
         elif 'covers' in albumData:
             # Old algorithm for downloading -> no Authentication -> less covers available!
-            getPicturesTheOldWay(albumData, otherData)
+            getPicturesTheOldWay(albumData, folderPath)
         logger.info('downloaded available scans :)')
 
     # Tagging
     if flags.TAG:
         logger.info('tagging files\n')
-        tagFiles(albumTrackData, folderTrackData, albumData, otherData)
+        tagFiles(albumTrackData, folderTrackData, albumData)
     # Renaming Files
     if flags.RENAME_FILES:
         logger.info('renaming files\n')
@@ -326,19 +324,19 @@ def findAlbumID(folderPath: str, searchTerm: Optional[str], searchYear: Optional
     tableData = []
     serialNumber: int = 1
     for album in albums:
-        albumID = album['link'].split('/')[1]
-        albumLink: str = f"https://vgmdb.net/{album['link']}"
-        albumTitle = getBest(album['titles'], flags.languageOrder)
-        releaseDate = album['release_date']
+        albumID = album.link.split('/')[1]
+        albumLink: str = f"https://vgmdb.net/{album.link}"
+        albumTitle = getBest(album.titles, flags.languageOrder)
+        releaseDate = album.release_date
         year = getYearFromDate(releaseDate)
-        catalog = album['catalog']
+        catalog = album.catalog
         if not searchYear or searchYear == year:
-            albumData[serialNumber] = {
-                **album,
-                "album_id": albumID,
-                "release_year": year,
-                "title": albumTitle
-            }
+            albumData[serialNumber] = SearchAlbumData(
+                **album.model_dump(),
+                album_id=albumID,
+                release_year=year,
+                title=albumTitle
+            )
             tableData.append((serialNumber, catalog, albumTitle, albumLink, year))
             serialNumber += 1
     if not tableData:
@@ -348,7 +346,7 @@ def findAlbumID(folderPath: str, searchTerm: Optional[str], searchYear: Optional
         tableData,
         headers=['S.No', 'Catalog', 'Title', 'Link', 'Year'],
         maxcolwidths=52,
-        tablefmt=tableFormat,
+        tablefmt=Flags().tableFormat,
         colalign=('center', 'left', 'left', 'left', 'center')
     ))
 

@@ -1,10 +1,10 @@
-from Imports.flagsAndSettings import Flags, tableFormat
+from Imports.flagsAndSettings import Flags
 import os
 from tabulate import tabulate
 from typing import Optional
-from Types.albumData import AlbumData
+from Types.vgmdbAlbumData import VgmdbAlbumData
 from Types.otherData import OtherData
-from Utility.mutagenWrapper import AudioFactory, supportedExtensions
+from Utility.Mutagen.mutagenWrapper import AudioFactory, supportedExtensions
 from Modules.Translate.translator import translate
 from Utility.generalUtils import get_default_logger, getBest
 
@@ -40,8 +40,8 @@ def getSearchTermAndDate(folderPath: str) -> tuple[Optional[str], Optional[str]]
     return None, date
 
 
-def getAlbumTrackData(albumData: AlbumData, otherData: OtherData) -> dict[int, dict[int, dict[str, str]]]:
-    flags: Flags = otherData['flags']
+def getAlbumTrackData(albumData: VgmdbAlbumData) -> dict[int, dict[int, dict[str, str]]]:
+    flags = Flags()
     trackData: dict[int, dict[int, dict[str, str]]] = {}
     discNumber = 1
     for disc in albumData['discs']:
@@ -131,7 +131,7 @@ def doTracksAlign(
             headers=['Disc', 'Track', 'Title (Translated)' if flags.TRANSLATE else 'Title', 'fileName'],
             colalign=('center', 'center', 'left', 'left'),
             maxcolwidths=50,
-            tablefmt=tableFormat
+            tablefmt=Flags().tableFormat
         )
     )
     return flag

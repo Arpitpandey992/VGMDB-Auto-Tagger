@@ -3,16 +3,16 @@ import requests
 import io
 from PIL import Image
 
-from Imports.flagsAndSettings import Flags, languages
-from Types.albumData import AlbumData, TrackData
+from Imports.flagsAndSettings import Flags
+from Types.vgmdbAlbumData import VgmdbAlbumData, TrackData
 from Utility.generalUtils import fixDate, get_default_logger, getProperCount
-from Utility.mutagenWrapper import AudioFactory
+from Utility.Mutagen.mutagenWrapper import AudioFactory
 from Utility.generalUtils import getBest
 
 logger = get_default_logger(__name__)
 
 
-def getImageData(albumData: AlbumData) -> Optional[bytes]:
+def getImageData(albumData: VgmdbAlbumData) -> Optional[bytes]:
     if 'picture_full' not in albumData:
         return None
 
@@ -45,7 +45,7 @@ def tagAudioFile(trackData: TrackData, flags=Flags()):
     def getAllLanguages(languageObject: dict[str, str]) -> list[str]:
         ans: list[str] = []
         for currentLanguage in flags.languageOrder:
-            for languageKey in languages[currentLanguage]:
+            for languageKey in Flags().languages[currentLanguage]:
                 if languageKey in languageObject:
                     ans.append(languageObject[languageKey])
                     break

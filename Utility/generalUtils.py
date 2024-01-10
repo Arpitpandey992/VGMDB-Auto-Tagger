@@ -4,8 +4,8 @@ from typing import Union, Optional
 import logging
 from math import ceil, log10
 import urllib.request
-from Imports.flagsAndSettings import languages
-from Types.albumData import AlbumData, TrackData
+from Imports.flagsAndSettings import Flags
+from Types.vgmdbAlbumData import VgmdbAlbumData  # , TrackData
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -150,7 +150,7 @@ def cleanSearchTerm(name: Optional[str]) -> Optional[str]:
     return ans
 
 
-def updateDict(dictionary: Union[dict, TrackData, AlbumData], keyValuePairs: dict) -> None:
+def updateDict(dictionary: Union[dict, VgmdbAlbumData], keyValuePairs: dict) -> None:
     """In place update some keys present in a dictionary"""
     for key, value in keyValuePairs.items():
         dictionary[key] = value
@@ -164,8 +164,8 @@ def printAndMoveBack(text: str):
 
 def isLanguagePresent(languageObject: dict[str, str], language: str) -> bool:
     presentLanguages = [key.lower().strip() for key in languageObject]
-    if language in languages:
-        for languageSynonym in languages[language]:
+    if language in Flags().languages:
+        for languageSynonym in Flags().languages[language]:
             if languageSynonym.lower().strip() in presentLanguages:
                 return True
     return False
@@ -173,7 +173,7 @@ def isLanguagePresent(languageObject: dict[str, str], language: str) -> bool:
 
 def getBest(languageObject: dict[str, str], languageOrder: list[str]) -> str:
     for currentLanguage in languageOrder:
-        for languageKey in languages[currentLanguage]:
+        for languageKey in Flags().languages[currentLanguage]:
             if languageKey in languageObject:
                 return languageObject[languageKey]
     if languageObject:

@@ -1,11 +1,10 @@
 import os
 from tabulate import tabulate
-from Imports.flagsAndSettings import tableFormat
-from Types.albumData import AlbumData, TrackData
-from Types.otherData import OtherData
+from Imports.flagsAndSettings import Flags
+from Types.vgmdbAlbumData import VgmdbAlbumData, TrackData
 from Utility.generalUtils import get_default_logger, printAndMoveBack, updateDict
 from Modules.Tag.tagUtils import getImageData, tagAudioFile
-from Utility.mutagenWrapper import supportedExtensions
+from Utility.Mutagen.mutagenWrapper import supportedExtensions
 from Utility.generalUtils import getBest
 
 logger = get_default_logger(__name__, 'info')
@@ -14,10 +13,9 @@ logger = get_default_logger(__name__, 'info')
 def tagFiles(
     albumTrackData: dict[int, dict[int, dict[str, str]]],
     folderTrackData: dict[int, dict[int, str]],
-    albumData: AlbumData,
-    otherData: OtherData
+    albumData: VgmdbAlbumData
 ):
-    flags = otherData.get('flags')
+    flags = Flags()
     trackData: TrackData = {
         **albumData,
         'track_number': 0,
@@ -90,6 +88,6 @@ def tagFiles(
             headers=['Disc', 'Track', 'Title', 'File Name'],
             colalign=('center', 'center', 'left', 'left'),
             maxcolwidths=50,
-            tablefmt=tableFormat
+            tablefmt=Flags().tableFormat
         )
     )

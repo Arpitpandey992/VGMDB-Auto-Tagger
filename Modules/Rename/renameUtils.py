@@ -3,12 +3,29 @@ from typing import Optional
 from typing_extensions import TypedDict
 from tabulate import tabulate
 from mutagen.flac import StreamInfo
+from Imports.flagsAndSettings import Flags
 from Utility.audioUtils import getFolderTrackData, getOneAudioFile
 from Utility.generalUtils import cleanName, fixDate, getProperCount, printAndMoveBack
-from Utility.mutagenWrapper import AudioFactory, supportedExtensions, IAudioManager
-from Imports.flagsAndSettings import tableFormat
+from Utility.Mutagen.mutagenWrapper import AudioFactory, supportedExtensions, IAudioManager
 from Utility.template import TemplateResolver
 from Utility.generalUtils import get_default_logger
+
+FOLDER_NAMING_TEMPLATE = {
+    "default": "{[{date}] }{albumname}{ [{catalog}]}{ [{format}]}",
+    "catalog_first": "{[{catalog}] }{albumname}{ [{date}]}{ [{format}]}",
+    "same_folder_name_default": "{[{date}] }{foldername}{ [{catalog}]}{ [{format}]}",
+    "same_folder_name_catalog_first": "{[{catalog}] }{foldername}{ [{date}]}{ [{format}]}"
+}
+
+
+def get_folder_naming_template(folder_naming_template: Optional[str], catalog_first: bool, same_folder_name: bool) -> str:
+    if folder_naming_template:
+        TemplateResolver.validateTemplate(folder_naming_template)
+        return folder_naming_template
+    elif catalog_first:
+        return FOLDER_NAMING_TEMPLATE['same_folder_name_catalog_first'] if same_folder_name else FOLDER_NAMING_TEMPLATE['catalog_first']
+    return FOLDER_NAMING_TEMPLATE['same_folder_name_default'] if same_folder_name else FOLDER_NAMING_TEMPLATE['catalog_first']
+
 
 logger = get_default_logger(__name__, 'info')
 
@@ -21,13 +38,41 @@ class TableData(TypedDict):
     tablefmt: str
 
 
-class RenameMetadata(TypedDict):
-    recursive: bool
+class RenameOptions(TypedDict):
+    folder_path: str
+    recur: bool
     verbose: bool
-    file_naming_template: str
     folder_naming_template: str
     results_table: list[TableData]
+    pause_on_update: bool
 
+
+def rename(
+    folder_path: str,
+    recur: bool = False,
+    verbose: bool = True,
+    folder_naming_template: Optional[str] = None,
+    catalog_first: bool = False,
+    same_folder_name: bool = False,
+    pause_on_update: bool = False,
+):
+    folder_naming_template = get_folder_naming_template(folder_naming_template, catalog_first, same_folder_name)
+    results_table = []
+    rename_options: RenameOptions = {
+        "folder_path": folder_path,
+        "recur": recur,
+        "verbose": verbose,
+        "folder_naming_template": folder_naming_template,
+        "results_table": results_table,
+        "pause_on_update": pause_on_update
+    }
+
+
+def _rename(rename_options: RenameOptions):
+    for item in os.listdir(rename_options['folder_path']):
+        totalTracks = countAudioFiles(folderPath)
+        if recur and os.path.isdir(item):
+            renameFilesInternal(item, verbose, pauseOnFinish, recur, tableData)
 
 
 def countAudioFiles(folderPath: Optional[str] = None, folderTrackData: Optional[dict[int, dict[int, str]]] = None) -> int:
@@ -196,7 +241,7 @@ def renameAlbumFiles(
                 tableData,
                 headers=['Disc', 'Track', 'Old Name', 'New Name'],
                 colalign=('center', 'center', 'left', 'left'),
-                maxcolwidths=50, tablefmt=tableFormat
+                maxcolwidths=50, tablefmt=Flags().tableFormat
             )
         )
 
@@ -283,7 +328,7 @@ def organizeFiles(folderPath: str, verbose: bool = True, pauseOnFinish: bool = F
                 headers=['S.no', 'Old Name', 'New Name'],
                 colalign=('center', 'left', 'left'),
                 maxcolwidths=45,
-                tablefmt=tableFormat
+                tablefmt=Flags().tableFormat
             )
         )
     if pauseOnFinish:

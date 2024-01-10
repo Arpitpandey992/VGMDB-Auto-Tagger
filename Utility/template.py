@@ -1,6 +1,11 @@
 
+class TemplateValidationException(ValueError):
+    def __init__(self, message):
+        super().__init__(message)
+
 
 class TemplateResolver:
+    # Public Functions:
     def __init__(self, mapping: dict) -> None:
         self.mapping = {
             key.lower(): value for key, value in mapping.items()
@@ -9,6 +14,28 @@ class TemplateResolver:
     def evaluate(self, expression: str) -> str:
         return self._evaluate(expression)[0]
 
+    @staticmethod
+    def validateTemplate(expression: str) -> None:
+        """
+        Check if template is valid or not.
+        :param expression: The expression string to validate
+        :raises TemplateValidationException: if provided expression is invalid
+        :returns: None
+        """
+        open = 0
+        for character in expression:
+            if character != '{' and character != '}':
+                continue
+            if character == '{':
+                open += 1
+            elif open == 0:
+                raise TemplateValidationException(f"invalid template expression: {expression}")
+            else:
+                open -= 1
+        if open != 0:
+            raise TemplateValidationException(f"invalid template expression: {expression}")
+
+# Private functions:
     def _evaluate(self, expression: str) -> tuple[str, bool]:
         """
         Recursively evaluate a given expression, not extremely optimized, but it's not needed here
@@ -20,7 +47,7 @@ class TemplateResolver:
                 return (expressionValue, True)
             return ("", False)
         expressionLength = len(expression)
-        closingIndices = self.getClosingIndices(expression)
+        closingIndices = self._getClosingIndices(expression)
         left = 0
         finalExpression = ""
         finalResolved = True
@@ -38,7 +65,7 @@ class TemplateResolver:
                 left += 1
         return (finalExpression, finalResolved)
 
-    def getClosingIndices(self, expression: str) -> list[int]:
+    def _getClosingIndices(self, expression: str) -> list[int]:
         expressionLength = len(expression)
         closingIndices: list[int] = [-1] * expressionLength
         stack: list[int] = []
@@ -51,20 +78,6 @@ class TemplateResolver:
                 lastOpeningIndex = stack.pop()
                 closingIndices[lastOpeningIndex] = i
         return closingIndices
-
-
-def isValidTemplate(expression: str) -> bool:
-    open = 0
-    for character in expression:
-        if character != '{' and character != '}':
-            continue
-        if character == '{':
-            open += 1
-        elif open == 0:
-            return False
-        else:
-            open -= 1
-    return open == 0
 
 
 if __name__ == '__main__':

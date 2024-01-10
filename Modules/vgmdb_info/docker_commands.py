@@ -53,11 +53,14 @@ def get_server_base_address(image_name: str) -> str:
 def wait_for_server_start(base_address: str):
     server_ready = False
     sleep_time_seconds, max_sleep_time_seconds = 1, 30
+    logger.debug('checking if server is ready to serve requests')
     while not server_ready:
         try:
             requests.get(base_address)
+            logger.debug('server is ready to serve requests!')
             server_ready = True
-        except requests.ConnectionError:
+        except requests.ConnectionError as e:
+            logger.debug(f'error connecting to {base_address}, retrying after {sleep_time_seconds} seconds, error: {e}')
             sleep(sleep_time_seconds)
             sleep_time_seconds = min(sleep_time_seconds * 2, max_sleep_time_seconds)
 

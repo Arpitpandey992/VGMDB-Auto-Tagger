@@ -1,55 +1,73 @@
-BACKUPFOLDER = '~/Music/Backups'
-APICALLRETRIES = 5
-tableFormat = 'pretty'
+class Singleton(type):
+    _instances = {}
 
-languages = {
-    'romaji': ['ja-latn', 'Romaji', 'Romaji Translated'],
-    'english': ['en', 'English', 'English (Apple Music)', 'English/German', 'English localized', 'English (alternate)', 'English Translated', 'English [Translation]'],
-    'japanese': ['ja', 'Japanese']
-}
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
 
 
-class Flags:
-    def __init__(self):
-        # Management Flags
-        self.BACKUP = False
-        self.YES = False
-        self.CONFIRM = False
-        self.RENAME_FILES = True
-        self.TAG = True
-        self.RENAME_FOLDER = True
-        self.NO_AUTH = False
-        self.NO_INPUT = False
-        self.TRANSLATE = False
-        self.DISC_NUMBERS = True
-        self.TRACK_NUMBERS = True
-        self.IGNORE_MISMATCH = False  # Dangerous, keep false
+class Flags(metaclass=Singleton):
+    # Settings
+    BACKUPFOLDER: str = '~/Music/Backups'
+    tableFormat: str = 'pretty'
 
-        # Metadata Flags
-        self.PICS = True
-        self.PIC_OVERWRITE = False
-        self.SCANS = True
-        self.DATE = True
-        self.YEAR = True
-        self.CATALOG = True
-        self.BARCODE = True
-        self.TITLE = True
-        self.KEEP_TITLE = False
-        self.SAME_FOLDER_NAME = False
-        self.ALL_LANG = True
+    languages: dict[str, list[str]] = {
+        'romaji': ['ja-latn', 'Romaji', 'Romaji Translated'],
+        'english': ['en', 'English', 'English (Apple Music)', 'English/German', 'English localized', 'English (alternate)', 'English Translated', 'English [Translation]'],
+        'japanese': ['ja', 'Japanese']
+    }
 
-        self.ORGANIZATIONS = True
-        # these tags are supposed to be track specific, but in VGMDB, they are provided for entire album,
-        # hence i've turned these off.
-        self.ARRANGERS = False
-        self.COMPOSERS = False
-        self.PERFORMERS = False
-        self.LYRICISTS = False
+    # Management Flags
+    BACKUP: bool = False
+    YES: bool = False
+    CONFIRM: bool = False
+    RENAME_FILES: bool = True
+    TAG: bool = True
+    RENAME_FOLDER: bool = True
+    NO_AUTH: bool = False
+    NO_INPUT: bool = False
+    TRANSLATE: bool = False
+    DISC_NUMBERS: bool = True
+    TRACK_NUMBERS: bool = True
+    IGNORE_MISMATCH: bool = False  # Dangerous, keep false
 
-        # default naming templates
-        self.folderNamingTemplate = "{[{date}] }{albumname}{ [{catalog}]}{ [{format}]}"
-        # languages to be probed from VGMDB in the given order of priority
-        self.languageOrder = ['english', 'romaji', 'japanese']
+    # Metadata Flags
+    PICS: bool = True
+    PIC_OVERWRITE: bool = False
+    SCANS: bool = True
+    DATE: bool = True
+    YEAR: bool = True
+    CATALOG: bool = True
+    BARCODE: bool = True
+    TITLE: bool = True
+    KEEP_TITLE: bool = False
+    SAME_FOLDER_NAME: bool = False
+    ALL_LANG: bool = True
 
-        # misc flags
-        self.SEE_FLAGS = False
+    ORGANIZATIONS: bool = True
+    # these tags are supposed to be track specific, but in VGMDB, they are provided for entire album,
+    # hence i've turned these off.
+    ARRANGERS: bool = False
+    COMPOSERS: bool = False
+    PERFORMERS: bool = False
+    LYRICISTS: bool = False
+
+    # default naming templates
+    folderNamingTemplate: str = "{[{date}] }{albumname}{ [{catalog}]}{ [{format}]}"
+    # languages to be probed from VGMDB in the given order of priority
+    languageOrder: list[str] = ['english', 'romaji', 'japanese']
+
+    # misc flags
+    SEE_FLAGS: bool = False
+
+
+if __name__ == "__main__":
+    x = Flags()
+    print(x.tableFormat)
+    x.tableFormat = "damn_pretty"
+    print(x.tableFormat)
+    y = Flags()
+    print(y.tableFormat)
+    assert (x.tableFormat == y.tableFormat)
+    assert (x is y)
