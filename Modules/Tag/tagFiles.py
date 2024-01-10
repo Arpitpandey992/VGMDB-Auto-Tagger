@@ -7,31 +7,27 @@ from Modules.Tag.tagUtils import getImageData, tagAudioFile
 from Utility.Mutagen.mutagenWrapper import supportedExtensions
 from Utility.generalUtils import getBest
 
-logger = get_default_logger(__name__, 'info')
+logger = get_default_logger(__name__, "info")
 
 
-def tagFiles(
-    albumTrackData: dict[int, dict[int, dict[str, str]]],
-    folderTrackData: dict[int, dict[int, str]],
-    albumData: VgmdbAlbumData
-):
+def tagFiles(albumTrackData: dict[int, dict[int, dict[str, str]]], folderTrackData: dict[int, dict[int, str]], albumData: VgmdbAlbumData):
     flags = Flags()
     trackData: TrackData = {
         **albumData,
-        'track_number': 0,
-        'total_tracks': 0,
-        'disc_number': 0,
-        'total_discs': 0,
-        'file_path': "",
-        'track_titles': {},
-        'album_link': albumData.get('vgmdb_link'),
-        'album_names': albumData.get('names'),
-        'album_name': getBest(albumData.get('names'), flags.languageOrder),
+        "track_number": 0,
+        "total_tracks": 0,
+        "disc_number": 0,
+        "total_discs": 0,
+        "file_path": "",
+        "track_titles": {},
+        "album_link": albumData.get("vgmdb_link"),
+        "album_names": albumData.get("names"),
+        "album_name": getBest(albumData.get("names"), flags.languageOrder),
     }
     if flags.PICS:
         imageData = getImageData(albumData)
         if imageData:
-            trackData['picture_cache'] = imageData
+            trackData["picture_cache"] = imageData
     totalDiscs = len(albumTrackData)
 
     tableData = []
@@ -51,43 +47,33 @@ def tagFiles(
 
             if extension not in supportedExtensions:
                 logger.error(f"couldn't tag: {fileName}, {extension} Not Supported Yet :(")
-                tableData.append(('XX', 'XX', 'XX', fileName))
+                tableData.append(("XX", "XX", "XX", fileName))
                 continue
 
-            updateDict(trackData, {
-                'track_number': trackNumber,
-                'total_tracks': totalTracks,
-                'disc_number': discNumber,
-                'total_discs': totalDiscs,
-                'file_path': filePath,
-                'track_titles': trackTitles,
-            })
+            updateDict(
+                trackData,
+                {
+                    "track_number": trackNumber,
+                    "total_tracks": totalTracks,
+                    "disc_number": discNumber,
+                    "total_discs": totalDiscs,
+                    "file_path": filePath,
+                    "track_titles": trackTitles,
+                },
+            )
 
             audioTagged = tagAudioFile(trackData, flags)
 
             if audioTagged:
                 printAndMoveBack(f"Tagged : {fileName}")
-                tableData.append((
-                    discNumber,
-                    trackNumber,
-                    getBest(trackTitles, flags.languageOrder),
-                    fileName
-                ))
+                tableData.append((discNumber, trackNumber, getBest(trackTitles, flags.languageOrder), fileName))
             else:
                 logger.error(f"couldn't tag: {fileName}")
-                tableData.append(('XX', 'XX', 'XX', fileName))
+                tableData.append(("XX", "XX", "XX", fileName))
 
     if not tableData:
         return
-    printAndMoveBack('')
-    logger.info('files Tagged as follows:')
+    printAndMoveBack("")
+    logger.info("files Tagged as follows:")
     tableData.sort()
-    logger.info(
-        '\n' + tabulate(
-            tableData,
-            headers=['Disc', 'Track', 'Title', 'File Name'],
-            colalign=('center', 'center', 'left', 'left'),
-            maxcolwidths=50,
-            tablefmt=Flags().tableFormat
-        )
-    )
+    logger.info("\n" + tabulate(tableData, headers=["Disc", "Track", "Title", "File Name"], colalign=("center", "center", "left", "left"), maxcolwidths=50, tablefmt=Flags().tableFormat))

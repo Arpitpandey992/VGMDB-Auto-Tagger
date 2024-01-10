@@ -6,13 +6,13 @@ from typing import Callable, Optional
 import unittest
 
 sys.path.append(os.getcwd())
-from Utility.Mutagen.mutagenWrapper import AudioFactory, ID3Wrapper, pictureTypes, pictureNameToNumber
+from Utility.Mutagen.mutagenWrapper import AudioFactory, pictureTypes, pictureNameToNumber
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 baseFolder = os.path.join(__location__, "testSamples")
 coversPath = os.path.join(baseFolder, "covers")
 covers = [os.path.join(coversPath, coverName) for coverName in os.listdir(coversPath)]
-SEE_PASSED = False
+
 # Unicode range for common Japanese characters (Hiragana, Katakana, and common Kanji)
 japanese_chars = [
     (0x3041, 0x3096),  # Hiragana
@@ -27,7 +27,7 @@ def getRandomCoverImageData() -> bytes:
     cover_index = random.randrange(0, num_covers, 1)
     path = covers[cover_index]
     # del covers[cover_index]
-    with open(path, 'rb') as image_file:
+    with open(path, "rb") as image_file:
         image_data = image_file.read()
     return image_data
 
@@ -35,13 +35,13 @@ def getRandomCoverImageData() -> bytes:
 def generate_random_string(x: int, y: int):
     siz = random.randint(x, y)
     characters = string.ascii_letters + string.digits  # You can customize this further
-    random_string = ''.join(random.choice(characters) for _ in range(siz))
+    random_string = "".join(random.choice(characters) for _ in range(siz))
     return random_string
 
 
 def generate_random_japanese_string(x: int, y: int) -> str:
     siz = random.randint(x, y)
-    random_string = ''.join(random.choice(all_japanese_chars) for _ in range(siz))
+    random_string = "".join(random.choice(all_japanese_chars) for _ in range(siz))
     return random_string
 
 
@@ -53,7 +53,6 @@ def selectRandomKeysFromDict(input_dict: dict) -> list:
 
 
 class MutagenWrapperTestCase(unittest.TestCase):
-
     def setUp(self):
         self.audio = audioImpl
         self.file_path = filePathImpl
@@ -110,8 +109,8 @@ class MutagenWrapperTestCase(unittest.TestCase):
         self.assertFalse(self.audio.hasPictureOfType("Cover (front)"))
 
     def test_setting_multiple_pictures(self):
-        """ This test is currently only for MP3 and FLAC """
-        chosen_picture_types = selectRandomKeysFromDict(pictureNameToNumber)   # random selection of which type of picture to embed
+        """This test is not for m4a files because they don't support multiple pictures"""
+        chosen_picture_types = selectRandomKeysFromDict(pictureNameToNumber)  # random selection of which type of picture to embed
         # chosen_picture_types: list[pictureTypes] = [u'Other', u'File icon', u'Other file icon', u'Cover (front)', u'Cover (back)', u'Leaflet page', u'Media (e.g. lable side of CD)']
         for picture_type in chosen_picture_types:
             self.audio.setPictureOfType(getRandomCoverImageData(), picture_type)
@@ -120,7 +119,7 @@ class MutagenWrapperTestCase(unittest.TestCase):
             self.assertTrue(self.audio.hasPictureOfType(picture_type))
 
     def test_xx_save(self):
-        """ xx is prepended so that the audio file is saved at the end """
+        """xx is prepended so that the audio file is saved at the end"""
         self.audio.save()
 
     def _test_equality_list_arg(self, setter: Callable, getter: Callable, setter_arg: list, expected: Optional[list] = None):
@@ -150,14 +149,7 @@ class MutagenWrapperTestCase(unittest.TestCase):
         self.assertEqual(self.audio.getCustomTag(key), expected)
 
 
-extensions = [
-    "mp3",
-    "flac",
-    "m4a",
-    "wav",
-    "ogg",
-    "opus"
-]
+extensions = ["mp3", "flac", "m4a", "wav", "ogg", "opus"]
 for extension in extensions:
     suite = unittest.TestLoader().loadTestsFromTestCase(MutagenWrapperTestCase)
     print(f"\n----------------------------------------------------------------------\nTesting {extension} file")

@@ -1,8 +1,7 @@
 import os
-from abc import ABC, abstractmethod
-from typing import Union, Optional
 import base64
-from uu import decode
+from typing import Union, Optional
+from abc import ABC, abstractmethod
 
 from mutagen.mp3 import MP3
 from mutagen.flac import Picture as PictureFLAC, FLAC
@@ -13,11 +12,22 @@ from mutagen.id3._frames import APIC, TALB, TDAT, TYER, TRCK, COMM, TXXX, TPOS, 
 from mutagen.id3 import ID3
 from mutagen.mp4 import MP4, MP4Cover
 
-from Utility.Mutagen.mutagenUtils import cleanDate, convertStringToNumber, ensureOneOrNone, getFirstElement, getProperCount, pictureNameToNumber, pictureTypes, splitAndGetFirst, splitAndGetSecond, extractYearFromDate
+from Utility.Mutagen.mutagenUtils import (
+    cleanDate,
+    convertStringToNumber,
+    ensureOneOrNone,
+    getFirstElement,
+    getProperCount,
+    pictureNameToNumber,
+    pictureTypes,
+    splitAndGetFirst,
+    splitAndGetSecond,
+    extractYearFromDate,
+)
 from Utility.generalUtils import get_default_logger
 
 
-logger = get_default_logger(__name__, 'info')
+logger = get_default_logger(__name__, "info")
 
 """
 This is a wrapper around mutagen module. 
@@ -29,13 +39,14 @@ class IAudioManager(ABC):
     """
     Interface Class for generalizing usage of Mutagen across multiple formats
     """
+
     @abstractmethod
     def setTitle(self, newTitle: list[str]):
-        """ Set the title of track """
+        """Set the title of track"""
 
     @abstractmethod
     def setAlbum(self, newAlbum: list[str]):
-        """ Set the album name of the track """
+        """Set the album name of the track"""
 
     @abstractmethod
     def setDiscNumbers(self, discNumber: int, totalDiscs: int):
@@ -53,102 +64,103 @@ class IAudioManager(ABC):
 
     @abstractmethod
     def setComment(self, comment: list[str]):
-        """ Set comment """
+        """Set comment"""
 
     @abstractmethod
     def setPictureOfType(self, imageData: bytes, pictureType: pictureTypes):
-        """ Set a picture of some type (3 = front Cover) """
+        """Set a picture of some type (3 = front Cover)"""
 
     @abstractmethod
     def hasPictureOfType(self, pictureType: pictureTypes) -> bool:
-        """ check whether a picture of some type (3 = front Cover) is present"""
+        """check whether a picture of some type (3 = front Cover) is present"""
 
     @abstractmethod
     def deletePictureOfType(self, pictureType: pictureTypes) -> bool:
-        """ delete a picture of some type (3 = front Cover), returns True if picture successfully deleted"""
+        """delete a picture of some type (3 = front Cover), returns True if picture successfully deleted"""
 
     @abstractmethod
     def setDate(self, date: list[str]):
-        """ Set the album release date """
+        """Set the album release date"""
+
     @abstractmethod
     def setCustomTag(self, key: str, value: list[str]):
-        """ Set a custom tag as Key = value """
+        """Set a custom tag as Key = value"""
 
     @abstractmethod
     def setCatalog(self, value: list[str]):
-        """ Set Catalog number """
+        """Set Catalog number"""
 
     @abstractmethod
     def setBarcode(self, value: list[str]):
-        """ Set Barcode number """
+        """Set Barcode number"""
 
     @abstractmethod
     def setDiscName(self, value: list[str]):
-        """ Set The Name of The Disc """
+        """Set The Name of The Disc"""
 
     @abstractmethod
     def getTitle(self) -> Optional[list[str]]:
-        """ get the title of track """
+        """get the title of track"""
 
     @abstractmethod
     def getAlbum(self) -> Optional[list[str]]:
-        """ get the album name of the track """
+        """get the album name of the track"""
 
     @abstractmethod
     def getArtist(self) -> Optional[list[str]]:
-        """ get the artist name of the track """
+        """get the artist name of the track"""
 
     @abstractmethod
     def getAlbumArtist(self) -> Optional[list[str]]:
-        """ get the album Artist name """
+        """get the album Artist name"""
 
     @abstractmethod
     def getDiscNumber(self) -> Optional[int]:
-        """ get disc number """
+        """get disc number"""
 
     @abstractmethod
     def getTotalDiscs(self) -> Optional[int]:
-        """ get total number of discs """
+        """get total number of discs"""
 
     @abstractmethod
     def getTrackNumber(self) -> Optional[int]:
-        """ get Track number """
+        """get Track number"""
 
     @abstractmethod
     def getTotalTracks(self) -> Optional[int]:
-        """ get Total number of tracks """
+        """get Total number of tracks"""
 
     @abstractmethod
     def getComment(self) -> Optional[list[str]]:
-        """ get comment """
+        """get comment"""
 
     @abstractmethod
     def getDate(self) -> Optional[list[str]]:
-        """ get the album release date """
+        """get the album release date"""
 
     @abstractmethod
     def getCustomTag(self, key: str) -> Optional[list[str]]:
-        """ get a custom tag as Key = value (which can be a string or a list of strings) """
+        """get a custom tag as Key = value (which can be a string or a list of strings)"""
 
     @abstractmethod
     def getCatalog(self) -> Optional[list[str]]:
-        """ get Catalog number of the album """
+        """get Catalog number of the album"""
 
     @abstractmethod
     def getBarcode(self) -> Optional[list[str]]:
-        """ get Barcode of the album """
+        """get Barcode of the album"""
 
     @abstractmethod
     def getDiscName(self) -> Optional[str]:
-        """ get the name of the disc """
+        """get the name of the disc"""
 
     @abstractmethod
     def printInfo(self) -> str:
-        """ See the metadata information in Human Readable Format """
+        """See the metadata information in Human Readable Format"""
 
     @abstractmethod
     def getInfo(self):
-        """ get the info metadata object """
+        """get the info metadata object"""
 
     @abstractmethod
     def getExtension(self) -> int:
@@ -156,11 +168,11 @@ class IAudioManager(ABC):
 
     @abstractmethod
     def save(self):
-        """ Apply metadata changes """
+        """Apply metadata changes"""
 
     @abstractmethod
     def clearTags(self):
-        """ clear all metadata tags """
+        """clear all metadata tags"""
 
 
 class CustomOgg(OggVorbis):
@@ -235,31 +247,31 @@ class VorbisWrapper(IAudioManager):
         self.audio = mutagen_object
 
     def setTitle(self, newTitle):
-        self.audio['title'] = newTitle
+        self.audio["title"] = newTitle
 
     def setAlbum(self, newAlbum):
-        self.audio['album'] = newAlbum
+        self.audio["album"] = newAlbum
 
     def setDiscNumbers(self, discNumber, totalDiscs):
         properDiscNumber, properTotalDiscs = getProperCount(discNumber, totalDiscs)
-        self.audio['discnumber'] = properDiscNumber
-        self.audio['totaldiscs'] = properTotalDiscs
-        self.audio['disctotal'] = properTotalDiscs
+        self.audio["discnumber"] = properDiscNumber
+        self.audio["totaldiscs"] = properTotalDiscs
+        self.audio["disctotal"] = properTotalDiscs
 
     def setTrackNumbers(self, trackNumber, totalTracks):
         properTrackNumber, properTotalTracks = getProperCount(trackNumber, totalTracks)
-        self.audio['tracknumber'] = properTrackNumber
-        self.audio['totaltracks'] = properTotalTracks
-        self.audio['tracktotal'] = properTotalTracks
+        self.audio["tracknumber"] = properTrackNumber
+        self.audio["totaltracks"] = properTotalTracks
+        self.audio["tracktotal"] = properTotalTracks
 
     def setComment(self, comment):
-        self.audio['comment'] = comment
+        self.audio["comment"] = comment
 
     def setPictureOfType(self, imageData, pictureType):
         picture = PictureFLAC()
         picture.data = imageData
         picture.type = pictureNameToNumber[pictureType]
-        picture.mime = 'image/jpeg'
+        picture.mime = "image/jpeg"
         picture.desc = pictureType
         self.audio.add_picture(picture)
 
@@ -276,78 +288,78 @@ class VorbisWrapper(IAudioManager):
         return True
 
     def setDate(self, date):
-        self.audio['date'] = [cleanDate(current_date) for current_date in date]
-        self.audio['year'] = [extractYearFromDate(current_date) for current_date in date]
+        self.audio["date"] = [cleanDate(current_date) for current_date in date]
+        self.audio["year"] = [extractYearFromDate(current_date) for current_date in date]
 
     def setCustomTag(self, key, value):
         self.audio[key] = value
 
     def setCatalog(self, value):
-        self.setCustomTag('CATALOGNUMBER', value)
-        self.setCustomTag('CATALOG', value)
+        self.setCustomTag("CATALOGNUMBER", value)
+        self.setCustomTag("CATALOG", value)
 
     def setBarcode(self, value):
-        self.setCustomTag('barcode', value)
+        self.setCustomTag("barcode", value)
 
     def setDiscName(self, value):
-        self.setCustomTag('DISCSUBTITLE', value)
+        self.setCustomTag("DISCSUBTITLE", value)
 
     def getTitle(self):
-        return ensureOneOrNone(self.audio.get('title'))
+        return ensureOneOrNone(self.audio.get("title"))
 
     def getAlbum(self):
-        return ensureOneOrNone(self.audio.get('album'))
+        return ensureOneOrNone(self.audio.get("album"))
 
     def getArtist(self):
-        return ensureOneOrNone(self.audio.get('artist'))
+        return ensureOneOrNone(self.audio.get("artist"))
 
     def getAlbumArtist(self):
-        return ensureOneOrNone(self.audio.get('albumartist'))
+        return ensureOneOrNone(self.audio.get("albumartist"))
 
     def getDiscNumber(self):
-        ans = getFirstElement(self.audio.get('discnumber'))
+        ans = getFirstElement(self.audio.get("discnumber"))
         # Usually the track number will be a simple number for Vorbis files, but sometimes it is like 01/23 which is wrong but to avoid the corner case, we are splitting it regardless
         return convertStringToNumber(splitAndGetFirst(ans))
 
     def getTotalDiscs(self):
-        ans = self.audio.get('disctotal')
+        ans = self.audio.get("disctotal")
         if not ans:
-            ans = self.audio.get('totaldiscs')
+            ans = self.audio.get("totaldiscs")
         if not ans:
-            ans = splitAndGetSecond(getFirstElement(self.audio.get('discnumber')))
+            ans = splitAndGetSecond(getFirstElement(self.audio.get("discnumber")))
         return convertStringToNumber(getFirstElement(ans))
 
     def getTrackNumber(self):
-        ans = getFirstElement(self.audio.get('tracknumber'))
+        ans = getFirstElement(self.audio.get("tracknumber"))
         # Usually the track number will be a simple number for Vorbis files, but sometimes it is like 01/23 which is wrong but to avoid the corner case, we are splitting it
         return convertStringToNumber(splitAndGetFirst(ans))
 
     def getTotalTracks(self):
-        ans = self.audio.get('tracktotal')
+        ans = self.audio.get("tracktotal")
         if not ans:
-            ans = self.audio.get('totaltracks')
+            ans = self.audio.get("totaltracks")
         # If the answer is still None, it might be possible that the track number is instead written like 01/23 from where we can get the total tracks. However, this format of writing track number is wrong in Vorbis files.
         if not ans:
-            ans = splitAndGetSecond(getFirstElement(self.audio.get('tracknumber')))
+            ans = splitAndGetSecond(getFirstElement(self.audio.get("tracknumber")))
         return convertStringToNumber(getFirstElement(ans))
 
     def getComment(self):
-        return ensureOneOrNone(self.audio.get('comment'))
+        return ensureOneOrNone(self.audio.get("comment"))
 
     def getDate(self):
-        return self._searchMultiCustomTags(['date', 'ORIGINALDATE', 'year', 'ORIGINALYEAR'])
+        return self._searchMultiCustomTags(["date", "ORIGINALDATE", "year", "ORIGINALYEAR"])
 
     def getCustomTag(self, key):
         return ensureOneOrNone(self.audio.get(key))
 
     def getCatalog(self):
-        return self._searchMultiCustomTags(['CATALOGNUMBER', 'CATALOG', 'LABELNO'])
+        return self._searchMultiCustomTags(["CATALOGNUMBER", "CATALOG", "LABELNO"])
 
     def getBarcode(self):
-        return self._searchMultiCustomTags(['barcode', 'BARCODE'])
+        return self._searchMultiCustomTags(["barcode", "BARCODE"])
 
     def getDiscName(self):
-        return self._searchMultiCustomTags(['DISCSUBTITLE', 'DISCNAME'])
+        return self._searchMultiCustomTags(["DISCSUBTITLE", "DISCNAME"])
 
     def printInfo(self):
         return self.audio.pprint()
@@ -401,7 +413,6 @@ class CustomMP3(ID3):
 
 
 class ID3Wrapper(IAudioManager):
-
     def __init__(self, mutagen_object: Union[CustomMP3, CustomWAVE], extension: str):
         self.audio = mutagen_object
         self.extension = extension.lower()
@@ -420,27 +431,17 @@ class ID3Wrapper(IAudioManager):
 
     def setDiscNumbers(self, discNumber, totalDiscs):
         properDiscNumber, properTotalDiscs = getProperCount(discNumber, totalDiscs)
-        self.audio.add(TPOS(
-            encoding=3,
-            text=[properDiscNumber + '/' + properTotalDiscs]
-        ))
+        self.audio.add(TPOS(encoding=3, text=[properDiscNumber + "/" + properTotalDiscs]))
 
     def setTrackNumbers(self, trackNumber, totalTracks):
         properTrackNumber, properTotalTracks = getProperCount(trackNumber, totalTracks)
-        self.audio.add(TRCK(
-            encoding=3,
-            text=[properTrackNumber + '/' + properTotalTracks]
-        ))
+        self.audio.add(TRCK(encoding=3, text=[properTrackNumber + "/" + properTotalTracks]))
 
     def setComment(self, comment):
         self.audio.add(COMM(encoding=3, text=comment))
 
     def setPictureOfType(self, imageData, pictureType):
-        picture = APIC(encoding=3,
-                       mime='image/jpeg',
-                       type=pictureNameToNumber[pictureType],
-                       desc=pictureType,
-                       data=imageData)
+        picture = APIC(encoding=3, mime="image/jpeg", type=pictureNameToNumber[pictureType], desc=pictureType, data=imageData)
         self.audio.add(picture)
 
     def hasPictureOfType(self, pictureType):
@@ -467,22 +468,24 @@ class ID3Wrapper(IAudioManager):
 
     def setCustomTag(self, key, value):
         if not value:
-            self._delete_custom_tag(key)  # deleting the custom tag if exists if the provided value is an empty list. This is consistent with other predefined tags where empty list makes the tag = None
+            self._delete_custom_tag(
+                key
+            )  # deleting the custom tag if exists if the provided value is an empty list. This is consistent with other predefined tags where empty list makes the tag = None
             return
         self.audio.add(TXXX(encoding=3, desc=key, text=value))
 
     def setCatalog(self, value):
-        self.setCustomTag('CATALOGNUMBER', value)
-        self.setCustomTag('CATALOG', value)
+        self.setCustomTag("CATALOGNUMBER", value)
+        self.setCustomTag("CATALOG", value)
 
     def setBarcode(self, value):
-        self.setCustomTag('barcode', value)
+        self.setCustomTag("barcode", value)
 
     def setDiscName(self, value):
-        self.setCustomTag('DISCSUBTITLE', value)
+        self.setCustomTag("DISCSUBTITLE", value)
 
     def getTitle(self):
-        ans = self.audio.get('TIT2')
+        ans = self.audio.get("TIT2")
         if not ans or not ans.text:
             return None
         title = [x for x in ans.text]
@@ -491,7 +494,7 @@ class ID3Wrapper(IAudioManager):
         return title
 
     def getAlbum(self):
-        ans = self.audio.get('TALB')
+        ans = self.audio.get("TALB")
         if not ans or not ans.text:
             return None
         album = [x for x in ans.text]
@@ -500,35 +503,35 @@ class ID3Wrapper(IAudioManager):
         return album
 
     def getArtist(self):
-        ans = self.audio.get('TPE1')
+        ans = self.audio.get("TPE1")
         return ensureOneOrNone(ans.text) if ans else None
 
     def getAlbumArtist(self):
-        ans = self.audio.get('TPE2')
+        ans = self.audio.get("TPE2")
         return ensureOneOrNone(ans.text) if ans else None
 
     def getDiscNumber(self):
-        ans = self.audio.get('TPOS')
+        ans = self.audio.get("TPOS")
         return convertStringToNumber(splitAndGetFirst(getFirstElement(ans.text))) if ans else None
 
     def getTotalDiscs(self):
-        ans = self.audio.get('TPOS')
+        ans = self.audio.get("TPOS")
         return convertStringToNumber(splitAndGetSecond(getFirstElement(ans.text))) if ans else None
 
     def getTrackNumber(self):
-        ans = self.audio.get('TRCK')
+        ans = self.audio.get("TRCK")
         return convertStringToNumber(splitAndGetFirst(getFirstElement(ans.text))) if ans else None
 
     def getTotalTracks(self):
-        ans = self.audio.get('TRCK')
+        ans = self.audio.get("TRCK")
         return convertStringToNumber(splitAndGetSecond(getFirstElement(ans.text))) if ans else None
 
     def getComment(self):
-        ans = self.audio.get('COMM::XXX')
+        ans = self.audio.get("COMM::XXX")
         return ensureOneOrNone(ans.text) if ans else None
 
     def getDate(self):
-        ans = self.audio.get('TDAT')
+        ans = self.audio.get("TDAT")
         if not ans or not ans.text:
             return None
         dates = [cleanDate(str(dat)) for dat in ans.text]
@@ -544,13 +547,13 @@ class ID3Wrapper(IAudioManager):
         return None
 
     def getCatalog(self):
-        return self._searchMultiCustomTags(['CATALOGNUMBER', 'CATALOG', 'LABELNO'])
+        return self._searchMultiCustomTags(["CATALOGNUMBER", "CATALOG", "LABELNO"])
 
     def getBarcode(self):
-        return self._searchMultiCustomTags(['barcode', 'BARCODE'])
+        return self._searchMultiCustomTags(["barcode", "BARCODE"])
 
     def getDiscName(self):
-        return self._searchMultiCustomTags(['DISCSUBTITLE', 'DISCNAME'])
+        return self._searchMultiCustomTags(["DISCSUBTITLE", "DISCNAME"])
 
     def printInfo(self):
         return self.audio.pprint()
@@ -622,18 +625,18 @@ class MP4Wrapper(IAudioManager):
 
     def setCustomTag(self, key, value):
         newKey = f"----:com.apple.iTunes:{key}"
-        value = [v.encode('utf-8') for v in value]
+        value = [v.encode("utf-8") for v in value]
         self.audio[newKey] = value
 
     def setCatalog(self, value):
-        self.setCustomTag('CATALOGNUMBER', value)
-        self.setCustomTag('CATALOG', value)
+        self.setCustomTag("CATALOGNUMBER", value)
+        self.setCustomTag("CATALOG", value)
 
     def setBarcode(self, value):
-        self.setCustomTag('barcode', value)
+        self.setCustomTag("barcode", value)
 
     def setDiscName(self, value):
-        self.setCustomTag('DISCSUBTITLE', value)
+        self.setCustomTag("DISCSUBTITLE", value)
 
     def getTitle(self):
         return ensureOneOrNone(self.audio.get("\xa9nam"))
@@ -674,17 +677,17 @@ class MP4Wrapper(IAudioManager):
         value = self.audio.get(newKey, None)
         if not value:
             return None
-        value = [v.decode('utf-8') for v in value]
+        value = [v.decode("utf-8") for v in value]
         return value
 
     def getCatalog(self):
-        return self._searchMultiCustomTags(['CATALOGNUMBER', 'CATALOG', 'LABELNO'])
+        return self._searchMultiCustomTags(["CATALOGNUMBER", "CATALOG", "LABELNO"])
 
     def getBarcode(self):
-        return self._searchMultiCustomTags(['barcode', 'BARCODE'])
+        return self._searchMultiCustomTags(["barcode", "BARCODE"])
 
     def getDiscName(self):
-        return self._searchMultiCustomTags(['DISCSUBTITLE', 'DISCNAME'])
+        return self._searchMultiCustomTags(["DISCSUBTITLE", "DISCNAME"])
 
     def printInfo(self):
         return self.audio.pprint()
@@ -710,17 +713,17 @@ class MP4Wrapper(IAudioManager):
 
 
 audioFileHandler = {
-    '.flac': [VorbisWrapper, CustomFLAC],
-    '.wav': [ID3Wrapper, CustomWAVE],
-    '.mp3': [ID3Wrapper, CustomMP3],
-    '.ogg': [VorbisWrapper, CustomOgg],
-    '.opus': [VorbisWrapper, CustomOpus],
-    '.m4a': [MP4Wrapper, MP4]
+    ".flac": [VorbisWrapper, CustomFLAC],
+    ".wav": [ID3Wrapper, CustomWAVE],
+    ".mp3": [ID3Wrapper, CustomMP3],
+    ".ogg": [VorbisWrapper, CustomOgg],
+    ".opus": [VorbisWrapper, CustomOpus],
+    ".m4a": [MP4Wrapper, MP4],
 }
 supportedExtensions = audioFileHandler.keys()
 
 
-class AudioFactory():
+class AudioFactory:
     @staticmethod
     def buildAudioManager(filePath: str) -> IAudioManager:
         _, extension = os.path.splitext(filePath)
@@ -729,13 +732,13 @@ class AudioFactory():
         return codec(handler(filePath), extension)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     filePath = "/Users/arpit/Library/Custom/Downloads/example.mp3"
     audio = AudioFactory.buildAudioManager(filePath)
     print(type(audio))
     print(isinstance(audio, IAudioManager))
-    audio.setCustomTag('yourssss', ['yepyep', 'ei', '213dasfdad'])
-    audio.setTitle(['damn', 'sons', 'huh'])
-    audio.setComment(['This is a comment', 'This as well', 'maybe this one too ;)'])
+    audio.setCustomTag("yourssss", ["yepyep", "ei", "213dasfdad"])
+    audio.setTitle(["damn", "sons", "huh"])
+    audio.setComment(["This is a comment", "This as well", "maybe this one too ;)"])
     audio.save()
     print(audio.printInfo())

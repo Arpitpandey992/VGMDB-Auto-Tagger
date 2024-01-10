@@ -4,7 +4,7 @@ from enum import Enum
 
 from Utility.generalUtils import get_default_logger
 
-logger = get_default_logger(__name__, 'info')
+logger = get_default_logger(__name__, "info")
 
 
 def isString(var) -> bool:
@@ -19,10 +19,10 @@ def splitAndGetFirst(discNumber: Optional[str]) -> Optional[str]:
     if not isString(discNumber):
         return str(discNumber)
 
-    if '/' in discNumber:
-        discNumber = discNumber.split('/')[0]
-    elif ':' in discNumber:
-        discNumber = discNumber.split(':')[0]
+    if "/" in discNumber:
+        discNumber = discNumber.split("/")[0]
+    elif ":" in discNumber:
+        discNumber = discNumber.split(":")[0]
 
     return discNumber
 
@@ -35,13 +35,13 @@ def splitAndGetSecond(discNumber: Optional[str]) -> Optional[str]:
     if not isString(discNumber):
         return str(discNumber)
 
-    if '/' in discNumber:
-        discNumberElements = discNumber.split('/')
+    if "/" in discNumber:
+        discNumberElements = discNumber.split("/")
         if len(discNumberElements) < 2:
             return None
         discNumber = discNumberElements[1]
-    elif ':' in discNumber:
-        discNumberElements = discNumber.split(':')
+    elif ":" in discNumber:
+        discNumberElements = discNumber.split(":")
         if len(discNumberElements) < 2:
             return None
         discNumber = discNumberElements[1]
@@ -57,41 +57,41 @@ def getFirstElement(listVariable: Optional[Union[list, Any]]) -> Any:
 
 
 pictureNameToNumber = {
-    u'Other': 0,
-    u'File icon': 1,
-    u'Other file icon': 2,
-    u'Cover (front)': 3,
-    u'Cover (back)': 4,
-    u'Leaflet page': 5,
-    u'Media (e.g. lable side of CD)': 6,
-    u'Lead artist/lead performer/soloist': 7,
-    u'Artist/performer': 8,
-    u'Conductor': 9,
-    u'Band/Orchestra': 10,
-    u'Composer': 11,
-    u'Lyricist/text writer': 12,
-    u'Recording Location': 13,
-    u'During recording': 14,
-    u'During performance': 15,
+    "Other": 0,
+    "File icon": 1,
+    "Other file icon": 2,
+    "Cover (front)": 3,
+    "Cover (back)": 4,
+    "Leaflet page": 5,
+    "Media (e.g. lable side of CD)": 6,
+    "Lead artist/lead performer/soloist": 7,
+    "Artist/performer": 8,
+    "Conductor": 9,
+    "Band/Orchestra": 10,
+    "Composer": 11,
+    "Lyricist/text writer": 12,
+    "Recording Location": 13,
+    "During recording": 14,
+    "During performance": 15,
 }
 
 pictureTypes = Literal[
-    u'Other',
-    u'File icon',
-    u'Other file icon',
-    u'Cover (front)',
-    u'Cover (back)',
-    u'Leaflet page',
-    u'Media (e.g. lable side of CD)',
-    u'Lead artist/lead performer/soloist',
-    u'Artist/performer',
-    u'Conductor',
-    u'Band/Orchestra',
-    u'Composer',
-    u'Lyricist/text writer',
-    u'Recording Location',
-    u'During recording',
-    u'During performance'
+    "Other",
+    "File icon",
+    "Other file icon",
+    "Cover (front)",
+    "Cover (back)",
+    "Leaflet page",
+    "Media (e.g. lable side of CD)",
+    "Lead artist/lead performer/soloist",
+    "Artist/performer",
+    "Conductor",
+    "Band/Orchestra",
+    "Composer",
+    "Lyricist/text writer",
+    "Recording Location",
+    "During recording",
+    "During performance",
 ]
 
 
@@ -116,7 +116,7 @@ def convertStringToNumber(var: Optional[str]) -> Optional[int]:
 
 
 def ensureOneOrNone(var: Optional[list]) -> Optional[list]:
-    if (not var):  # Considers both cases: var is None or var is an empty array
+    if not var:  # Considers both cases: var is None or var is an empty array
         return None
     return var
 
@@ -127,8 +127,8 @@ def cleanDate(date_str: str) -> str:
     fills unknows fields with 00
     """
     ideal_parts_example = ["2014", "05", "13"]
-    cleaned_date = date_str.strip().replace('/', '-').replace('_', '-').replace(' ', '')
-    parts = cleaned_date.split('-')
+    cleaned_date = date_str.strip().replace("/", "-").replace("_", "-").replace(" ", "")
+    parts = cleaned_date.split("-")
     # parts += ['00'] * (len(ideal_parts_example) - len(parts)) # not appending 00 for now, this may not be the best way to do things
     parts = [_ensureNumCharacters(part, len(ideal_parts_example[i])) for i, part in enumerate(parts)]
     # normalized_date_str = '{}-{}-{}'.format(*parts)
@@ -149,6 +149,7 @@ def checkForEmptyListArgument(func):
                 logger.debug(f"received an empty list for function call: {func.__name__} under class: {self.__class__.__name__} in file: {self.audio.filename}")
                 return  # Return early if the list is empty
         return func(self, *args, **kwargs)
+
     return wrapper
 
 
