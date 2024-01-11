@@ -5,7 +5,7 @@ import logging
 from math import ceil, log10
 import urllib.request
 from Imports.flagsAndSettings import Flags
-from Types.vgmdbAlbumData import VgmdbAlbumData  # , TrackData
+from Modules.VGMDB.models.albumData import VgmdbAlbumData  # , TrackData
 from dotenv import load_dotenv
 
 load_dotenv()

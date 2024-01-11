@@ -1,8 +1,8 @@
 import argparse
 from Imports.flagsAndSettings import Flags
 
-from Modules.Rename.renameUtils import organizeFiles, renameFilesInternal
-from Modules.Rename.renameUtils import organizeAlbum
+from Modules.Rename.utils import organizeFiles, renameFilesInternal
+from Modules.Rename.utils import organizeAlbum
 from Utility.generalUtils import get_default_logger
 from Utility.template import isValidTemplate
 

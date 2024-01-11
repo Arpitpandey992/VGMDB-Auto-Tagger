@@ -1,10 +1,10 @@
 import os
 from tabulate import tabulate
 from Imports.flagsAndSettings import Flags
-from Types.vgmdbAlbumData import VgmdbAlbumData, TrackData
+from Modules.VGMDB.models.albumData import VgmdbAlbumData, TrackData
 from Utility.generalUtils import get_default_logger, printAndMoveBack, updateDict
 from Modules.Tag.tagUtils import getImageData, tagAudioFile
-from Utility.Mutagen.mutagenWrapper import supportedExtensions
+from Modules.Mutagen.mutagenWrapper import supportedExtensions
 from Utility.generalUtils import getBest
 
 logger = get_default_logger(__name__, "info")

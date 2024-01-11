@@ -4,9 +4,9 @@ import io
 from PIL import Image
 
 from Imports.flagsAndSettings import Flags
-from Types.vgmdbAlbumData import VgmdbAlbumData, TrackData
+from Modules.VGMDB.models.albumData import VgmdbAlbumData, TrackData
 from Utility.generalUtils import fixDate, get_default_logger, getProperCount
-from Utility.Mutagen.mutagenWrapper import AudioFactory
+from Modules.Mutagen.mutagenWrapper import AudioFactory
 from Utility.generalUtils import getBest
 
 logger = get_default_logger(__name__)

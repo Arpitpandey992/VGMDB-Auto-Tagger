@@ -7,17 +7,17 @@ from tabulate import tabulate
 
 
 from Imports.flagsAndSettings import Flags
-from Modules.Rename.renameUtils import renameAlbumFiles, renameAlbumFolder
+from Modules.Rename.utils import renameAlbumFiles, renameAlbumFolder
 from Utility.generalUtils import get_default_logger, getBest, yesNoUserInput, fixDate, cleanSearchTerm
 
 from Modules.Tag.tagFiles import tagFiles
 from Utility.audioUtils import getSearchTermAndDate, getAlbumTrackData, getFolderTrackData, doTracksAlign
-from Modules.vgmdbrip.vgmdbrip import getPictures, getPicturesTheOldWay
+from Modules.VGMDB.vgmdbrip.vgmdbrip import getPictures, getPicturesTheOldWay
 
-from Types.vgmdbAlbumData import VgmdbAlbumData
-from Types.search import SearchAlbumData
+from Modules.VGMDB.models.albumData import VgmdbAlbumData
+from Modules.VGMDB.models.search import SearchAlbumData
 from Utility.template import TemplateResolver, TemplateValidationException
-from Utility.vgmdbUtils import getAlbumDetails, searchAlbum
+from Modules.VGMDB.utils import getAlbumDetails, searchAlbum
 
 logger = get_default_logger('albumTagger')
 

@@ -2,9 +2,10 @@ from Imports.flagsAndSettings import Flags
 import os
 from tabulate import tabulate
 from typing import Optional
-from Types.vgmdbAlbumData import VgmdbAlbumData
+from Modules.Mutagen.mutagenWrapper import supportedExtensions
+from Modules.VGMDB.models.albumData import VgmdbAlbumData
 from Types.otherData import OtherData
-from Utility.Mutagen.mutagenWrapper import AudioFactory, supportedExtensions
+from Modules.Mutagen.mutagenWrapper import AudioFactory
 from Modules.Translate.translator import translate
 from Utility.generalUtils import get_default_logger, getBest
 

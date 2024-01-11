@@ -1,4 +1,7 @@
+from email.mime import base
+from operator import truediv
 import os
+import shutil
 import string
 import sys
 import random
@@ -6,10 +9,11 @@ from typing import Callable, Optional
 import unittest
 
 sys.path.append(os.getcwd())
-from Utility.Mutagen.mutagenWrapper import AudioFactory, pictureTypes, pictureNameToNumber
+from Modules.Mutagen.mutagenWrapper import AudioFactory, IAudioManager, pictureTypes, pictureNameToNumber
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-baseFolder = os.path.join(__location__, "testSamples")
+baseFolder = os.path.join(__location__, "testSamples", "baseSamples")
+modifiedFolder = os.path.join(__location__, "testSamples", "modifiedSamples")
 coversPath = os.path.join(baseFolder, "covers")
 covers = [os.path.join(coversPath, coverName) for coverName in os.listdir(coversPath)]
 
@@ -20,6 +24,8 @@ japanese_chars = [
     (0x4E00, 0x9FBF),  # Common Kanji
 ]
 all_japanese_chars = "".join(chr(x) for x in [k for start, end in japanese_chars for k in range(start, end)])
+audioImpl: IAudioManager
+filePathImpl: str
 
 
 def getRandomCoverImageData() -> bytes:
@@ -79,9 +85,11 @@ class MutagenWrapperTestCase(unittest.TestCase):
         self._test_equality_list_arg(self.audio.setComment, self.audio.getComment, test_arr)
 
     def test_date(self):
-        test_arr = ["2001-7-3", "567-  4 /  14 ", "2023-9 -  4 ", "2023- 9", "1969 "]
-        expected_arr = ["2001-07-03", "0567-04-14", "2023-09-04", "2023-09", "1969"]
-        self._test_equality_list_arg(self.audio.setDate, self.audio.getDate, test_arr, expected_arr)
+        test_arr = ["2001-7-3", "567-  4 /  14 ", "2023-9 -  4 ", "2023- 9", "1969 ", "  2007/11-6"]
+        expected_arr = ["2001-07-03", "0567-04-14", "2023-09-04", "2023-09", "1969", "2007-11-06"]
+        for i, x in enumerate(test_arr):
+            self.audio.setDate(x)
+            self.assertEqual(self.audio.getDate(), expected_arr[i])
 
     def test_catalog(self):
         test_arr = ["KSLA-0211", "UNCD-0021~0025", generate_random_string(10, 10)]
@@ -127,7 +135,7 @@ class MutagenWrapperTestCase(unittest.TestCase):
             expected = setter_arg
 
         setter([])
-        self.assertEqual(None, getter())
+        self.assertEqual([], getter())
 
         setter(setter_arg[0:1])
         self.assertEqual(expected[0:1], getter())
@@ -140,7 +148,7 @@ class MutagenWrapperTestCase(unittest.TestCase):
             expected = val
 
         self.audio.setCustomTag(key, [])
-        self.assertEqual(self.audio.getCustomTag(key), None)
+        self.assertEqual(self.audio.getCustomTag(key), [])
 
         self.audio.setCustomTag(key, val[0:1])
         self.assertEqual(self.audio.getCustomTag(key), expected[0:1])
@@ -149,14 +157,45 @@ class MutagenWrapperTestCase(unittest.TestCase):
         self.assertEqual(self.audio.getCustomTag(key), expected)
 
 
-extensions = ["mp3", "flac", "m4a", "wav", "ogg", "opus"]
-for extension in extensions:
-    suite = unittest.TestLoader().loadTestsFromTestCase(MutagenWrapperTestCase)
-    print(f"\n----------------------------------------------------------------------\nTesting {extension} file")
-    filePath = os.path.join(baseFolder, f"{extension}_test.{extension}")
-    audioImpl = AudioFactory.buildAudioManager(filePath)
-    audioImpl.clearTags()
-    audioImpl.save()
-    filePathImpl = filePath
-    unittest.TextTestRunner().run(suite)
-    # testMutagenWrapper(AudioFactory.buildAudioManager(filePath))
+def copy_base_samples(force=False):
+    if not force and os.path.exists(modifiedFolder):
+        return
+    if os.path.exists(modifiedFolder):
+        shutil.rmtree(modifiedFolder)
+    os.makedirs(modifiedFolder)
+    for file in os.listdir(baseFolder):
+        file_path = os.path.join(baseFolder, file)
+        if os.path.isfile(file_path):
+            shutil.copy(file_path, modifiedFolder)
+
+
+def test_mutagen_wrapper():
+    extensions = ["mp3", "flac", "m4a", "wav", "ogg", "opus"]
+    for extension in extensions:
+        suite = unittest.TestLoader().loadTestsFromTestCase(MutagenWrapperTestCase)
+        print(f"\n----------------------------------------------------------------------\nTesting {extension} file")
+        filePath = os.path.join(modifiedFolder, f"{extension}_test.{extension}")
+        global audioImpl, filePathImpl
+        audioImpl = AudioFactory.buildAudioManager(filePath)
+        # audioImpl.clearTags()
+        # audioImpl.save()
+        filePathImpl = filePath
+        unittest.TextTestRunner().run(suite)
+
+
+def custom_check():
+    extensions = ["mp3", "flac", "m4a", "wav", "ogg", "opus"]
+    for extension in extensions:
+        print(f"\n----------------------------------------------------------------------\nTesting {extension} file")
+        filePath = os.path.join(baseFolder, f"{extension}_test.{extension}")
+        m1 = AudioFactory.buildAudioManager(filePath)
+        m2 = AudioFactory.buildAudioManager(filePath)
+        m1.setAlbum(["damn"])
+        m1.save()
+        print(m2.getAlbum())
+
+
+if __name__ == "__main__":
+    copy_base_samples()
+    test_mutagen_wrapper()
+    # custom_check()
