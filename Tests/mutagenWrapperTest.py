@@ -1,5 +1,3 @@
-from email.mime import base
-from operator import truediv
 import os
 import shutil
 import string
@@ -7,6 +5,8 @@ import sys
 import random
 from typing import Callable, Optional
 import unittest
+
+from Modules.Print.utils import LINE_SEPARATOR
 
 sys.path.append(os.getcwd())
 from Modules.Mutagen.mutagenWrapper import AudioFactory, IAudioManager, pictureTypes, pictureNameToNumber
@@ -173,7 +173,7 @@ def test_mutagen_wrapper():
     extensions = ["mp3", "flac", "m4a", "wav", "ogg", "opus"]
     for extension in extensions:
         suite = unittest.TestLoader().loadTestsFromTestCase(MutagenWrapperTestCase)
-        print(f"\n----------------------------------------------------------------------\nTesting {extension} file")
+        print(f"\n{LINE_SEPARATOR}\nTesting {extension} file")
         filePath = os.path.join(modifiedFolder, f"{extension}_test.{extension}")
         global audioImpl, filePathImpl
         audioImpl = AudioFactory.buildAudioManager(filePath)
@@ -186,7 +186,7 @@ def test_mutagen_wrapper():
 def custom_check():
     extensions = ["mp3", "flac", "m4a", "wav", "ogg", "opus"]
     for extension in extensions:
-        print(f"\n----------------------------------------------------------------------\nTesting {extension} file")
+        print(f"\n{LINE_SEPARATOR}\nTesting {extension} file")
         filePath = os.path.join(baseFolder, f"{extension}_test.{extension}")
         m1 = AudioFactory.buildAudioManager(filePath)
         m2 = AudioFactory.buildAudioManager(filePath)

@@ -1,5 +1,6 @@
 import os
 from typing import Optional
+
 from Modules.Mutagen.mutagenWrapper import AudioFactory, UnsupportedFileFormatError, isFileFormatSupported
 from Modules.Mutagen.utils import cleanDate, is_date_in_YYYY_MM_DD
 
@@ -36,20 +37,30 @@ logger = get_default_logger(__name__, "info")
 
 
 def scan_albums(root_folder: str) -> list[albumData.LocalAlbumData]:
+    """scans for all albums inside root_folder recursively"""
     max_depths = {}
-    _precalculate_max_depths(root_folder, max_depths)
+    _precalculate_max_depths_with_audio_files(root_folder, max_depths)
     albums = _scan_albums(root_folder, max_depths)
     return albums
 
 
 def scan_album_in_folder_if_exists(folder_path: str) -> Optional[albumData.LocalAlbumData]:
+    """returns a single album if the given folders contains files belonging to a single album"""
     audio_files = get_supported_audio_files_in_folder(folder_path)
     if not _does_audio_files_belong_to_one_album_only(audio_files):
         return None
     return _compile_album_data_from_track_data(folder_path, audio_files)
 
 
-def get_supported_audio_files_in_folder(folder_path: str, current_depth: int = 1) -> list[albumData.Track]:
+def get_supported_audio_files_in_folder(folder_path: str, max_depth=-1) -> list[albumData.Track]:
+    """get a list of all supported audio files inside a folder, provide max_depth for recursion depth while scanning"""
+    return _get_supported_audio_files_in_folder(folder_path, max_depth)
+
+
+# private functions
+def _get_supported_audio_files_in_folder(folder_path: str, max_depth, current_depth: int = 1) -> list[albumData.Track]:
+    if max_depth > 0 and current_depth > max_depth:
+        return []
     audio_tracks = []
     for entry in os.listdir(folder_path):
         entry_path = os.path.join(folder_path, entry)
@@ -62,11 +73,10 @@ def get_supported_audio_files_in_folder(folder_path: str, current_depth: int = 1
             except Exception as e:
                 logger.error(f"unable to read the file at {folder_path}, error:\n{e}")
         elif os.path.isdir(entry_path):
-            audio_tracks.extend(get_supported_audio_files_in_folder(entry_path, current_depth + 1))
+            audio_tracks.extend(_get_supported_audio_files_in_folder(entry_path, max_depth, current_depth + 1))
     return audio_tracks
 
 
-# private functions
 def _compile_album_data_from_track_data(parent_directory: str, audio_files: list[albumData.Track]) -> albumData.LocalAlbumData:
     """it is considered a guarantee that the audio_files array represents tracks of a single album"""
     album_data = albumData.LocalAlbumData(album_folder_path=parent_directory)
@@ -129,7 +139,7 @@ def _does_audio_files_belong_to_one_album_only(audio_files: list[albumData.Track
     if has_identical_items_list_of_list([track.audio_manager.getBarcode() for track in audio_files]):
         return True
     dates = [track.audio_manager.getDate() for track in audio_files]
-    if not None in dates:
+    if None not in dates:
         cleaned_dates = [date for date in dates if date is not None]
         if all(is_date_in_YYYY_MM_DD(cleanDate(date)) for date in cleaned_dates) and has_identical_items_list_of_string(cleaned_dates):
             return True
@@ -152,16 +162,23 @@ def _scan_albums(folder_path: str, max_depths: dict[str, int]) -> list[albumData
     return found_albums
 
 
-def _precalculate_max_depths(folder_path: str, max_depths: dict[str, int]):
+def _precalculate_max_depths_with_audio_files(folder_path: str, max_depths: dict[str, int]):
     """returns: whether the folder contains any audio file"""
     max_depth = -1
     for entry in os.listdir(folder_path):
         entry_path = os.path.join(folder_path, entry)
         if os.path.isdir(entry_path):
-            _precalculate_max_depths(entry_path, max_depths)
+            _precalculate_max_depths_with_audio_files(entry_path, max_depths)
             if max_depths[entry_path] != -1:  # there is an audio file inside entry_path
                 max_depth = max(max_depth, 1 + max_depths[entry_path])
         elif os.path.isfile(entry_path) and isFileFormatSupported(entry_path):
             max_depth = max(max_depth, 1)
 
     max_depths[folder_path] = max_depth
+
+
+if __name__ == "__main__":
+    test_music_dir = "/Users/arpit/Library/Custom/Music"
+    albums = scan_albums(test_music_dir)
+    for album in albums:
+        print(album.pprint())

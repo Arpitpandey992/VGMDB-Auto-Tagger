@@ -734,7 +734,7 @@ def isFileFormatSupported(filePath: str) -> bool:
 class AudioFactory:
     @staticmethod
     def buildAudioManager(filePath: str) -> IAudioManager:
-        if not isFileFormatSupported:
+        if not isFileFormatSupported(filePath):
             raise UnsupportedFileFormatError(filePath)
         _, extension = os.path.splitext(filePath)
         extension = extension.lower()

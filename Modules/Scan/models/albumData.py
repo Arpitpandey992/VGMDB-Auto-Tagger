@@ -2,12 +2,16 @@ from typing import Optional
 from pydantic import BaseModel
 
 from Modules.Mutagen.mutagenWrapper import IAudioManager
+from Modules.Print.utils import LINE_SEPARATOR, SUB_LINE_SEPARATOR
 
 
 class Track(BaseModel):
     file_path: str
     depth_in_parent_folder: int
     audio_manager: IAudioManager
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class Disc(BaseModel):
@@ -23,6 +27,17 @@ class LocalAlbumData(BaseModel):
     album_folder_path: str
     discs: dict[int, Disc] = {}  # files with proper disc number (default = 1) and track numbers already present
     unclean_tracks: list[Track] = []  # files without track number tags, maybe we can still tag them somehow? (accoust_id, name similarity, etc)
+
+    def pprint(self) -> str:
+        """pretty printing only the useful information"""
+        details = f"{LINE_SEPARATOR}\nalbum path: {self.album_folder_path}\n{LINE_SEPARATOR}\n"
+        for disc_number, disc in sorted(self.discs.items()):
+            details += f"Disc {disc_number}:{f' {disc.folder_name}' if disc.folder_name else ''}\n{SUB_LINE_SEPARATOR}\n"
+            for track_number, track in sorted(disc.tracks.items()):
+                details += f"Track {track_number}: {track.file_path}\n"
+            details += f"{SUB_LINE_SEPARATOR}\n"
+        details += f"{LINE_SEPARATOR}\n"
+        return details
 
     # helper functions
     def does_track_exist(self, disc_number: int, track_number: int) -> bool:
