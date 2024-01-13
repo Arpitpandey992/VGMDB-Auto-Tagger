@@ -3,7 +3,7 @@ from typing import Optional
 from typing_extensions import TypedDict
 from tabulate import tabulate
 from mutagen.flac import StreamInfo
-from Imports.flagsAndSettings import Flags
+from Imports.config import Config
 from Modules.Mutagen.mutagenWrapper import supportedExtensions
 from Utility.audioUtils import getFolderTrackData, getOneAudioFile
 from Utility.generalUtils import cleanName, fixDate, getProperCount, printAndMoveBack
@@ -15,7 +15,7 @@ FOLDER_NAMING_TEMPLATE = {
     "default": "{[{date}] }{albumname}{ [{catalog}]}{ [{format}]}",
     "catalog_first": "{[{catalog}] }{albumname}{ [{date}]}{ [{format}]}",
     "same_folder_name_default": "{[{date}] }{foldername}{ [{catalog}]}{ [{format}]}",
-    "same_folder_name_catalog_first": "{[{catalog}] }{foldername}{ [{date}]}{ [{format}]}"
+    "same_folder_name_catalog_first": "{[{catalog}] }{foldername}{ [{date}]}{ [{format}]}",
 }
 
 
@@ -24,11 +24,11 @@ def get_folder_naming_template(folder_naming_template: Optional[str], catalog_fi
         TemplateResolver.validateTemplate(folder_naming_template)
         return folder_naming_template
     elif catalog_first:
-        return FOLDER_NAMING_TEMPLATE['same_folder_name_catalog_first'] if same_folder_name else FOLDER_NAMING_TEMPLATE['catalog_first']
-    return FOLDER_NAMING_TEMPLATE['same_folder_name_default'] if same_folder_name else FOLDER_NAMING_TEMPLATE['catalog_first']
+        return FOLDER_NAMING_TEMPLATE["same_folder_name_catalog_first"] if same_folder_name else FOLDER_NAMING_TEMPLATE["catalog_first"]
+    return FOLDER_NAMING_TEMPLATE["same_folder_name_default"] if same_folder_name else FOLDER_NAMING_TEMPLATE["catalog_first"]
 
 
-logger = get_default_logger(__name__, 'info')
+logger = get_default_logger(__name__, "info")
 
 
 class TableData(TypedDict):
@@ -59,18 +59,11 @@ def rename(
 ):
     folder_naming_template = get_folder_naming_template(folder_naming_template, catalog_first, same_folder_name)
     results_table = []
-    rename_options: RenameOptions = {
-        "folder_path": folder_path,
-        "recur": recur,
-        "verbose": verbose,
-        "folder_naming_template": folder_naming_template,
-        "results_table": results_table,
-        "pause_on_update": pause_on_update
-    }
+    rename_options: RenameOptions = {"folder_path": folder_path, "recur": recur, "verbose": verbose, "folder_naming_template": folder_naming_template, "results_table": results_table, "pause_on_update": pause_on_update}
 
 
 def _rename(rename_options: RenameOptions):
-    for item in os.listdir(rename_options['folder_path']):
+    for item in os.listdir(rename_options["folder_path"]):
         totalTracks = countAudioFiles(folderPath)
         if recur and os.path.isdir(item):
             renameFilesInternal(item, verbose, pauseOnFinish, recur, tableData)
@@ -97,66 +90,56 @@ def deduceAudioDetails(audio: IAudioManager) -> str:
     extension = audio.getExtension()
     # Flac contains most info variables, hence using it here for type hints only
     info: StreamInfo = audio.getInfo()  # type:ignore
-    if extension in ['.flac', '.wav']:
-        format = 'FLAC' if extension == '.flac' else 'WAV'
+    if extension in [".flac", ".wav"]:
+        format = "FLAC" if extension == ".flac" else "WAV"
         bits = info.bits_per_sample
         sample_rate = info.sample_rate / 1000
         if sample_rate.is_integer():
             sample_rate = int(sample_rate)
-        source = 'CD' if bits == 16 else 'WEB'
+        source = "CD" if bits == 16 else "WEB"
         if sample_rate >= 192 or bits > 24:
             source = "VINYL"  # Scuffed way, but assuming Vinyl rips have extremely high sample rate, but Qobuz does provide 192kHz files so yeah...
         # Edge cases should be edited manually later
         return f"{source}-{format} {bits}bit {sample_rate}kHz"
-    elif extension == '.mp3':
+    elif extension == ".mp3":
         # CD-MP3 because in 99% cases, an mp3 album is a lossy cd rip
         bitrate = int(info.bitrate / 1000)
         return f"CD-MP3 {bitrate}kbps"
-    elif extension == '.m4a':
+    elif extension == ".m4a":
         # aac files are usually provided by websites directly for lossy versions. apple music files are also m4a
         bitrate = int(info.bitrate / 1000)
         return f"WEB-AAC {bitrate}kbps"
-    elif extension == '.ogg':
+    elif extension == ".ogg":
         # Usually from spotify
         bitrate = int(info.bitrate / 1000)
         return f"WEB-OGG {bitrate}kbps"
-    elif extension == '.opus':
+    elif extension == ".opus":
         # YouTube bruh, couldn't figure out a way to retrieve bitrate
         return f"YT-OPUS"
     return ""
 
 
-def renameAlbumFolder(
-    folderPath: str,
-    renameTemplate: str
-) -> None:
+def renameAlbumFolder(folderPath: str, renameTemplate: str) -> None:
     """rename a folder contains exactly ONE album"""
 
     filePath = getOneAudioFile(folderPath)
     if not filePath:
-        logger.error('no audio file in directory!, aborting')
+        logger.error("no audio file in directory!, aborting")
         return
 
     audio = AudioFactory.buildAudioManager(filePath)
     folderName = os.path.basename(folderPath)
     albumName = audio.getAlbum()
     if albumName is None and "foldername" not in renameTemplate.lower():
-        logger.error(f'no album Name in {filePath}, aborting!')
+        logger.error(f"no album Name in {filePath}, aborting!")
         return
     date = fixDate(audio.getDate())
     if not date:
-        date = fixDate(audio.getCustomTag('year'))
+        date = fixDate(audio.getCustomTag("year"))
     if date:
-        date = date.replace('-', '.')
+        date = date.replace("-", ".")
 
-    templateMapping: dict[str, Optional[str]] = {
-        "albumname": albumName,
-        "catalog": audio.getCatalog(),
-        "date": date,
-        "foldername": folderName,
-        "barcode": audio.getCustomTag('barcode'),
-        "format": deduceAudioDetails(audio)
-    }
+    templateMapping: dict[str, Optional[str]] = {"albumname": albumName, "catalog": audio.getCatalog(), "date": date, "foldername": folderName, "barcode": audio.getCustomTag("barcode"), "format": deduceAudioDetails(audio)}
 
     templateResolver = TemplateResolver(templateMapping)
     newFolderName = templateResolver.evaluate(renameTemplate)
@@ -164,19 +147,15 @@ def renameAlbumFolder(
 
     baseFolderPath = os.path.dirname(folderPath)
     newFolderPath = os.path.join(baseFolderPath, newFolderName)
-    if (folderName != newFolderName):
+    if folderName != newFolderName:
         if os.path.exists(newFolderPath):
-            logger.error(f'{newFolderName} exists, cannot rename {folderName}')
+            logger.error(f"{newFolderName} exists, cannot rename {folderName}")
         else:
             os.rename(folderPath, newFolderPath)
-            logger.info(f'rename: {folderName} => {newFolderName}')
+            logger.info(f"rename: {folderName} => {newFolderName}")
 
 
-def renameAlbumFiles(
-    folderPath: str,
-    noMove: bool = False,
-    verbose: bool = False
-):
+def renameAlbumFiles(folderPath: str, noMove: bool = False, verbose: bool = False):
     """Rename all files present inside a directory which contains files corresponding to ONE album only"""
     folderTrackData = getFolderTrackData(folderPath)
     totalDiscs = len(folderTrackData)
@@ -192,7 +171,7 @@ def renameAlbumFiles(
             audio = AudioFactory.buildAudioManager(filePath)
             title = audio.getTitle()
             if not title:
-                logger.error(f'title not present in file: {fileName}, skipped!')
+                logger.error(f"title not present in file: {fileName}, skipped!")
                 continue
 
             trackNumberStr = getProperCount(trackNumber, totalTracks)
@@ -207,12 +186,12 @@ def renameAlbumFiles(
             discName = audio.getDiscName()
 
             if discName:
-                discFolderName = f'Disc {discNumber} - {discName}'
+                discFolderName = f"Disc {discNumber} - {discName}"
             else:
-                discFolderName = f'Disc {discNumber}'
+                discFolderName = f"Disc {discNumber}"
 
             if totalDiscs == 1 or noMove:
-                discFolderName = ''
+                discFolderName = ""
             discFolderPath = os.path.join(folderPath, discFolderName)
             if not os.path.exists(discFolderPath):
                 os.makedirs(discFolderPath)
@@ -220,31 +199,19 @@ def renameAlbumFiles(
             if filePath != newFilePath:
                 try:
                     if os.path.exists(newFilePath):
-                        logger.error(f'{newFilePath} exists, cannot rename {fileName}')
+                        logger.error(f"{newFilePath} exists, cannot rename {fileName}")
                     else:
                         os.rename(filePath, newFilePath)
                         printAndMoveBack(f"renamed: {newName}")
-                        tableData.append((
-                            discNumberStr,
-                            trackNumberStr,
-                            oldName,
-                            os.path.join(discFolderName, newName)
-                        ))
+                        tableData.append((discNumberStr, trackNumberStr, oldName, os.path.join(discFolderName, newName)))
 
                 except Exception as e:
-                    logger.exception(f'cannot rename {fileName}\n{e}')
-    printAndMoveBack('')
+                    logger.exception(f"cannot rename {fileName}\n{e}")
+    printAndMoveBack("")
     if verbose and tableData:
-        logger.info('files renamed as follows:')
+        logger.info("files renamed as follows:")
         tableData.sort()
-        logger.info(
-            '\n' + tabulate(
-                tableData,
-                headers=['Disc', 'Track', 'Old Name', 'New Name'],
-                colalign=('center', 'center', 'left', 'left'),
-                maxcolwidths=50, tablefmt=Flags().tableFormat
-            )
-        )
+        logger.info("\n" + tabulate(tableData, headers=["Disc", "Track", "Old Name", "New Name"], colalign=("center", "center", "left", "left"), maxcolwidths=50, tablefmt=Config().tableFormat))
 
 
 def renameFilesInternal(folderPath, verbose: bool, pauseOnFinish: bool, recur: bool, tableData: list):
@@ -269,22 +236,17 @@ def renameFilesInternal(folderPath, verbose: bool, pauseOnFinish: bool, recur: b
 
             title = audio.getTitle()
             if not title:
-                logger.info(f'title not present in {file}, skipping!')
+                logger.info(f"title not present in {file}, skipping!")
                 continue
             artist = audio.getArtist()
             date = fixDate(audio.getDate())
             if not date:
-                date = fixDate(audio.getCustomTag('year'))
+                date = fixDate(audio.getCustomTag("year"))
             if date:
-                date = date.replace('-', '.')
+                date = date.replace("-", ".")
             year = date[:4] if date and len(date) >= 4 else ""
             oldName = file
-            names = {
-                1: f"{artist} - {title}{extension}" if artist else f"{title}{extension}",
-                2: f"{title}{extension}",
-                3: f"[{date}] {title}{extension}",
-                4: f"[{year}] {title}{extension}"
-            }
+            names = {1: f"{artist} - {title}{extension}" if artist else f"{title}{extension}", 2: f"{title}{extension}", 3: f"[{date}] {title}{extension}", 4: f"[{year}] {title}{extension}"}
             multiTrackName, singleTrackName = 2, 2
 
             # Change the naming template here :
@@ -298,13 +260,13 @@ def renameFilesInternal(folderPath, verbose: bool, pauseOnFinish: bool, recur: b
             if oldName != newName:
                 try:
                     if os.path.exists(newFilePath):
-                        logger.error(f'{newFilePath} exists, cannot rename {file}')
+                        logger.error(f"{newFilePath} exists, cannot rename {file}")
                     else:
                         os.rename(filePath, newFilePath)
                         printAndMoveBack(f"renamed : {newName}")
                         tableData.append((len(tableData) + 1, oldName, newName))
                 except Exception as e:
-                    logger.exception(f'cannot rename {file}\n{e}')
+                    logger.exception(f"cannot rename {file}\n{e}")
 
 
 def organizeAlbum(folderPath: str, folderNamingtemplate: str, pauseOnFinish: bool = False):
@@ -319,18 +281,10 @@ def organizeFiles(folderPath: str, verbose: bool = True, pauseOnFinish: bool = F
     tableData = []
     renameFilesInternal(folderPath, verbose, pauseOnFinish, recur, tableData)
 
-    printAndMoveBack('')
+    printAndMoveBack("")
     if verbose and tableData:
-        logger.info('files renamed as follows:')
+        logger.info("files renamed as follows:")
         tableData.sort()
-        logger.info(
-            '\n' + tabulate(
-                tableData,
-                headers=['S.no', 'Old Name', 'New Name'],
-                colalign=('center', 'left', 'left'),
-                maxcolwidths=45,
-                tablefmt=Flags().tableFormat
-            )
-        )
+        logger.info("\n" + tabulate(tableData, headers=["S.no", "Old Name", "New Name"], colalign=("center", "left", "left"), maxcolwidths=45, tablefmt=Config().tableFormat))
     if pauseOnFinish:
         input("Press Enter to continue...")

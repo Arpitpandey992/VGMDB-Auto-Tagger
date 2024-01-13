@@ -1,0 +1,3 @@
+APICALLRETRIES = 5
+USE_LOCAL_SERVER = False
+VGMDB_INFO_BASE_URL = "https://vgmdb.info"

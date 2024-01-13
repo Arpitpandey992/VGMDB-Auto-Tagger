@@ -1,7 +1,8 @@
 import os
 from tabulate import tabulate
-from Imports.flagsAndSettings import Flags
-from Modules.VGMDB.models.albumData import VgmdbAlbumData, TrackData
+from Imports.config import get_config
+from Modules.Scan.models.local_album_data import LocalAlbumData
+from Modules.VGMDB.models.vgmdb_album_data import VgmdbAlbumData
 from Utility.generalUtils import get_default_logger, printAndMoveBack, updateDict
 from Modules.Tag.tagUtils import getImageData, tagAudioFile
 from Modules.Mutagen.mutagenWrapper import supportedExtensions
@@ -10,34 +11,19 @@ from Utility.generalUtils import getBest
 logger = get_default_logger(__name__, "info")
 
 
-def tagFiles(albumTrackData: dict[int, dict[int, dict[str, str]]], folderTrackData: dict[int, dict[int, str]], albumData: VgmdbAlbumData):
-    flags = Flags()
-    trackData: TrackData = {
-        **albumData,
-        "track_number": 0,
-        "total_tracks": 0,
-        "disc_number": 0,
-        "total_discs": 0,
-        "file_path": "",
-        "track_titles": {},
-        "album_link": albumData.get("vgmdb_link"),
-        "album_names": albumData.get("names"),
-        "album_name": getBest(albumData.get("names"), flags.languageOrder),
-    }
-    if flags.PICS:
-        imageData = getImageData(albumData)
-        if imageData:
-            trackData["picture_cache"] = imageData
+def tagFiles(local_album_data: LocalAlbumData, vgmdb_album_data: VgmdbAlbumData):
+    config = get_config()
+
     totalDiscs = len(albumTrackData)
 
     tableData = []
     for discNumber, tracks in folderTrackData.items():
-        if not flags.IGNORE_MISMATCH and discNumber not in albumTrackData:
+        if not config.IGNORE_MISMATCH and discNumber not in albumTrackData:
             continue
         totalTracks = len(albumTrackData.get(discNumber, tracks))
 
         for trackNumber, filePath in tracks.items():
-            if not flags.IGNORE_MISMATCH and trackNumber not in albumTrackData.get(discNumber, {}):
+            if not config.IGNORE_MISMATCH and trackNumber not in albumTrackData.get(discNumber, {}):
                 continue
             trackTitles = albumTrackData.get(discNumber, {}).get(trackNumber, {})
 
@@ -62,11 +48,11 @@ def tagFiles(albumTrackData: dict[int, dict[int, dict[str, str]]], folderTrackDa
                 },
             )
 
-            audioTagged = tagAudioFile(trackData, flags)
+            audioTagged = tagAudioFile(trackData, config)
 
             if audioTagged:
                 printAndMoveBack(f"Tagged : {fileName}")
-                tableData.append((discNumber, trackNumber, getBest(trackTitles, flags.languageOrder), fileName))
+                tableData.append((discNumber, trackNumber, getBest(trackTitles, config.language_order), fileName))
             else:
                 logger.error(f"couldn't tag: {fileName}")
                 tableData.append(("XX", "XX", "XX", fileName))
@@ -76,4 +62,4 @@ def tagFiles(albumTrackData: dict[int, dict[int, dict[str, str]]], folderTrackDa
     printAndMoveBack("")
     logger.info("files Tagged as follows:")
     tableData.sort()
-    logger.info("\n" + tabulate(tableData, headers=["Disc", "Track", "Title", "File Name"], colalign=("center", "center", "left", "left"), maxcolwidths=50, tablefmt=Flags().tableFormat))
+    logger.info("\n" + tabulate(tableData, headers=["Disc", "Track", "Title", "File Name"], colalign=("center", "center", "left", "left"), maxcolwidths=50, tablefmt=Configs().tableFormat))

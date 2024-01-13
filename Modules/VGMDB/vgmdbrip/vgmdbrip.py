@@ -4,8 +4,8 @@ import getpass
 import pickle
 import requests
 from bs4 import BeautifulSoup, Tag
-from Modules.VGMDB.models.albumData import VgmdbAlbumData
-from Utility.generalUtils import downloadPicture
+from Modules.Utils.network_utils import downloadFile
+
 session = requests.Session()
 
 
@@ -14,9 +14,9 @@ def Soup(data):
 
 
 def is_logged_in(current_session) -> bool:
-    x = current_session.get('https://vgmdb.net/forums/private.php')
+    x = current_session.get("https://vgmdb.net/forums/private.php")
     soup = Soup(x.content)
-    login_element = soup.find('a', href='#', string='Login')
+    login_element = soup.find("a", href="#", string="Login")
     return login_element is None
 
 
@@ -30,31 +30,33 @@ def login(config):
             session = temp_session
     if not logged_in:
         while True:
-            username = input('VGMdb username:\t')
-            password = getpass.getpass('VGMdb password:\t')
-            base_url = 'https://vgmdb.net/forums/'
-            x = session.post(base_url + 'login.php?do=login', {
-                'vb_login_username': username,
-                'vb_login_password': password,
-                'vb_login_md5password': hashlib.md5(password.encode()).hexdigest(),
-                'vb_login_md5password_utf': hashlib.md5(password.encode()).hexdigest(),
-                'cookieuser': 1,
-                'do': 'login',
-                's': '',
-                'securitytoken': 'guest'
-            })
-            table = Soup(x.content).find(
-                'table', class_='tborder', width="70%")
-            panel = table.find('div', class_='panel')  # type: ignore
+            username = input("VGMdb username:\t")
+            password = getpass.getpass("VGMdb password:\t")
+            base_url = "https://vgmdb.net/forums/"
+            x = session.post(
+                base_url + "login.php?do=login",
+                {
+                    "vb_login_username": username,
+                    "vb_login_password": password,
+                    "vb_login_md5password": hashlib.md5(password.encode()).hexdigest(),
+                    "vb_login_md5password_utf": hashlib.md5(password.encode()).hexdigest(),
+                    "cookieuser": 1,
+                    "do": "login",
+                    "s": "",
+                    "securitytoken": "guest",
+                },
+            )
+            table = Soup(x.content).find("table", class_="tborder", width="70%")
+            panel = table.find("div", class_="panel")  # type: ignore
             message = panel.text.strip()  # type: ignore
             print(message)
 
-            if message.startswith('You'):
-                if message[223] == '5':
+            if message.startswith("You"):
+                if message[223] == "5":
                     raise SystemExit(1)
                 print(message)
                 continue
-            elif message.startswith('Wrong'):
+            elif message.startswith("Wrong"):
                 raise SystemExit(1)
             else:
                 break
@@ -72,10 +74,10 @@ def ensure_dir(f):
         os.makedirs(d)
 
 
-def getPictures(folder: str, albumID: str):
+def downloadScans(output_dir: str, albumID: str):
     cwd = os.path.abspath(__file__)
     scriptdir = os.path.dirname(cwd)
-    config = os.path.join(scriptdir, 'vgmdbrip.pkl')
+    config = os.path.join(scriptdir, "vgmdbrip.pkl")
     login(config)
     soup = Soup(session.get("https://vgmdb.net/album/" + albumID).content)
     gallery = soup.find("div", attrs={"class": "covertab", "id": "cover_gallery"})
@@ -86,32 +88,22 @@ def getPictures(folder: str, albumID: str):
     scans = gallery.find_all("a", attrs={"class": "highslide"})
     pictureCount = len(scans)
 
-    finalScanFolder = os.path.join(folder, 'Scans') if pictureCount > 1 else folder
+    finalScanFolder = os.path.join(output_dir, "Scans") if pictureCount > 1 else output_dir
     if not os.path.exists(finalScanFolder):
         os.makedirs(finalScanFolder)
 
     for scan in scans:
         url = scan["href"]
-        title = remove(scan.text.strip(), "\"*/:<>?\|")  # type: ignore
-        downloadPicture(URL=url, path=finalScanFolder, name=title)
-
+        title = remove(scan.text.strip(), '"*/:<>?\|')  # type: ignore
+        print(f"downloading {title}..........", end="", flush=True)
+        try:
+            downloadFile(url=url, output_dir=finalScanFolder, name=title)
+            print("done")
+        except Exception as e:
+            print(f"failed, error:\n{e}")
     pickle.dump(session, open(config, "wb"))
-
-
-def getPicturesTheOldWay(albumData: VgmdbAlbumData, folderPath: str):
-    frontPictureExists = False
-    coverPath = os.path.join(folderPath, 'Scans')
-    if not os.path.exists(coverPath):
-        os.makedirs(coverPath)
-    for cover in albumData.covers:
-        downloadPicture(URL=cover.full, path=coverPath, name=cover.name)
-        if cover.name.lower() == 'front' or cover.name.lower == 'cover':
-            frontPictureExists = True
-    if not frontPictureExists and albumData.picture_full:
-        downloadPicture(URL=albumData.picture_full,
-                        path=coverPath, name='Front')
 
 
 if __name__ == "__main__":
     folder = "/Users/arpit/Downloads/test"
-    getPictures(folder, "135540")
+    downloadScans(folder, "135542")

@@ -5,7 +5,7 @@ from Modules.Mutagen.mutagenWrapper import AudioFactory, UnsupportedFileFormatEr
 from Modules.Mutagen.utils import cleanDate, is_date_in_YYYY_MM_DD
 
 import Modules.Scan.constants as constants
-import Modules.Scan.models.albumData as albumData
+import Modules.Scan.models.local_album_data as local_album_data
 from Utility.generalUtils import get_default_logger
 
 
@@ -36,7 +36,7 @@ ways to identify:
 logger = get_default_logger(__name__, "info")
 
 
-def scan_albums(root_folder: str) -> list[albumData.LocalAlbumData]:
+def scan_albums(root_folder: str) -> list[local_album_data.LocalAlbumData]:
     """scans for all albums inside root_folder recursively"""
     max_depths = {}
     _precalculate_max_depths_with_audio_files(root_folder, max_depths)
@@ -44,7 +44,7 @@ def scan_albums(root_folder: str) -> list[albumData.LocalAlbumData]:
     return albums
 
 
-def scan_album_in_folder_if_exists(folder_path: str) -> Optional[albumData.LocalAlbumData]:
+def scan_album_in_folder_if_exists(folder_path: str) -> Optional[local_album_data.LocalAlbumData]:
     """returns a single album if the given folders contains files belonging to a single album"""
     audio_files = get_supported_audio_files_in_folder(folder_path)
     if not _does_audio_files_belong_to_one_album_only(audio_files):
@@ -52,13 +52,13 @@ def scan_album_in_folder_if_exists(folder_path: str) -> Optional[albumData.Local
     return _compile_album_data_from_track_data(folder_path, audio_files)
 
 
-def get_supported_audio_files_in_folder(folder_path: str, max_depth=-1) -> list[albumData.Track]:
+def get_supported_audio_files_in_folder(folder_path: str, max_depth=-1) -> list[local_album_data.Track]:
     """get a list of all supported audio files inside a folder, provide max_depth for recursion depth while scanning"""
     return _get_supported_audio_files_in_folder(folder_path, max_depth)
 
 
 # private functions
-def _get_supported_audio_files_in_folder(folder_path: str, max_depth, current_depth: int = 1) -> list[albumData.Track]:
+def _get_supported_audio_files_in_folder(folder_path: str, max_depth, current_depth: int = 1) -> list[local_album_data.Track]:
     if max_depth > 0 and current_depth > max_depth:
         return []
     audio_tracks = []
@@ -67,7 +67,7 @@ def _get_supported_audio_files_in_folder(folder_path: str, max_depth, current_de
         if os.path.isfile(entry_path):
             try:
                 audio_manager = AudioFactory.buildAudioManager(entry_path)
-                audio_tracks.append(albumData.Track(file_path=entry_path, audio_manager=audio_manager, depth_in_parent_folder=current_depth))
+                audio_tracks.append(local_album_data.Track(file_path=entry_path, audio_manager=audio_manager, depth_in_parent_folder=current_depth))
             except UnsupportedFileFormatError:
                 pass
             except Exception as e:
@@ -77,9 +77,9 @@ def _get_supported_audio_files_in_folder(folder_path: str, max_depth, current_de
     return audio_tracks
 
 
-def _compile_album_data_from_track_data(parent_directory: str, audio_files: list[albumData.Track]) -> albumData.LocalAlbumData:
+def _compile_album_data_from_track_data(parent_directory: str, audio_files: list[local_album_data.Track]) -> local_album_data.LocalAlbumData:
     """it is considered a guarantee that the audio_files array represents tracks of a single album"""
-    album_data = albumData.LocalAlbumData(album_folder_path=parent_directory)
+    album_data = local_album_data.LocalAlbumData(album_folder_path=parent_directory)
 
     # mapping tracks and discs
     for track in audio_files:
@@ -117,7 +117,7 @@ def _compile_album_data_from_track_data(parent_directory: str, audio_files: list
     return album_data
 
 
-def _does_audio_files_belong_to_one_album_only(audio_files: list[albumData.Track]) -> bool:
+def _does_audio_files_belong_to_one_album_only(audio_files: list[local_album_data.Track]) -> bool:
     if not audio_files:
         return False
 
@@ -146,7 +146,7 @@ def _does_audio_files_belong_to_one_album_only(audio_files: list[albumData.Track
     return False
 
 
-def _scan_albums(folder_path: str, max_depths: dict[str, int]) -> list[albumData.LocalAlbumData]:
+def _scan_albums(folder_path: str, max_depths: dict[str, int]) -> list[local_album_data.LocalAlbumData]:
     max_depth = max_depths[folder_path]
     if max_depth != -1 and max_depth <= constants.MAX_FOLDER_DEPTH_OF_ALBUM:  # audio files exist somewhere inside the folder
         found_album = scan_album_in_folder_if_exists(folder_path)

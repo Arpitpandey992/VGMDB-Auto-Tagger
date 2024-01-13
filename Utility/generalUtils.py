@@ -3,26 +3,19 @@ import sys
 from typing import Union, Optional
 import logging
 from math import ceil, log10
-import urllib.request
-from Imports.flagsAndSettings import Flags
-from Modules.VGMDB.models.albumData import VgmdbAlbumData  # , TrackData
+from Imports.config import Config
+from Modules.VGMDB.models.vgmdb_album_data import VgmdbAlbumData  # , TrackData
 from dotenv import load_dotenv
 
 load_dotenv()
 
 
-def get_default_logger(name: str, logging_level='info') -> logging.Logger:
-    logging_levels = {
-        'info': logging.INFO,
-        'debug': logging.DEBUG,
-        'error': logging.ERROR,
-        'critical': logging.CRITICAL,
-        'fatal': logging.FATAL
-    }
+def get_default_logger(name: str, logging_level="info") -> logging.Logger:
+    logging_levels = {"info": logging.INFO, "debug": logging.DEBUG, "error": logging.ERROR, "critical": logging.CRITICAL, "fatal": logging.FATAL}
     if logging_level not in logging_levels:
         raise Exception(f'invalid logging level: {logging_level}, choose among {", ".join(logging_levels.keys())}')
     level = logging_levels[logging_level]
-    logging.basicConfig(format='%(levelname)s:\t  %(name)s: %(message)s')
+    logging.basicConfig(format="%(levelname)s:\t  %(name)s: %(message)s")
     logger = logging.getLogger(name)
     script_dir = os.path.dirname(os.path.abspath(__file__))
     logs_dir = os.path.abspath(os.path.join(script_dir, "..", "logs"))
@@ -32,7 +25,7 @@ def get_default_logger(name: str, logging_level='info') -> logging.Logger:
     return logger
 
 
-logger = get_default_logger(__name__, 'info')
+logger = get_default_logger(__name__, "info")
 
 
 def getProperCount(count: Union[str, int], totalCount: Union[str, int]) -> str:
@@ -47,64 +40,45 @@ def getProperCount(count: Union[str, int], totalCount: Union[str, int]) -> str:
 
 
 def yesNoUserInput() -> bool:
-    print('Continue? (Y/n) : ', end='')
+    print("Continue? (Y/n) : ", end="")
     resp = input()
-    if resp == 'n' or resp == 'N':
+    if resp == "n" or resp == "N":
         return False
     return True
 
 
 def noYesUserInput() -> bool:
-    print('Continue? (y/N) : ', end='')
+    print("Continue? (y/N) : ", end="")
     resp = input()
-    if resp == 'y' or resp == 'Y':
+    if resp == "y" or resp == "Y":
         return True
     return False
 
 
-def downloadPicture(URL: str, path: str, name=None):
-    try:
-        pictureName = os.path.basename(URL)
-        imagePath = os.path.join(path, pictureName)
-        originalURLName, extension = os.path.splitext(imagePath)
-        if name:
-            finalImageName = name + extension
-            if os.path.exists(os.path.join(path, finalImageName)):
-                logger.info(f'FileExists : {finalImageName}')
-                return
-        urllib.request.urlretrieve(URL, imagePath)
-        if name is not None:
-            originalURLName = name
-            os.rename(imagePath, os.path.join(path, originalURLName + extension))
-        logger.info(f'Downloaded : {originalURLName}{extension}')
-    except Exception as e:
-        logger.error(f"error during picture download: {e}")
-
-
 forbiddenCharacters = {
-    '<': 'ᐸ',
-    '>': 'ᐳ',
-    ':': '꞉',
-    '"': 'ˮ',
-    '\'': 'ʻ',
+    "<": "ᐸ",
+    ">": "ᐳ",
+    ":": "꞉",
+    '"': "ˮ",
+    "'": "ʻ",
     # '/': '／', # Looks far too stretched, but is more popular for some reason
-    '/': 'Ⳇ',  # This one looks more natural
-    '\\': '∖',
-    '|': 'ǀ',
-    '?': 'ʔ',
-    '*': '∗',
-    '+': '＋',
-    '%': '٪',
-    '!': 'ⵑ',
-    '`': '՝',
-    '&': '&',  # keeping same as it is not forbidden, but it may cause problems
-    '{': '❴',
-    '}': '❵',
-    '=': '᐀',
-    '~': '～',  # Not using this because it could be present in catalog number as well, may cause problems though
-    '#': '#',  # couldn't find alternative
-    '$': '$',  # couldn't find alternative
-    '@': '@'  # couldn't find alternative
+    "/": "Ⳇ",  # This one looks more natural
+    "\\": "∖",
+    "|": "ǀ",
+    "?": "ʔ",
+    "*": "∗",
+    "+": "＋",
+    "%": "٪",
+    "!": "ⵑ",
+    "`": "՝",
+    "&": "&",  # keeping same as it is not forbidden, but it may cause problems
+    "{": "❴",
+    "}": "❵",
+    "=": "᐀",
+    "~": "～",  # Not using this because it could be present in catalog number as well, may cause problems though
+    "#": "#",  # couldn't find alternative
+    "$": "$",  # couldn't find alternative
+    "@": "@",  # couldn't find alternative
 }
 
 
@@ -122,12 +96,12 @@ def fixDate(date: Optional[str]) -> Optional[str]:
     """
     if not date:
         return date
-    date.replace('/', '-')
-    date.replace('_', '-')
+    date.replace("/", "-")
+    date.replace("_", "-")
     date = date.strip()
-    parts = date.split('-')
-    parts += ['00'] * (3 - len(parts))
-    normalized_date_str = '{}-{}-{}'.format(*parts)
+    parts = date.split("-")
+    parts += ["00"] * (3 - len(parts))
+    normalized_date_str = "{}-{}-{}".format(*parts)
     return normalized_date_str
 
 
@@ -136,17 +110,17 @@ def cleanSearchTerm(name: Optional[str]) -> Optional[str]:
         return None
 
     def isJapanese(ch):
-        return (ord(ch) >= 0x4E00 and ord(ch) <= 0x9FFF)
+        return ord(ch) >= 0x4E00 and ord(ch) <= 0x9FFF
 
     def isChinese(ch):
-        return (ord(ch) >= 0x3400 and ord(ch) <= 0x4DFF)
+        return ord(ch) >= 0x3400 and ord(ch) <= 0x4DFF
 
     ans = ""
     for ch in name:
-        if ch.isalnum() or ch == ' ' or isJapanese(ch) or isChinese(ch):
+        if ch.isalnum() or ch == " " or isJapanese(ch) or isChinese(ch):
             ans += ch
         else:
-            ans += ' '
+            ans += " "
     return ans
 
 
@@ -158,14 +132,14 @@ def updateDict(dictionary: Union[dict, VgmdbAlbumData], keyValuePairs: dict) -> 
 
 def printAndMoveBack(text: str):
     sys.stdout.write("\033[K")  # Clear to the end of line
-    print(text, end='\r')
+    print(text, end="\r")
     sys.stdout.flush()
 
 
 def isLanguagePresent(languageObject: dict[str, str], language: str) -> bool:
     presentLanguages = [key.lower().strip() for key in languageObject]
-    if language in Flags().languages:
-        for languageSynonym in Flags().languages[language]:
+    if language in Config().languages:
+        for languageSynonym in Config().languages[language]:
             if languageSynonym.lower().strip() in presentLanguages:
                 return True
     return False
@@ -173,7 +147,7 @@ def isLanguagePresent(languageObject: dict[str, str], language: str) -> bool:
 
 def getBest(languageObject: dict[str, str], languageOrder: list[str]) -> str:
     for currentLanguage in languageOrder:
-        for languageKey in Flags().languages[currentLanguage]:
+        for languageKey in Config().languages[currentLanguage]:
             if languageKey in languageObject:
                 return languageObject[languageKey]
     if languageObject:

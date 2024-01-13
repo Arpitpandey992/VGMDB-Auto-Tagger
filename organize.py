@@ -1,5 +1,5 @@
 import argparse
-from Imports.flagsAndSettings import Flags
+from Imports.config import Config
 
 from Modules.Rename.utils import organizeFiles, renameFilesInternal
 from Modules.Rename.utils import organizeAlbum
@@ -23,7 +23,7 @@ def main():
     args = argumentParser()
     logger = get_default_logger("organize", "info")
     folderPath = args.folderPath
-    flags = Flags()
+    flags = Config()
     folderNamingTemplate = flags.folderNamingTemplate
 
     if args.folder_naming_template:
