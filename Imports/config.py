@@ -9,7 +9,7 @@ import sys
 sys.path.append(os.getcwd())
 # REMOVE
 
-from Imports.constants import languages
+from Imports.constants import LANGUAGES
 
 
 class Config(BaseModel):
@@ -27,35 +27,39 @@ class Config(BaseModel):
     NO_AUTH: bool = False
     NO_INPUT: bool = False
     TRANSLATE: bool = False
-    DISC_NUMBERS: bool = True
-    TRACK_NUMBERS: bool = True
     IGNORE_MISMATCH: bool = False  # Dangerous, keep false
 
     # Metadata Flags
-    PICS: bool = True
-    PIC_OVERWRITE: bool = False
-    SCANS: bool = True
+    # Album specific tags
+    ALBUM_NAME: bool = True
+    ALBUM_COVER: bool = True
+    ALBUM_COVER_OVERWRITE: bool = False
+    SCANS_DOWNLOAD: bool = True
     DATE: bool = True
-    YEAR: bool = True
+    # YEAR: bool = True
     CATALOG: bool = True
     BARCODE: bool = True
-    TITLE: bool = True
-    KEEP_TITLE: bool = False
-    SAME_FOLDER_NAME: bool = False
-    ALL_LANG: bool = True
-
+    VGMDB_LINK: bool = True
     ORGANIZATIONS: bool = True
-    # these tags are supposed to be track specific, but in VGMDB, they are provided for entire album,
-    # hence i've turned these off.
+    # the following tags are supposed to be track specific, but in VGMDB, they are provided for entire album,
+    # hence i've turned these off by default
     ARRANGERS: bool = False
     COMPOSERS: bool = False
     PERFORMERS: bool = False
     LYRICISTS: bool = False
 
+    # Track specific tags
+    TITLE: bool = True
+    DISC_NUMBERS: bool = True
+    TRACK_NUMBERS: bool = True
+    KEEP_TITLE: bool = False
+    SAME_FOLDER_NAME: bool = False
+    ALL_LANG: bool = True
+
     # default naming templates
     folderNamingTemplate: str = "{[{date}] }{albumname}{ [{catalog}]}{ [{format}]}"
     # languages to be probed from VGMDB in the given order of priority
-    language_order: list[languages] = ["english", "romaji", "japanese"]
+    language_order: list[LANGUAGES] = ["english", "romaji", "japanese", "other"]
 
     # misc flags
     SEE_FLAGS: bool = False

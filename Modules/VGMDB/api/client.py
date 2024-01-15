@@ -63,9 +63,11 @@ def getAlbumDetails(albumID: str) -> VgmdbAlbumData:
                 new_tracks[track_number] = track
                 track_number += 1
             disc["tracks"] = new_tracks
+            disc["total_tracks"] = len(disc["tracks"])
             new_discs[disc_number] = disc
             disc_number += 1
         vgmdb_album_data["discs"] = new_discs
+        vgmdb_album_data["total_discs"] = len(new_discs)
 
     vgmdb_album_data = getRequest(f"{VGMDB_INFO_BASE_URL}/album/{albumID}")
     if not vgmdb_album_data:

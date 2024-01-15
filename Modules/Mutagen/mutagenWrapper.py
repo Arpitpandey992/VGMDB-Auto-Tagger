@@ -68,7 +68,7 @@ class IAudioManager(ABC):
 
     @abstractmethod
     def setPictureOfType(self, imageData: bytes, pictureType: pictureTypes):
-        """Set a picture of some type (3 = front Cover)"""
+        """Set a picture of some type"""
 
     @abstractmethod
     def hasPictureOfType(self, pictureType: pictureTypes) -> bool:
@@ -284,7 +284,7 @@ class VorbisWrapper(IAudioManager):
     def deletePictureOfType(self, pictureType):
         if not self.hasPictureOfType(pictureType):
             return False
-        self.audio.delete_picture_of_type(pictureNameToNumber[pictureType])  # Note: OGG and OPUS files can only contain one picture, so this will remove any picture stored regardless of type
+        self.audio.delete_picture_of_type(pictureNameToNumber[pictureType])
         return True
 
     def setDate(self, date):

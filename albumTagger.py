@@ -119,11 +119,11 @@ def argumentParser() -> tuple[argparse.Namespace, Config, str]:
         flags.RENAME_FILES = False
 
     if args.no_scans:
-        flags.SCANS = False
+        flags.SCANS_DOWNLOAD = False
     if args.no_pics:
-        flags.PICS = False
+        flags.ALBUM_COVER = False
     if args.pic_overwrite:
-        flags.PIC_OVERWRITE = True
+        flags.ALBUM_COVER_OVERWRITE = True
     if args.no_auth:
         flags.NO_AUTH = True
 
@@ -233,7 +233,7 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Config) -> bool:
             if not flags.NO_INPUT and not flags.yes_to_all and not yesNoUserInput():
                 return False
 
-    if flags.SCANS:
+    if flags.SCANS_DOWNLOAD:
         logger.info("downloading scans...")
         if not flags.NO_AUTH:
             # New Algorithm for downloading Scans -> All scans are downloaded, requires Authentication

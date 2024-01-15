@@ -82,10 +82,10 @@ def tagAudioFile(trackData: TrackData, flags=Config()):
         audio.setDiscNumbers(getProperCount(trackData["disc_number"], trackData["total_discs"]), str(trackData["total_discs"]))
     audio.setComment(f"Find the tracklist at {trackData['album_link']}")
 
-    if flags.PICS and "picture_cache" in trackData:
+    if flags.ALBUM_COVER and "picture_cache" in trackData:
         imageData = trackData["picture_cache"]
         if audio.hasPictureOfType(3):
-            if flags.PIC_OVERWRITE:
+            if flags.ALBUM_COVER_OVERWRITE:
                 audio.deletePictureOfType(3)
                 audio.setPictureOfType(imageData, 3)
         else:

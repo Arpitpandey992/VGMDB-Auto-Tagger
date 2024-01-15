@@ -1,10 +1,8 @@
 import os
 import sys
-from typing import Union, Optional
 import logging
+from typing import Union, Optional
 from math import ceil, log10
-from Imports.config import Config
-from Modules.VGMDB.models.vgmdb_album_data import VgmdbAlbumData  # , TrackData
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -124,10 +122,10 @@ def cleanSearchTerm(name: Optional[str]) -> Optional[str]:
     return ans
 
 
-def updateDict(dictionary: Union[dict, VgmdbAlbumData], keyValuePairs: dict) -> None:
-    """In place update some keys present in a dictionary"""
-    for key, value in keyValuePairs.items():
-        dictionary[key] = value
+# def updateDict(dictionary: Union[dict, VgmdbAlbumData], keyValuePairs: dict) -> None:
+#     """In place update some keys present in a dictionary"""
+#     for key, value in keyValuePairs.items():
+#         dictionary[key] = value
 
 
 def printAndMoveBack(text: str):
@@ -136,20 +134,20 @@ def printAndMoveBack(text: str):
     sys.stdout.flush()
 
 
-def isLanguagePresent(languageObject: dict[str, str], language: str) -> bool:
-    presentLanguages = [key.lower().strip() for key in languageObject]
-    if language in Config().languages:
-        for languageSynonym in Config().languages[language]:
-            if languageSynonym.lower().strip() in presentLanguages:
-                return True
-    return False
+# def isLanguagePresent(languageObject: dict[str, str], language: str) -> bool:
+#     presentLanguages = [key.lower().strip() for key in languageObject]
+#     if language in Config().languages:
+#         for languageSynonym in Config().languages[language]:
+#             if languageSynonym.lower().strip() in presentLanguages:
+#                 return True
+#     return False
 
 
-def getBest(languageObject: dict[str, str], languageOrder: list[str]) -> str:
-    for currentLanguage in languageOrder:
-        for languageKey in Config().languages[currentLanguage]:
-            if languageKey in languageObject:
-                return languageObject[languageKey]
-    if languageObject:
-        return list(languageObject.items())[0][1]
-    return "(no title available)"
+# def getBest(languageObject: dict[str, str], languageOrder: list[str]) -> str:
+#     for currentLanguage in languageOrder:
+#         for languageKey in Config().languages[currentLanguage]:
+#             if languageKey in languageObject:
+#                 return languageObject[languageKey]
+#     if languageObject:
+#         return list(languageObject.items())[0][1]
+#     return "(no title available)"

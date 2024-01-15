@@ -1,4 +1,4 @@
 from typing import Literal
 
 
-languages = Literal["english", "romaji", "japanese", "other"]
+LANGUAGES = Literal["english", "romaji", "japanese", "other"]

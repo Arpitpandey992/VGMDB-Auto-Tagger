@@ -13,5 +13,4 @@ def compress_image_limit_max_width(raw_image_data: bytes, max_width: int = 800) 
 
     imageData = io.BytesIO()
     image.save(imageData, format="JPEG", quality=70)
-    imageData = imageData.getvalue()
-    return imageData
+    return imageData.getvalue()
