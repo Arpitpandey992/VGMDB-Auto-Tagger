@@ -8,9 +8,9 @@ from tabulate import tabulate
 
 from Imports.config import Config
 from Modules.Rename.utils import renameAlbumFiles, renameAlbumFolder
-from Utility.generalUtils import get_default_logger, getBest, yesNoUserInput, fixDate, cleanSearchTerm
+from Modules.Utils.general_utils import get_default_logger, getBest, yesNoUserInput, fixDate, cleanSearchTerm
 
-from Modules.Tag.tagFiles import tagFiles
+from Modules.Tag.tagger import tagFiles
 from Utility.audioUtils import getSearchTermAndDate, getAlbumTrackData, getFolderTrackData, doTracksAlign
 from Modules.VGMDB.vgmdbrip.vgmdbrip import downloadScans, downloadScansNoAuth
 
@@ -85,61 +85,61 @@ def argumentParser() -> tuple[argparse.Namespace, Config, str]:
     if args.yes:
         flags.yes_to_all = True
     if args.no_input:
-        flags.NO_INPUT = True
+        flags.no_input = True
     if args.backup:
         flags.backup = True
     if args.rename_folder:
-        flags.RENAME_FOLDER = True
+        flags.rename_folder = True
     if args.no_rename_folder:
-        flags.RENAME_FOLDER = False
+        flags.rename_folder = False
     if args.rename_files:
-        flags.RENAME_FILES = True
+        flags.rename_files = True
     if args.no_rename_files:
-        flags.RENAME_FILES = False
+        flags.rename_files = False
     if args.tag:
-        flags.TAG = True
+        flags.tag = True
     if args.no_tag:
-        flags.TAG = False
+        flags.tag = False
     if args.no_title:
-        flags.TITLE = False
+        flags.title = False
     if args.keep_title:
-        flags.KEEP_TITLE = True
+        flags.keep_title = True
     if args.same_folder_name:
-        flags.SAME_FOLDER_NAME = True
+        flags.same_folder_name = True
     if args.one_lang:
-        flags.ALL_LANG = False
+        flags.all_lang = False
     if args.translate:
-        flags.TRANSLATE = True
+        flags.translate = True
 
     if args.album_data_only:
-        flags.TITLE = False
-        flags.DISC_NUMBERS = False
-        flags.TRACK_NUMBERS = False
+        flags.title = False
+        flags.disc_numbers = False
+        flags.track_numbers = False
         flags.IGNORE_MISMATCH = True
-        flags.RENAME_FILES = False
+        flags.rename_files = False
 
     if args.no_scans:
-        flags.SCANS_DOWNLOAD = False
+        flags.scans_download = False
     if args.no_pics:
-        flags.ALBUM_COVER = False
+        flags.album_cover = False
     if args.pic_overwrite:
-        flags.ALBUM_COVER_OVERWRITE = True
+        flags.album_cover_overwrite = True
     if args.no_auth:
-        flags.NO_AUTH = True
+        flags.no_auth = True
 
     if args.single or args.performers:
-        flags.PERFORMERS = True
+        flags.performers = True
     if args.single or args.arrangers:
-        flags.ARRANGERS = True
+        flags.arrangers = True
     if args.single or args.lyricists:
-        flags.LYRICISTS = True
+        flags.lyricists = True
     if args.single or args.composers:
-        flags.COMPOSERS = True
+        flags.composers = True
 
     if args.no_modify:
-        flags.TAG = False
-        flags.RENAME_FOLDER = False
-        flags.RENAME_FILES = False
+        flags.tag = False
+        flags.rename_folder = False
+        flags.rename_files = False
 
     if args.folder_naming_template:
         template = args.folder_naming_template
@@ -149,10 +149,10 @@ def argumentParser() -> tuple[argparse.Namespace, Config, str]:
             logger.info(f"{e}, aborting")
             return args, flags, ""
 
-        flags.folderNamingTemplate = args.folder_naming_template
+        flags.folder_naming_template = args.folder_naming_template
 
     if args.ksl:
-        flags.folderNamingTemplate = "{[{catalog}] }{albumname}{ [{date}]}{ [{format}]}"
+        flags.folder_naming_template = "{[{catalog}] }{albumname}{ [{date}]}{ [{format}]}"
 
     if flags.SEE_FLAGS:
         logger.info("\n" + json.dumps(vars(flags), indent=4))
@@ -161,7 +161,7 @@ def argumentParser() -> tuple[argparse.Namespace, Config, str]:
 
 def tagAndRenameFiles(folderPath: str, albumID: str, flags: Config) -> bool:
     try:
-        if flags.TRANSLATE:
+        if flags.translate:
             logger.info("fetching and translating album data from VGMDB, it will take a while")
         else:
             logger.info("fetching Album Data from VGMDB")
@@ -191,25 +191,25 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Config) -> bool:
 
     if not doTracksAlign(albumTrackData, folderTrackData, flags):
         logger.info("The tracks are not fully fitting the album data received from VGMDB!")
-        if flags.NO_INPUT:
+        if flags.no_input:
             return False
         print("continue? (y/N/no-title/no-tag): ", end="")
         resp = input()
         if resp == "no-title":
-            flags.TITLE = False  # type:ignore
+            flags.title = False  # type:ignore
         elif resp == "no-tag":
-            flags.TAG = False  # type:ignore
+            flags.tag = False  # type:ignore
         elif resp.lower() != "y":
             return False
     else:
         logger.info("tracks are perfectly aligning with the album data received from VGMDB!")
-        if not flags.NO_INPUT and not flags.yes_to_all:
+        if not flags.no_input and not flags.yes_to_all:
             print("continue? (Y/n/no-title/no-tag): ", end="")
             resp = input()
             if resp == "no-title":
-                flags.TITLE = False  # type:ignore
+                flags.title = False  # type:ignore
             elif resp == "no-tag":
-                flags.TAG = False  # type:ignore
+                flags.tag = False  # type:ignore
             elif resp.lower() == "n":
                 return False
 
@@ -220,7 +220,7 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Config) -> bool:
 
     if flags.backup:
         try:
-            destinationFolder = Config().BACKUPFOLDER
+            destinationFolder = Config().backup_folder
             if not os.path.exists(destinationFolder):
                 os.makedirs(destinationFolder)
             logger.info(f"backing Up {folderPath}...")
@@ -230,12 +230,12 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Config) -> bool:
         except Exception as e:
             logger.error("backup couldn't Be completed, but this probably means that this folder was already backed up, so it 'should' be safe ;)")
             logger.exception(e)
-            if not flags.NO_INPUT and not flags.yes_to_all and not yesNoUserInput():
+            if not flags.no_input and not flags.yes_to_all and not yesNoUserInput():
                 return False
 
-    if flags.SCANS_DOWNLOAD:
+    if flags.scans_download:
         logger.info("downloading scans...")
-        if not flags.NO_AUTH:
+        if not flags.no_auth:
             # New Algorithm for downloading Scans -> All scans are downloaded, requires Authentication
             downloadScans(folderPath, albumID)
         elif "covers" in albumData:
@@ -244,21 +244,21 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Config) -> bool:
         logger.info("downloaded available scans :)")
 
     # Tagging
-    if flags.TAG:
+    if flags.tag:
         logger.info("tagging files\n")
         tagFiles(albumTrackData, folderTrackData, albumData)
     # Renaming Files
-    if flags.RENAME_FILES:
+    if flags.rename_files:
         logger.info("renaming files\n")
         renameAlbumFiles(folderPath, verbose=True)
     # Renaming Folder
-    if flags.RENAME_FOLDER:
+    if flags.rename_folder:
         logger.info("renaming folder\n")
-        if flags.SAME_FOLDER_NAME:
+        if flags.same_folder_name:
             # NOT recommended to use this option, just provide the template in CLI argument itself and use foldername instead of albumname
             renameAlbumFolder(folderPath, renameTemplate="{[{date}]} {foldername} {[{catalog}]}")
         else:
-            renameAlbumFolder(folderPath, renameTemplate=flags.folderNamingTemplate)
+            renameAlbumFolder(folderPath, renameTemplate=flags.folder_naming_template)
     return True
 
 
@@ -271,7 +271,7 @@ def getSearchInput() -> Optional[str]:
 
 
 def findAlbumID(folderPath: str, searchTerm: Optional[str], searchYear: Optional[str], flags: Config) -> Optional[str]:
-    if flags.NO_INPUT and not searchTerm:
+    if flags.no_input and not searchTerm:
         return None
     folderName = os.path.basename(folderPath)
     logger.info(f"searching album in folder: {folderName}")
@@ -303,12 +303,12 @@ def findAlbumID(folderPath: str, searchTerm: Optional[str], searchYear: Optional
     if not tableData:
         # if we are here then that means we are getting some results but none are in the year provided
         return findAlbumID(folderPath, searchTerm, None, flags)
-    logger.info("\n" + tabulate(tableData, headers=["S.No", "Catalog", "Title", "Link", "Year"], maxcolwidths=52, tablefmt=Config().tableFormat, colalign=("center", "left", "left", "left", "center")))
+    logger.info("\n" + tabulate(tableData, headers=["S.No", "Catalog", "Title", "Link", "Year"], maxcolwidths=52, tablefmt=Config().table_format, colalign=("center", "left", "left", "left", "center")))
 
-    if (flags.NO_INPUT or flags.yes_to_all) and len(tableData) == 1:
+    if (flags.no_input or flags.yes_to_all) and len(tableData) == 1:
         logger.info("continuing with this album!")
         choice = "1"
-    elif flags.NO_INPUT:
+    elif flags.no_input:
         return None
     else:
         print(f"give another search term (exit allowed) or choose album serial number (1-{len(tableData)}): ", end="")

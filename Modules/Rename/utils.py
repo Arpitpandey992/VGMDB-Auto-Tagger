@@ -6,10 +6,10 @@ from mutagen.flac import StreamInfo
 from Imports.config import Config
 from Modules.Mutagen.mutagenWrapper import supportedExtensions
 from Utility.audioUtils import getFolderTrackData, getOneAudioFile
-from Utility.generalUtils import cleanName, fixDate, getProperCount, printAndMoveBack
+from Modules.Utils.general_utils import cleanName, fixDate, getProperCount, printAndMoveBack
 from Modules.Mutagen.mutagenWrapper import AudioFactory, IAudioManager
 from Utility.template import TemplateResolver
-from Utility.generalUtils import get_default_logger
+from Modules.Utils.general_utils import get_default_logger
 
 FOLDER_NAMING_TEMPLATE = {
     "default": "{[{date}] }{albumname}{ [{catalog}]}{ [{format}]}",
@@ -211,7 +211,7 @@ def renameAlbumFiles(folderPath: str, noMove: bool = False, verbose: bool = Fals
     if verbose and tableData:
         logger.info("files renamed as follows:")
         tableData.sort()
-        logger.info("\n" + tabulate(tableData, headers=["Disc", "Track", "Old Name", "New Name"], colalign=("center", "center", "left", "left"), maxcolwidths=50, tablefmt=Config().tableFormat))
+        logger.info("\n" + tabulate(tableData, headers=["Disc", "Track", "Old Name", "New Name"], colalign=("center", "center", "left", "left"), maxcolwidths=50, tablefmt=Config().table_format))
 
 
 def renameFilesInternal(folderPath, verbose: bool, pauseOnFinish: bool, recur: bool, tableData: list):
@@ -285,6 +285,6 @@ def organizeFiles(folderPath: str, verbose: bool = True, pauseOnFinish: bool = F
     if verbose and tableData:
         logger.info("files renamed as follows:")
         tableData.sort()
-        logger.info("\n" + tabulate(tableData, headers=["S.no", "Old Name", "New Name"], colalign=("center", "left", "left"), maxcolwidths=45, tablefmt=Config().tableFormat))
+        logger.info("\n" + tabulate(tableData, headers=["S.no", "Old Name", "New Name"], colalign=("center", "left", "left"), maxcolwidths=45, tablefmt=Config().table_format))
     if pauseOnFinish:
         input("Press Enter to continue...")

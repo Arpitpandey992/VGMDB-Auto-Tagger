@@ -5,7 +5,7 @@ import cutlet
 import json
 
 from Modules.Translate.chatGPT import ChatGPTAPI
-from Utility.generalUtils import get_default_logger
+from Modules.Utils.general_utils import get_default_logger
 
 logger = get_default_logger(__name__, 'info')
 

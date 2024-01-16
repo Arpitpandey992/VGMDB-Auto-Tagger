@@ -1,4 +1,4 @@
 {
-    "BACKUPFOLDER": "~/Backup",
-    "language_order": ["english", "japanese", "romaji"]
+    "backup_folder": "~/Backup",
+    "romaji": true
 }

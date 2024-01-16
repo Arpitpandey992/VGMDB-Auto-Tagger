@@ -15,12 +15,11 @@ class TemplateResolver:
         return self._evaluate(expression)[0]
 
     @staticmethod
-    def validateTemplate(expression: str) -> None:
+    def validateTemplate(expression: str):
         """
         Check if template is valid or not.
         :param expression: The expression string to validate
         :raises TemplateValidationException: if provided expression is invalid
-        :returns: None
         """
         open = 0
         for character in expression:
@@ -90,6 +89,6 @@ if __name__ == '__main__':
         "name": "damnson"
     }
     template = TemplateResolver(mapping)
-    testName = "{[{catalog}]}{name}{[{date}]}"
+    testName = "{[{catalog}] }{name}{ [{date}]}"
     finalExpression = template.evaluate(testName)
     print(finalExpression)

@@ -122,32 +122,7 @@ def cleanSearchTerm(name: Optional[str]) -> Optional[str]:
     return ans
 
 
-# def updateDict(dictionary: Union[dict, VgmdbAlbumData], keyValuePairs: dict) -> None:
-#     """In place update some keys present in a dictionary"""
-#     for key, value in keyValuePairs.items():
-#         dictionary[key] = value
-
-
 def printAndMoveBack(text: str):
-    sys.stdout.write("\033[K")  # Clear to the end of line
     print(text, end="\r")
     sys.stdout.flush()
-
-
-# def isLanguagePresent(languageObject: dict[str, str], language: str) -> bool:
-#     presentLanguages = [key.lower().strip() for key in languageObject]
-#     if language in Config().languages:
-#         for languageSynonym in Config().languages[language]:
-#             if languageSynonym.lower().strip() in presentLanguages:
-#                 return True
-#     return False
-
-
-# def getBest(languageObject: dict[str, str], languageOrder: list[str]) -> str:
-#     for currentLanguage in languageOrder:
-#         for languageKey in Config().languages[currentLanguage]:
-#             if languageKey in languageObject:
-#                 return languageObject[languageKey]
-#     if languageObject:
-#         return list(languageObject.items())[0][1]
-#     return "(no title available)"
+    sys.stdout.write("\033[K")  # Clear to the end of line, this will not clear the current line because we are not flushing stdout at this point

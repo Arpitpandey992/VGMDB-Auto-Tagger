@@ -5,7 +5,7 @@ from typing import List, Type, Callable, Any, Optional, Literal
 from typing_extensions import TypedDict
 from openai.error import RateLimitError, Timeout, APIConnectionError, ServiceUnavailableError, TryAgain, APIError
 
-from Utility.generalUtils import get_default_logger
+from Modules.Utils.general_utils import get_default_logger
 
 DEFAULT_SYSTEM_ROLE_CONTENT = "You are a helpful assistant."
 model_types = Literal["4k_tokens", "16k_tokens", "4k_tokens_function_calling", "16k_tokens_function_calling"]

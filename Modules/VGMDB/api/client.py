@@ -6,7 +6,7 @@ sys.path.append(os.getcwd())
 
 from Modules.Print.utils import SUB_LINE_SEPARATOR
 from Modules.VGMDB.constants import APICALLRETRIES, USE_LOCAL_SERVER, VGMDB_INFO_BASE_URL
-from Utility.generalUtils import get_default_logger
+from Modules.Utils.general_utils import get_default_logger
 from Modules.VGMDB.models.vgmdb_album_data import VgmdbAlbumData
 from Modules.VGMDB.models.search import SearchAlbum
 
@@ -57,6 +57,7 @@ def getAlbumDetails(albumID: str) -> VgmdbAlbumData:
 
         # Setting disc data in a format which is much faster to retrieve
         new_discs, disc_number = {}, 1
+        album_total_tracks = 0
         for disc in vgmdb_album_data["discs"]:
             new_tracks, track_number = {}, 1
             for track in disc["tracks"]:
@@ -64,10 +65,12 @@ def getAlbumDetails(albumID: str) -> VgmdbAlbumData:
                 track_number += 1
             disc["tracks"] = new_tracks
             disc["total_tracks"] = len(disc["tracks"])
+            album_total_tracks += disc["total_tracks"]
             new_discs[disc_number] = disc
             disc_number += 1
         vgmdb_album_data["discs"] = new_discs
         vgmdb_album_data["total_discs"] = len(new_discs)
+        vgmdb_album_data["total_tracks_in_album"] = album_total_tracks
 
     vgmdb_album_data = getRequest(f"{VGMDB_INFO_BASE_URL}/album/{albumID}")
     if not vgmdb_album_data:

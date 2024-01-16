@@ -3,7 +3,7 @@ from Imports.config import Config
 
 from Modules.Rename.utils import organizeFiles, renameFilesInternal
 from Modules.Rename.utils import organizeAlbum
-from Utility.generalUtils import get_default_logger
+from Modules.Utils.general_utils import get_default_logger
 from Utility.template import isValidTemplate
 
 
@@ -24,7 +24,7 @@ def main():
     logger = get_default_logger("organize", "info")
     folderPath = args.folderPath
     flags = Config()
-    folderNamingTemplate = flags.folderNamingTemplate
+    folderNamingTemplate = flags.folder_naming_template
 
     if args.folder_naming_template:
         template = args.folder_naming_template

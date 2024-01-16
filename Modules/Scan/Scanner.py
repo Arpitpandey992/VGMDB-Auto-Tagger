@@ -6,7 +6,7 @@ from Modules.Mutagen.utils import cleanDate, is_date_in_YYYY_MM_DD
 
 import Modules.Scan.constants as constants
 from Modules.Scan.models.local_album_data import LocalAlbumData, LocalTrackData
-from Utility.generalUtils import get_default_logger
+from Modules.Utils.general_utils import get_default_logger
 
 
 """

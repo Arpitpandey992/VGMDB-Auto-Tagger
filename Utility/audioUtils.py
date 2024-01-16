@@ -7,7 +7,7 @@ from Modules.VGMDB.models.vgmdb_album_data import VgmdbAlbumData
 from Types.otherData import OtherData
 from Modules.Mutagen.mutagenWrapper import AudioFactory
 from Modules.Translate.translator import translate
-from Utility.generalUtils import get_default_logger, getBest
+from Modules.Utils.general_utils import get_default_logger, getBest
 
 logger = get_default_logger(__name__, "info")
 
@@ -50,7 +50,7 @@ def getAlbumTrackData(albumData: VgmdbAlbumData) -> dict[int, dict[int, dict[str
         trackNumber = 1
         for track in disc["tracks"]:
             names = {key: val for key, val in track["names"].items() if val != "None"}
-            if flags.TRANSLATE:
+            if flags.translate:
                 # Translating when english is not present
                 otherLanguageTitle = getBest(names, flags.language_order)
                 translateObject = translate(otherLanguageTitle, "english")
@@ -120,10 +120,10 @@ def doTracksAlign(albumTrackData: dict[int, dict[int, dict[str, str]]], folderTr
         "\n"
         + tabulate(
             tableData,
-            headers=["Disc", "Track", "Title (Translated)" if flags.TRANSLATE else "Title", "fileName"],
+            headers=["Disc", "Track", "Title (Translated)" if flags.translate else "Title", "fileName"],
             colalign=("center", "center", "left", "left"),
             maxcolwidths=50,
-            tablefmt=Config().tableFormat,
+            tablefmt=Config().table_format,
         )
     )
     return flag

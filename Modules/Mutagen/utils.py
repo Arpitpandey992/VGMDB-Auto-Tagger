@@ -3,7 +3,7 @@ from math import ceil, log10
 import re
 from typing import Any, Literal, Optional, Union
 
-from Utility.generalUtils import get_default_logger
+from Modules.Utils.general_utils import get_default_logger
 
 logger = get_default_logger(__name__, "info")
 

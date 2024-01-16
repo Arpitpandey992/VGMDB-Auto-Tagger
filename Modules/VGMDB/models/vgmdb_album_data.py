@@ -119,6 +119,7 @@ class VgmdbAlbumData(BaseModel):
     # custom data
     album_id: str
     total_discs: int
+    total_tracks_in_album: int
     unmatched_local_tracks: list[LocalTrackData] = []
     album_cover_cache: bytes | None = None
 
@@ -143,8 +144,8 @@ class VgmdbAlbumData(BaseModel):
             return None
         if self.album_cover_cache:
             return self.album_cover_cache
-        self.album_cover_cache = getRawDataFromUrl(self.picture_full)
-        return compress_image_limit_max_width(self.album_cover_cache)
+        self.album_cover_cache = compress_image_limit_max_width(getRawDataFromUrl(self.picture_full))
+        return self.album_cover_cache
 
     def download_scans(self, output_dir: str, no_auth: bool = False):
         if no_auth:

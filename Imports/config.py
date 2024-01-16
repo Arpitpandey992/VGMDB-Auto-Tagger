@@ -1,6 +1,4 @@
-import json
-from typing import get_args
-from pydantic import BaseModel, ValidationError, field_validator
+from pydantic import BaseModel
 
 # REMOVE
 import os
@@ -13,101 +11,53 @@ from Imports.constants import LANGUAGES
 
 
 class Config(BaseModel):
-    # Settings
-    BACKUPFOLDER: str = "~/Music/Backups"
-    tableFormat: str = "pretty"
-
-    # Management Flags
+    # settings
+    root_dir: str
+    recur: bool = False
+    id: str | None = None
+    search: str | None = None
+    yes: bool = False
+    no_input: bool = False
     backup: bool = False
-    yes_to_all: bool = False
-    confirm: bool = False
-    RENAME_FILES: bool = True
-    TAG: bool = True
-    RENAME_FOLDER: bool = True
-    NO_AUTH: bool = False
-    NO_INPUT: bool = False
-    TRANSLATE: bool = False
-    IGNORE_MISMATCH: bool = False  # Dangerous, keep false
+    backup_folder: str = "~/Music/Backups"
+    no_auth: bool = False
 
-    # Metadata Flags
-    # Album specific tags
-    ALBUM_NAME: bool = True
-    ALBUM_COVER: bool = True
-    ALBUM_COVER_OVERWRITE: bool = False
-    SCANS_DOWNLOAD: bool = True
-    DATE: bool = True
-    # YEAR: bool = True
-    CATALOG: bool = True
-    BARCODE: bool = True
-    VGMDB_LINK: bool = True
-    ORGANIZATIONS: bool = True
-    # the following tags are supposed to be track specific, but in VGMDB, they are provided for entire album,
-    # hence i've turned these off by default
-    ARRANGERS: bool = False
-    COMPOSERS: bool = False
-    PERFORMERS: bool = False
-    LYRICISTS: bool = False
+    # Tagging:
+    # Album specific flags
+    tag: bool = True
+    album_name: bool = True
+    album_cover: bool = True
+    album_cover_overwrite: bool = False
+    date: bool = True
+    catalog: bool = True
+    barcode: bool = True
+    vgmdb_link: bool = True
+    organizations: bool = True
+    # the following flags are supposed to be track specific, but in VGMDB, they are provided for entire album,
+    # hence i've turned these off by default. They are turned on automatically for albums having only 1 track
+    arrangers: bool = False
+    composers: bool = False
+    performers: bool = False
+    lyricists: bool = False
 
-    # Track specific tags
-    TITLE: bool = True
-    DISC_NUMBERS: bool = True
-    TRACK_NUMBERS: bool = True
-    KEEP_TITLE: bool = False
-    SAME_FOLDER_NAME: bool = False
-    ALL_LANG: bool = True
+    # Track specific flags
+    title: bool = True
+    keep_title: bool = False
+    disc_numbers: bool = True
+    track_numbers: bool = True
 
-    # default naming templates
-    folderNamingTemplate: str = "{[{date}] }{albumname}{ [{catalog}]}{ [{format}]}"
-    # languages to be probed from VGMDB in the given order of priority
+    # Rename:
+    rename: bool = True
+    rename_folder: bool = True
+    rename_files: bool = True
+    same_folder_name: bool = False
+    folder_naming_template: str = "{[{date}] }{albumname}{ [{catalog}]}{ [{format}]}"
+
+    # Extra stuff
+    scans_download: bool = True
+    translate: bool = False
+    all_lang: bool = True
+    album_data_only: bool = False
+
+    # language priority for names of various tags (title, album, composer, etc)
     language_order: list[LANGUAGES] = ["english", "romaji", "japanese", "other"]
-
-    # misc flags
-    SEE_FLAGS: bool = False
-
-    def __init__(self, **data):
-        unexpected_kwargs = set(data.keys()) - set(self.__annotations__.keys())
-        if unexpected_kwargs:
-            raise TypeError(f"unexpected config option{'s' if len(unexpected_kwargs) > 1 else ''}: {', '.join(unexpected_kwargs)}")
-        super().__init__(**data)
-
-
-flags_instance: Config | None = None
-
-
-def get_config() -> Config:
-    """not thread safe, just saying ;)"""
-
-    def _init_flags() -> Config:
-        """use config.json in root directory to initialize flags"""
-        config_file_path = "config.json"
-        with open(config_file_path, "r") as file:
-            config = json.load(file)
-        try:
-            return Config(**config)
-        except ValidationError as e:
-            print(f"validation error in {config_file_path}")
-            for err in e.errors():
-                print(err)
-            raise (e)
-        except TypeError as e:
-            print(f"type error in {config_file_path}")
-            print(e)
-            raise (e)
-        except Exception as e:
-            exit(0)
-
-    global flags_instance
-    if flags_instance is None:
-        flags_instance = _init_flags()
-    return flags_instance
-
-
-if __name__ == "__main__":
-    x = get_config()
-    print(x.tableFormat)
-    x.tableFormat = "damn_pretty"
-    print(x.tableFormat)
-    y = get_config()
-    print(y.tableFormat)
-    assert x.tableFormat == y.tableFormat
-    assert x is y
