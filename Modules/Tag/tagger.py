@@ -2,14 +2,18 @@
 import sys
 import os
 
+
 sys.path.append(os.getcwd())
 # remove
 
 from tabulate import tabulate
-from Imports.config import Config, get_config
+
+from Imports.config import Config
+from Modules.Tag import custom_tags
 from Modules.Scan.models.local_album_data import LocalAlbumData
 from Modules.VGMDB.models.vgmdb_album_data import ArrangerOrComposerOrLyricistOrPerformer, Names, VgmdbAlbumData
 from Modules.Utils.general_utils import get_default_logger, printAndMoveBack
+from Modules.Print import Table
 
 logger = get_default_logger(__name__, "info")
 
@@ -29,10 +33,10 @@ class Tagger:
         if not self.config.album_data_only:
             logger.info("tagging track data")
             self._tag_track_specific_data()
-        
+
         logger.info("tagging album data")
         self._tag_album_specific_data()
-        
+
         logger.info("saving files")
         self._save_local_files()
 
@@ -40,7 +44,13 @@ class Tagger:
         printAndMoveBack("")
         logger.info("files Tagged as follows:")
         self.table_data.sort()
-        logger.info("\n" + tabulate(self.table_data, headers=["Disc", "Track", "Title", "File Name"], colalign=("center", "center", "left", "left"), maxcolwidths=50, tablefmt=self.config.table_format))
+        columns = (
+            Table.Column(header="Disc", justify="center", style="bold"),
+            Table.Column(header="Track", justify="center", style="bold"),
+            Table.Column(header="Title", justify="left", style="cyan"),
+            Table.Column(header="File Name", justify="left", style="magenta"),
+        )
+        Table.tabulate(self.table_data, columns=columns, title="Tagging Result")
 
     # Private Functions
     def _save_local_files(self):
@@ -58,7 +68,8 @@ class Tagger:
 
             if self.config.vgmdb_link:
                 audio_manager.setComment([f"Find the tracklist at {self.vgmdb_album_data.vgmdb_link}"])
-                audio_manager.setCustomTag("VGMDB Link", [self.vgmdb_album_data.vgmdb_link])
+                audio_manager.setCustomTag(custom_tags.VGMDB_LINK, [self.vgmdb_album_data.vgmdb_link])
+                audio_manager.setCustomTag(custom_tags.VGMDB_ID, [self.vgmdb_album_data.album_id])
 
             if self.config.album_cover:
                 cover_data = self.vgmdb_album_data.get_album_cover_data()
@@ -79,20 +90,23 @@ class Tagger:
 
             if self.config.organizations and self.vgmdb_album_data.organizations:
                 for org in self.vgmdb_album_data.organizations:
-                    org_name = self._get_highest_priority_name(org.names)
+                    org_name = org.names.get_highest_priority_name(self.config.language_order)
                     audio_manager.setCustomTag(org.role, [org_name]) if org_name else None
+
+            if self.config.media_format:
+                audio_manager.setCustomTag("Media Format", [self.vgmdb_album_data.media_format])
 
             def addMultiValues(tag: list[ArrangerOrComposerOrLyricistOrPerformer] | None, tagInFile: str, flag: bool = True):
                 if not tag or not flag:
                     return
-                dude_names = [name for name in [self._get_highest_priority_name(dude.names) for dude in tag] if name]
+                dude_names = [name for name in [dude.names.get_highest_priority_name(self.config.language_order) for dude in tag] if name]
                 audio_manager.setCustomTag(tagInFile, dude_names) if dude_names else None
 
             is_single = self.vgmdb_album_data.total_tracks_in_album == 1
-            addMultiValues(self.vgmdb_album_data.lyricists, "lyricist", is_single or self.config.lyricists)
-            addMultiValues(self.vgmdb_album_data.performers, "performer", is_single or self.config.performers)
-            addMultiValues(self.vgmdb_album_data.arrangers, "arranger", is_single or self.config.arrangers)
-            addMultiValues(self.vgmdb_album_data.composers, "composer", is_single or self.config.composers)
+            addMultiValues(self.vgmdb_album_data.lyricists, custom_tags.LYRICIST, is_single or self.config.lyricists)
+            addMultiValues(self.vgmdb_album_data.performers, custom_tags.PERFORMER, is_single or self.config.performers)
+            addMultiValues(self.vgmdb_album_data.arrangers, custom_tags.ARRANGER, is_single or self.config.arrangers)
+            addMultiValues(self.vgmdb_album_data.composers, custom_tags.COMPOSER, is_single or self.config.composers)
 
         for local_track in self.unmatched_local_tracks:
             self.table_data.append((404, 404, "XX", local_track.file_name))
@@ -101,7 +115,7 @@ class Tagger:
         for disc_number, disc in self.vgmdb_album_data.discs.items():
             for track_number, track in disc.tracks.items():
                 if not track.local_track:
-                    self.table_data.append((disc_number, track_number, self._get_highest_priority_name(track.names), "XX"))
+                    self.table_data.append((disc_number, track_number, track.names.get_highest_priority_name(self.config.language_order), "XX"))
                     continue
                 printAndMoveBack(f"tagging {track.local_track.file_name}")
                 audio_manager = track.local_track.audio_manager
@@ -118,30 +132,21 @@ class Tagger:
                 if self.config.track_numbers:
                     audio_manager.setTrackNumbers(track_number, disc.total_tracks)
 
-                self.table_data.append((disc_number, track_number, self._get_highest_priority_name(track.names), track.local_track.file_name))
+                self.table_data.append((disc_number, track_number, track.names.get_highest_priority_name(self.config.language_order), track.local_track.file_name))
 
     def _get_flag_filtered_names(self, names: Names) -> list[str]:
         reordered_names = names.get_reordered_names(self.config.language_order)
         return reordered_names if self.config.all_lang else reordered_names[:1]
 
-    def _get_highest_priority_name(self, names: Names) -> str | None:
-        reordered_names = names.get_reordered_names(self.config.language_order)
-        return reordered_names[0] if reordered_names else None
-
-
-def tag_album(local_album_data: LocalAlbumData, vgmdb_album_data: VgmdbAlbumData):
-    tagger = Tagger(local_album_data, vgmdb_album_data)
-    tagger.tag_files()
-    tagger.print_table()
-
 
 if __name__ == "__main__":
-    import Modules.Scan.Scanner as Scanner
-    import Modules.VGMDB.api.client as Client
+    from Modules.Scan.Scanner import Scanner
+    from Modules.VGMDB.api import client
 
     folder = "/Users/arpit/Library/Custom/Music/Rewrite OST Bak"
-    local_album_data = Scanner.scan_album_in_folder_if_exists(folder)
-    vgmdb_album_data = Client.getAlbumDetails("27623")
+    scanner = Scanner()
+    local_album_data = scanner.scan_album_in_folder_if_exists(folder)
+    vgmdb_album_data = client.get_album_details("27623")
     if not local_album_data:
         print(f"nothing found in {folder}")
         exit(0)
@@ -150,7 +155,6 @@ if __name__ == "__main__":
         track.audio_manager.setAlbum(["rewrite"])
         track.audio_manager.save()
 
-    config = get_config()
-    config.ALL_LANG = True
-    config.ALBUM_COVER_OVERWRITE = True
-    tag_album(local_album_data, vgmdb_album_data)
+    tagger = Tagger(local_album_data, vgmdb_album_data, Config(root_dir=folder, all_lang=True, album_cover_overwrite=True))
+    tagger.tag_files()
+    tagger.print_table()

@@ -1,6 +1,6 @@
 import os
 from typing import get_args
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from Imports.constants import LANGUAGES
 from Modules.Print.utils import LINE_SEPARATOR, SUB_LINE_SEPARATOR
@@ -25,6 +25,10 @@ class Names(BaseModel):
     language_map: dict[LANGUAGES, list[str]] = {}
 
     def __init__(self, **language_dict):
+        # for identifying whether the incoming data is from a pre existing Names object:
+        if "language_map" in language_dict:
+            super().__init__(**language_dict)
+            return
         super().__init__()
         self.language_map = {"english": self.english, "japanese": self.japanese, "romaji": self.romaji, "other": self.others}
         for language_key, value in language_dict.items():
@@ -32,7 +36,13 @@ class Names(BaseModel):
             self.language_map[identified_language].append(value)
 
     def get_reordered_names(self, order: list[LANGUAGES]) -> list[str]:
+        """get all names reordered according to the given order"""
         return [name for lang in order for name in self.language_map[lang]]
+
+    def get_highest_priority_name(self, priority: list[LANGUAGES]) -> str | None:
+        """get the name with highest priority"""
+        reordered_names = self.get_reordered_names(priority)
+        return reordered_names[0] if reordered_names else None
 
     def _identify_language(self, s: str) -> LANGUAGES:
         lang = s.lower().strip()
@@ -60,9 +70,12 @@ class VgmdbTrackData(BaseModel):
 
 class VgmdbDiscData(BaseModel):
     tracks: dict[int, VgmdbTrackData]  # map between track number and track data
-    total_tracks: int  # custom field
     disc_length: str | None = None
     name: str | None = None
+
+    @property
+    def total_tracks(self) -> int:
+        return len(self.tracks)
 
 
 class ArrangerOrComposerOrLyricistOrPerformer(BaseModel):
@@ -118,10 +131,43 @@ class VgmdbAlbumData(BaseModel):
 
     # custom data
     album_id: str
-    total_discs: int
-    total_tracks_in_album: int
     unmatched_local_tracks: list[LocalTrackData] = []
     album_cover_cache: bytes | None = None
+
+    @property
+    def total_discs(self):
+        return len(self.discs)
+
+    @property
+    def total_tracks_in_album(self):
+        return sum(len(disc.tracks) for disc in self.discs.values())
+
+    @field_validator("catalog", mode="before")
+    @classmethod
+    def fix_catalog(cls, catalog: str) -> str | None:
+        return catalog if catalog != "N/A" else None
+
+    @field_validator("discs", mode="before")
+    @classmethod
+    def convert_discs_from_list_to_dict(cls, discs: list | dict[int, VgmdbDiscData]) -> dict[int, VgmdbDiscData]:
+        if isinstance(discs, dict) and all(isinstance(disc, VgmdbDiscData) for disc in discs.values()):
+            # if we initializing this object with the proper value it is expecting
+            return discs
+        if isinstance(discs, list):
+            # Converting disc data from list to dict which is much faster to retrieve from
+            new_discs: dict[int, VgmdbDiscData] = {}
+            disc_number = 1
+            for disc in discs:
+                new_tracks: dict[int, VgmdbTrackData] = {}
+                track_number = 1
+                for track in disc["tracks"]:
+                    new_tracks[track_number] = VgmdbTrackData.model_validate(track)
+                    track_number += 1
+                new_discs[disc_number] = VgmdbDiscData(tracks=new_tracks)
+                disc_number += 1
+            return new_discs
+
+        raise TypeError(f"invalid initialization of discs: {discs}")
 
     # helper functions
     def link_local_album_data(self, local_album_data: LocalAlbumData):
@@ -136,7 +182,7 @@ class VgmdbAlbumData(BaseModel):
                 if local_track:
                     track.local_track = local_track
                     temp_unmatched_local_tracks_set.discard(local_track)
-        # add more matching method...
+        # add more matching algorithms...
         self.unmatched_local_tracks = list(temp_unmatched_local_tracks_set)  # update the unmatched list
 
     def get_album_cover_data(self) -> bytes | None:
@@ -184,3 +230,15 @@ class VgmdbAlbumData(BaseModel):
                 frontPictureExists = True
         if not frontPictureExists and self.picture_full:
             downloadFile(url=self.picture_full, output_dir=coverPath, name="Front")
+
+
+def test():
+    from Modules.VGMDB.api.client import get_album_details
+
+    data = get_album_details("123")
+    print(data.pprint())
+    new_data = VgmdbAlbumData(**data.model_dump())
+
+
+if __name__ == "__main__":
+    test()

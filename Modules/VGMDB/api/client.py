@@ -1,9 +1,13 @@
+import time
+from urllib.parse import urljoin
 import requests
-import sys
 import os
 
-sys.path.append(os.getcwd())
+# remove
+import sys
 
+sys.path.append(os.getcwd())
+# remove
 from Modules.Print.utils import SUB_LINE_SEPARATOR
 from Modules.VGMDB.constants import APICALLRETRIES, USE_LOCAL_SERVER, VGMDB_INFO_BASE_URL
 from Modules.Utils.general_utils import get_default_logger
@@ -11,7 +15,7 @@ from Modules.VGMDB.models.vgmdb_album_data import VgmdbAlbumData
 from Modules.VGMDB.models.search import SearchAlbum
 
 
-logger = get_default_logger(__name__, "info")
+logger = get_default_logger(__name__, "debug")
 
 
 if USE_LOCAL_SERVER:
@@ -39,57 +43,41 @@ error:
 logger.info(f"using {VGMDB_INFO_BASE_URL} for VGMDB API")
 
 
-def getRequest(url: str) -> dict | None:
+def get_request(url: str) -> dict | None:
+    backoff_secs = 1
     for _ in range(APICALLRETRIES):
         try:
             response = requests.get(url)
             if response.status_code >= 200 and response.status_code <= 299:
                 return response.json()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.info(f"error in getting response, retrying after {backoff_secs} seconds")
+            logger.debug(f"error: {e}")
+            time.sleep(backoff_secs)
+            backoff_secs *= 2
     return None
 
 
-def getAlbumDetails(albumID: str) -> VgmdbAlbumData:
-    def _clean_incoming_data(vgmdb_album_data: dict):
-        if vgmdb_album_data["catalog"] == "N/A":
-            vgmdb_album_data["catalog"] = None
-
-        # Setting disc data in a format which is much faster to retrieve
-        new_discs, disc_number = {}, 1
-        album_total_tracks = 0
-        for disc in vgmdb_album_data["discs"]:
-            new_tracks, track_number = {}, 1
-            for track in disc["tracks"]:
-                new_tracks[track_number] = track
-                track_number += 1
-            disc["tracks"] = new_tracks
-            disc["total_tracks"] = len(disc["tracks"])
-            album_total_tracks += disc["total_tracks"]
-            new_discs[disc_number] = disc
-            disc_number += 1
-        vgmdb_album_data["discs"] = new_discs
-        vgmdb_album_data["total_discs"] = len(new_discs)
-        vgmdb_album_data["total_tracks_in_album"] = album_total_tracks
-
-    vgmdb_album_data = getRequest(f"{VGMDB_INFO_BASE_URL}/album/{albumID}")
+def get_album_details(album_id: str) -> VgmdbAlbumData:
+    url = urljoin(VGMDB_INFO_BASE_URL, f"album/{album_id}")
+    vgmdb_album_data = get_request(url)
     if not vgmdb_album_data:
-        raise Exception(f"could not retrieve album details from vgmdb for albumID: {albumID}, most likely server error")
-    _clean_incoming_data(vgmdb_album_data)
+        raise Exception(f"could not retrieve album details from vgmdb for albumID: {album_id}, most likely server error")
 
-    return VgmdbAlbumData(**vgmdb_album_data, album_id=albumID)
+    return VgmdbAlbumData(**vgmdb_album_data, album_id=album_id)
 
 
-def searchAlbum(albumName: str) -> list[SearchAlbum]:
-    searchResult = getRequest(f"{VGMDB_INFO_BASE_URL}/search?q={albumName}")
-    if not searchResult:
-        raise Exception(f"could not search for {albumName} from vgmdb, most likely server error")
-    return searchResult["results"]["albums"]
+def search_album(search_term: str) -> list[SearchAlbum]:
+    url = urljoin(VGMDB_INFO_BASE_URL, f"search?q={search_term}")
+    search_result = get_request(url)
+    if not search_result:
+        raise Exception(f"could not search for {search_term} from vgmdb, most likely server error")
+    return [SearchAlbum.model_validate(result) for result in search_result["results"]["albums"]]
 
 
 if __name__ == "__main__":
-    print(getAlbumDetails("551").pprint() + "\n\n")
-    print(getAlbumDetails("10052").pprint() + "\n\n")
-    print(getAlbumDetails("19065").pprint() + "\n\n")
-    albumSearchData = searchAlbum("Rewrite")
+    print(get_album_details("551").pprint() + "\n\n")
+    print(get_album_details("10052").pprint() + "\n\n")
+    print(get_album_details("19065").pprint() + "\n\n")
+    albumSearchData = search_album("Rewrite")
     print(albumSearchData)

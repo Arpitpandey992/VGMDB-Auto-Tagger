@@ -33,6 +33,7 @@ class Config(BaseModel):
     barcode: bool = True
     vgmdb_link: bool = True
     organizations: bool = True
+    media_format: bool = True
     # the following flags are supposed to be track specific, but in VGMDB, they are provided for entire album,
     # hence i've turned these off by default. They are turned on automatically for albums having only 1 track
     arrangers: bool = False

@@ -1,19 +1,24 @@
 import os
 import sys
 import logging
-from typing import Union, Optional
+from typing import Literal, Union, Optional
 from math import ceil, log10
 from dotenv import load_dotenv
 
 load_dotenv()
 
+logging_levels = Literal["info", "debug", "error", "critical", "fatal"]
 
-def get_default_logger(name: str, logging_level="info") -> logging.Logger:
+
+def get_default_logger(name: str, logging_level: logging_levels = "info") -> logging.Logger:
     logging_levels = {"info": logging.INFO, "debug": logging.DEBUG, "error": logging.ERROR, "critical": logging.CRITICAL, "fatal": logging.FATAL}
     if logging_level not in logging_levels:
         raise Exception(f'invalid logging level: {logging_level}, choose among {", ".join(logging_levels.keys())}')
     level = logging_levels[logging_level]
-    logging.basicConfig(format="%(levelname)s:\t  %(name)s: %(message)s")
+    if logging_level == "info":
+        logging.basicConfig(format="%(message)s")
+    else:
+        logging.basicConfig(format="%(levelname)s:\t  %(name)s: %(message)s")
     logger = logging.getLogger(name)
     script_dir = os.path.dirname(os.path.abspath(__file__))
     logs_dir = os.path.abspath(os.path.join(script_dir, "..", "logs"))

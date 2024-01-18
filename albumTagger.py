@@ -17,7 +17,7 @@ from Modules.VGMDB.vgmdbrip.vgmdbrip import downloadScans, downloadScansNoAuth
 from Modules.VGMDB.models.vgmdb_album_data import VgmdbAlbumData
 from Modules.VGMDB.models.search import SearchAlbumData
 from Utility.template import TemplateResolver, TemplateValidationException
-from Modules.VGMDB.api.client import getAlbumDetails, searchAlbum
+from Modules.VGMDB.api.client import get_album_details, searchAlbum
 
 logger = get_default_logger("albumTagger")
 
@@ -165,7 +165,7 @@ def tagAndRenameFiles(folderPath: str, albumID: str, flags: Config) -> bool:
             logger.info("fetching and translating album data from VGMDB, it will take a while")
         else:
             logger.info("fetching Album Data from VGMDB")
-        albumData: VgmdbAlbumData = getAlbumDetails(albumID)
+        albumData: VgmdbAlbumData = get_album_details(albumID)
         if albumData is None:
             logger.error("could not fetch album details, Please Try Again.")
             return False

@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 from pydantic import BaseModel
 
@@ -15,7 +16,7 @@ class LocalTrackData(BaseModel):
         arbitrary_types_allowed = True
 
     def __hash__(self) -> int:
-        return self.file_path.__hash__() # for being able to create a set
+        return self.file_path.__hash__()  # for being able to create a set
 
 
 class LocalDiscData(BaseModel):
@@ -31,6 +32,10 @@ class LocalAlbumData(BaseModel):
     album_folder_path: str
     discs: dict[int, LocalDiscData] = {}  # files with proper disc number (default = 1) and track numbers already present
     unclean_tracks: list[LocalTrackData] = []  # files without track number tags, maybe we can still tag them somehow? (accoust_id, name similarity, etc)
+
+    @property
+    def album_folder_name(self) -> str:
+        return os.path.basename(self.album_folder_path)
 
     # helper functions
     def pprint(self) -> str:
@@ -58,7 +63,27 @@ class LocalAlbumData(BaseModel):
         tracks.extend([track for _, disc in self.discs.items() for _, track in disc.tracks.items()])
         return tracks
 
+    def get_one_random_track(self) -> LocalTrackData:
+        all_tracks = self.get_all_tracks()
+        return all_tracks[0] if all_tracks else self.unclean_tracks[0]  # if there are no clean tracks, there must be at least one unclean track
+
     def _does_track_exist(self, disc_number: int, track_number: int) -> bool:
         if disc_number not in self.discs or track_number not in self.discs[disc_number].tracks:
             return False
         return True
+
+
+def test():
+    from Modules.Scan.Scanner import Scanner
+
+    test_music_dir = "/Users/arpit/Library/Custom/Music/Rewrite OST Bak"
+    scanner = Scanner()
+    album = scanner.scan_album_in_folder_if_exists(test_music_dir)
+    if not album:
+        return
+    print(album.pprint())
+    new_album = LocalAlbumData(**album.model_dump())
+
+
+if __name__ == "__main__":
+    test()
