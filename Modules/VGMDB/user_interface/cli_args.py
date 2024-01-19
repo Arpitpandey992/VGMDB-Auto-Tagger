@@ -1,5 +1,5 @@
 from tap import Tap
-from Imports.config import Config
+from Imports.config import Config, get_config
 
 from Utility.template import TemplateResolver
 
@@ -54,7 +54,7 @@ class CLIArgs(Tap):
             TemplateResolver.validateTemplate(self.folder_naming_template)  # will raise exception if not valid
 
     def get_config(self) -> Config:
-        config = Config(**{k: v for k, v in self.as_dict().items() if v})  # Removing None values first
+        config = get_config(**{k: v for k, v in self.as_dict().items() if v})  # Removing None values first
 
         if self.no_modify:
             config.tag = False

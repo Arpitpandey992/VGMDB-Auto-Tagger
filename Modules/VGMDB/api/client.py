@@ -47,6 +47,8 @@ error:
 
 logger.info(f"using {VGMDB_INFO_BASE_URL} for VGMDB API")
 
+album_cache, search_cache = {}, {}
+
 
 def get_request(url: str) -> dict | Exception:
     backoff_secs = 1
@@ -66,25 +68,36 @@ def get_request(url: str) -> dict | Exception:
 
 
 def get_album_details(album_id: str) -> VgmdbAlbumData:
+    global album_cache
+    if album_id in album_cache:
+        return album_cache[album_id]
+
     url = urljoin(VGMDB_INFO_BASE_URL, f"album/{album_id}")
     vgmdb_album_data = get_request(url)
     if isinstance(vgmdb_album_data, Exception):
         raise VgmdbRequestException(f"could not retrieve album details from vgmdb for albumID: {album_id}")
 
-    return VgmdbAlbumData(**vgmdb_album_data, album_id=album_id)
+    album_cache[album_id] = VgmdbAlbumData(**vgmdb_album_data, album_id=album_id)
+    return album_cache[album_id]
 
 
 def search_album(search_term: str) -> list[SearchAlbum]:
+    global search_cache
+    if search_term in search_cache:
+        return search_cache[search_term]
+
     url = urljoin(VGMDB_INFO_BASE_URL, f"search?q={search_term}")
     search_result = get_request(url)
     if isinstance(search_result, Exception):
         raise VgmdbRequestException(f"could not search for {search_term} from vgmdb")
-    return [SearchAlbum.model_validate(result) for result in search_result["results"]["albums"]]
+    search_cache[search_term] = [SearchAlbum.model_validate(result) for result in search_result["results"]["albums"]]
+    return search_cache[search_term]
 
 
 if __name__ == "__main__":
-    print(get_album_details("551").pprint() + "\n\n")
-    print(get_album_details("10052").pprint() + "\n\n")
-    print(get_album_details("19065").pprint() + "\n\n")
-    albumSearchData = search_album("Rewrite")
-    print(albumSearchData)
+    for i in range(2):
+        print(get_album_details("551").pprint() + "\n\n")
+        print(get_album_details("10052").pprint() + "\n\n")
+        print(get_album_details("19065").pprint() + "\n\n")
+        print(get_album_details("41676").pprint() + "\n\n")
+        print(search_album("Rewrite"), end="\n\n")

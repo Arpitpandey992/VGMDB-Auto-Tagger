@@ -59,7 +59,8 @@ class CLI:
             logger.info(f"operating on {album.album_folder_name}")
             logger.info(SUB_LINE_SEPARATOR)
             try:
-                local_album_config = self._get_args().get_config()
+                local_album_config = self.root_config.model_copy()
+                local_album_config.root_dir = album.album_folder_path
                 self.operate(album, local_album_config)
             except Exception as e:
                 logger.error(f"error occurred: {type(e).__name__} -> {e}, skipping {album.album_folder_path}")
@@ -116,8 +117,9 @@ class CLI:
             config.set_dynamically(constants.CONFIG_MAP[flag], True)
         for flag in config_disable:
             config.set_dynamically(constants.CONFIG_MAP[flag], False)
-        if "translate" in config_disable:
-            "IMPLEMENT CACHING FOR GETTING VGMDB_ALBUM_DATA SO THAT IT IS NOT OVERWRITTEN DURING GOING BACK TO SEARCH STAGE"
+        if constants.REVERSE_CONFIG_MAP["translate"] in config_disable:
+            vgmdb_album_data.clear_names("translated")
+
         return self._confirm_before_proceeding(vgmdb_album_data, config)
 
     def _find_and_show_match(self, vgmdb_album_data: VgmdbAlbumData, config: Config) -> bool:
@@ -126,12 +128,13 @@ class CLI:
             logger.info("translating track names")
             for disc_number, vgmdb_disc in vgmdb_album_data.discs.items():
                 for track_number, vgmdb_track in vgmdb_disc.tracks.items():
-                    track_title = vgmdb_track.names.get_highest_priority_name(config.language_order)
+                    track_title = vgmdb_track.names.get_highest_priority_name([order for order in config.language_order if order != "translated"])  # don't wanna translate translated text ;)
                     printAndMoveBack(f"translating {track_title}")
                     for translate_language in config.translation_language:
                         translated_name = translator.translate(track_title, translate_language)
-                        vgmdb_track.names.add_name(translated_name, "translated") if translated_name else None
-
+                        vgmdb_track.names.add_names([translated_name], "translated") if translated_name else None
+            printAndMoveBack("")
+            logger.info("finished")
         table_data = []
         for disc_number, vgmdb_disc in vgmdb_album_data.discs.items():
             for track_number, vgmdb_track in vgmdb_disc.tracks.items():
@@ -163,7 +166,7 @@ class CLI:
         columns = (
             Table.Column(header="Disc", justify="center", style="bold"),
             Table.Column(header="Track", justify="center", style="bold"),
-            Table.Column(header="Title", justify="left", style="cyan"),
+            Table.Column(header=f"Title{' [Translated]' if config.translate else ''}", justify="left", style="cyan"),
             Table.Column(header="File Name", justify="left", style="magenta"),
         )
         Table.tabulate(table_data, columns=columns, title=f"Data Match Between Details from VGMDB Album and Local Album")
@@ -175,7 +178,9 @@ class CLI:
         vgmdb_id = audio_manager.getCustomTag(custom_tags.VGMDB_ID)
         if vgmdb_id and vgmdb_id[0].isdigit:
             logger.info("found album id in embedded tag")
-            return vgmdb_id[0]
+            use_embedded_id = questionary.confirm("use embedded album id?").ask()
+            if use_embedded_id:
+                return vgmdb_id[0]
 
         # get search term
         search_term, reason = config.search, "provided search term"
@@ -196,6 +201,7 @@ class CLI:
         while not album_found and not exit_flag:
             logger.info(f"searching for {search_term}")
             search_result = client.search_album(search_term)
+
             table_data = [(result.catalog, result.get_album_name(config.language_order), result.album_link, result.release_year) for result in search_result if (not year_filter_flag) or (year and result.release_year == year)]
             num_results = len(table_data)
             table_data = sorted(table_data, key=lambda x: x[1])
@@ -208,18 +214,24 @@ class CLI:
             Table.tabulate(table_data, columns=columns, add_number_column=True, title=f"Search Results{f', year: {year}' if year and year_filter_flag else ' year: any'}")
 
             def is_choice_within_bounds(choice: str) -> bool | str:
+                if not choice:
+                    return "Choice cannot be empty"
                 if not choice.isdigit():
                     return True
+                elif num_results == 0:
+                    return "No results available, provide search term or exit"
                 return True if int(choice) >= 1 and int(choice) <= num_results else f"S.No. must be {f'between 1 and {num_results}' if num_results > 1 else 'equal to 1'}"
 
             if num_results == 0:
-                choice = questionary.text(f"No results found, provide: search term | {exit_ask} | {no_year_filter if year and year_filter_flag else year_filter} -> ").ask()
+                choice = questionary.text(
+                    f"No results found, provide: search term | {exit_ask} | {no_year_filter if year and year_filter_flag else year_filter} -> ",
+                    validate=is_choice_within_bounds,
+                ).ask()
             else:
                 choice = questionary.text(
                     f"Albums found: {num_results}, Provide S.No. [1-{num_results}] | Search Term | {exit_ask} | {no_year_filter if year and year_filter_flag else year_filter} -> ",
                     default="1",
                     validate=is_choice_within_bounds,
-                    qmark="?",
                 ).ask()
             if choice is None:
                 return None

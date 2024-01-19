@@ -22,4 +22,6 @@ CONFIG_MAP = {
     "Keep Title (don't overwrite current title)": "keep_title",
     "Translate": "translate",
 }
+
+REVERSE_CONFIG_MAP = {val: key for key, val in CONFIG_MAP.items()}
 NULL_INT = 10001

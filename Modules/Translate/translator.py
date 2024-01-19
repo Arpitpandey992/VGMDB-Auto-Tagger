@@ -18,8 +18,6 @@ logger = get_default_logger(__name__, "info")
 
 # This uses 'translate-shell' system process for transcription. make sure it is available and added to path
 
-translate_cache: dict[tuple[str, TRANSLATE_LANGUAGES], str | None] = {}
-
 
 def get_text_language(text: str) -> str:
     try:
@@ -104,13 +102,18 @@ def translate_chat_gpt(text: str, targetLanguage: str) -> str:
     return translate(**options)
 
 
+translate_cache: dict[tuple[str, TRANSLATE_LANGUAGES], str | None] = {}
+
+
 def translate(text: str | None, target_language: TRANSLATE_LANGUAGES = "english") -> str | None:
     if not text:
         return
+    global translate_cache
     if (text, target_language) in translate_cache:
         return translate_cache.get((text, target_language))
     source_language = get_text_language(text)
     if target_language.lower() in source_language or "english" in source_language:
+        translate_cache[(text, target_language)] = None
         return None
     if target_language not in get_args(TRANSLATE_LANGUAGES):
         logger.error(f"{target_language} is not supported for translation")

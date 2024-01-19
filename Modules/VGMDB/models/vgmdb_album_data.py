@@ -37,8 +37,8 @@ class Names(BaseModel):
             identified_language = self._identify_language(language_key)
             self.language_map[identified_language].append(value)
 
-    def add_name(self, name: str, language: LANGUAGES):
-        self.language_map[language].append(name)
+    def add_names(self, name: list[str], language: LANGUAGES):
+        self.language_map[language] = name
 
     def clear_names(self, language: LANGUAGES):
         self.language_map[language].clear()
@@ -99,7 +99,14 @@ class OrganizationOrPublisherOrDistributor(BaseModel):
 
 class ReleasePrice(BaseModel):
     currency: str | None = None
-    price: float | None = None
+    price: str | None = None
+
+    @field_validator("price", mode="before")
+    @classmethod
+    def fix_price(cls, price: float | str | None) -> str | None:
+        if not price:
+            return None
+        return str(price)
 
 
 class VgmdbAlbumData(BaseModel):
@@ -220,6 +227,12 @@ class VgmdbAlbumData(BaseModel):
 
     def get_track(self, disc_number: int, track_number: int) -> VgmdbTrackData | None:
         return self.discs[disc_number].tracks[track_number] if self._does_track_exist(disc_number, track_number) else None
+
+    def clear_names(self, names_language: LANGUAGES):
+        """clear names of a particular language from all tracks"""
+        for _, disc in sorted(self.discs.items()):
+            for _, track in sorted(disc.tracks.items()):
+                track.names.clear_names(names_language)
 
     # private functions
     def _does_track_exist(self, disc_number: int, track_number: int) -> bool:

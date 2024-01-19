@@ -71,3 +71,22 @@ class Config(BaseModel):
     def set_dynamically(self, key: str, val):
         """set the internal variables like a dict, will raise a KeyError if invalid key"""
         self.__dict__[key] = val
+
+
+config_cache = {}
+
+
+def get_config(root_dir, **kwargs):
+    global config_cache
+    if root_dir in config_cache:
+        return config_cache[root_dir]
+    config_cache[root_dir] = Config(root_dir=root_dir, **kwargs)
+    return config_cache[root_dir]
+
+
+if __name__ == "__main__":
+    obj1 = get_config(root_dir="damn")
+    obj2 = get_config(root_dir="son")
+    obj3 = get_config(root_dir="damn")
+    print(obj1 is obj2)
+    print(obj1 is obj3)

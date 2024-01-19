@@ -6,14 +6,11 @@ import os
 sys.path.append(os.getcwd())
 # remove
 
-from tabulate import tabulate
-
 from Imports.config import Config
 from Modules.Tag import custom_tags
 from Modules.Scan.models.local_album_data import LocalAlbumData
 from Modules.VGMDB.models.vgmdb_album_data import ArrangerOrComposerOrLyricistOrPerformer, Names, VgmdbAlbumData
 from Modules.Utils.general_utils import get_default_logger, printAndMoveBack
-from Modules.Print import Table
 
 logger = get_default_logger(__name__, "info")
 
@@ -27,30 +24,23 @@ class Tagger:
         self.vgmdb_album_data.link_local_album_data(self.local_album_data)
         self.matched_local_tracks = [track.local_track for _, disc in self.vgmdb_album_data.discs.items() for _, track in disc.tracks.items() if track.local_track]
         self.unmatched_local_tracks = self.vgmdb_album_data.unmatched_local_tracks
-        self.table_data = []
 
     def tag_files(self):
         if not self.config.album_data_only:
             logger.info("tagging track data")
             self._tag_track_specific_data()
+            printAndMoveBack("")
+            logger.info("finished")
 
         logger.info("tagging album data")
         self._tag_album_specific_data()
+        printAndMoveBack("")
+        logger.info("finished")
 
         logger.info("saving files")
         self._save_local_files()
-
-    def print_table(self):
         printAndMoveBack("")
-        logger.info("files Tagged as follows:")
-        self.table_data.sort()
-        columns = (
-            Table.Column(header="Disc", justify="center", style="bold"),
-            Table.Column(header="Track", justify="center", style="bold"),
-            Table.Column(header="Title", justify="left", style="cyan"),
-            Table.Column(header="File Name", justify="left", style="magenta"),
-        )
-        Table.tabulate(self.table_data, columns=columns, title="Tagging Result")
+        logger.info("finished")
 
     # Private Functions
     def _save_local_files(self):
@@ -108,14 +98,10 @@ class Tagger:
             addMultiValues(self.vgmdb_album_data.arrangers, custom_tags.ARRANGER, is_single or self.config.arrangers)
             addMultiValues(self.vgmdb_album_data.composers, custom_tags.COMPOSER, is_single or self.config.composers)
 
-        for local_track in self.unmatched_local_tracks:
-            self.table_data.append((404, 404, "XX", local_track.file_name))
-
     def _tag_track_specific_data(self):
         for disc_number, disc in self.vgmdb_album_data.discs.items():
             for track_number, track in disc.tracks.items():
                 if not track.local_track:
-                    self.table_data.append((disc_number, track_number, track.names.get_highest_priority_name(self.config.language_order), "XX"))
                     continue
                 printAndMoveBack(f"tagging {track.local_track.file_name}")
                 audio_manager = track.local_track.audio_manager
@@ -131,8 +117,6 @@ class Tagger:
 
                 if self.config.track_numbers:
                     audio_manager.setTrackNumbers(track_number, disc.total_tracks)
-
-                self.table_data.append((disc_number, track_number, track.names.get_highest_priority_name(self.config.language_order), track.local_track.file_name))
 
     def _get_flag_filtered_names(self, names: Names) -> list[str]:
         reordered_names = names.get_reordered_names(self.config.language_order)
@@ -157,4 +141,3 @@ if __name__ == "__main__":
 
     tagger = Tagger(local_album_data, vgmdb_album_data, Config(root_dir=folder, all_lang=True, album_cover_overwrite=True))
     tagger.tag_files()
-    tagger.print_table()
