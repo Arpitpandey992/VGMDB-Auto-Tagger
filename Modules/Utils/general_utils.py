@@ -42,20 +42,9 @@ def getProperCount(count: Union[str, int], totalCount: Union[str, int]) -> str:
     return str(count)
 
 
-def yesNoUserInput() -> bool:
-    print("Continue? (Y/n) : ", end="")
-    resp = input()
-    if resp == "n" or resp == "N":
-        return False
-    return True
-
-
-def noYesUserInput() -> bool:
-    print("Continue? (y/N) : ", end="")
-    resp = input()
-    if resp == "y" or resp == "Y":
-        return True
-    return False
+def ifNot(var, otherwise):
+    """checks if var is None (or empty list and all) and returns otherwise, else returns var"""
+    return var if var else otherwise
 
 
 forbiddenCharacters = {

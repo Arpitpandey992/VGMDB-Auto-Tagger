@@ -10,14 +10,16 @@ from Modules.Utils.network_utils import downloadFile, getRawDataFromUrl
 from Modules.VGMDB.vgmdbrip.vgmdbrip import downloadScans
 
 language_aliases: dict[LANGUAGES, list[str]] = {
-    "romaji": ["ja-latn", "Romaji", "Romaji Translated"],
-    "english": ["en", "English", "English (Apple Music)", "English/German", "English localized", "English (alternate)", "English Translated", "English [Translation]"],
+    "english": ["en", "English", "English (Apple Music)", "English/German", "English (alternate)", "English localized", "English Translated", "English [Translation]"],  # these translations are official
+    "translated": [],
+    "romaji": ["ja-latn", "Romaji"],
     "japanese": ["ja", "Japanese"],
 }
 
 
 class Names(BaseModel):
     english: list[str] = []
+    translated: list[str] = []
     japanese: list[str] = []
     romaji: list[str] = []
     others: list[str] = []
@@ -30,16 +32,22 @@ class Names(BaseModel):
             super().__init__(**language_dict)
             return
         super().__init__()
-        self.language_map = {"english": self.english, "japanese": self.japanese, "romaji": self.romaji, "other": self.others}
+        self.language_map = {"english": self.english, "translated": self.translated, "japanese": self.japanese, "romaji": self.romaji, "other": self.others}
         for language_key, value in language_dict.items():
             identified_language = self._identify_language(language_key)
             self.language_map[identified_language].append(value)
+
+    def add_name(self, name: str, language: LANGUAGES):
+        self.language_map[language].append(name)
+
+    def clear_names(self, language: LANGUAGES):
+        self.language_map[language].clear()
 
     def get_reordered_names(self, order: list[LANGUAGES]) -> list[str]:
         """get all names reordered according to the given order"""
         return [name for lang in order for name in self.language_map[lang]]
 
-    def get_highest_priority_name(self, priority: list[LANGUAGES]) -> str | None:
+    def get_highest_priority_name(self, priority: list[LANGUAGES] = ["english", "translated", "romaji", "japanese", "other"]) -> str | None:
         """get the name with highest priority"""
         reordered_names = self.get_reordered_names(priority)
         return reordered_names[0] if reordered_names else None

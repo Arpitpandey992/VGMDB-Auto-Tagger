@@ -7,7 +7,7 @@ import sys
 sys.path.append(os.getcwd())
 # REMOVE
 
-from Imports.constants import LANGUAGES
+from Imports.constants import LANGUAGES, TRANSLATE_LANGUAGES
 
 
 class Config(BaseModel):
@@ -56,9 +56,18 @@ class Config(BaseModel):
 
     # Extra stuff
     scans_download: bool = True
-    translate: bool = False
     all_lang: bool = True
     album_data_only: bool = False
 
     # language priority for names of various tags (title, album, composer, etc)
-    language_order: list[LANGUAGES] = ["english", "romaji", "japanese", "other"]
+    language_order: list[LANGUAGES] = ["english", "translated", "romaji", "japanese", "other"]
+    translate: bool = False
+    translation_language: list[TRANSLATE_LANGUAGES] = ["english", "romaji"]
+
+    def get_dynamically(self, key: str):
+        """access the internal variables like a dict, will raise a KeyError if invalid key"""
+        return self.__dict__[key]
+
+    def set_dynamically(self, key: str, val):
+        """set the internal variables like a dict, will raise a KeyError if invalid key"""
+        self.__dict__[key] = val

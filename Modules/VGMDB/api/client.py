@@ -18,6 +18,11 @@ from Modules.VGMDB.models.search import SearchAlbum
 logger = get_default_logger(__name__, "debug")
 
 
+class VgmdbRequestException(requests.RequestException):
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
 if USE_LOCAL_SERVER:
     try:
         from Modules.VGMDB.api.vgmdb_info import run_server
@@ -43,8 +48,9 @@ error:
 logger.info(f"using {VGMDB_INFO_BASE_URL} for VGMDB API")
 
 
-def get_request(url: str) -> dict | None:
+def get_request(url: str) -> dict | Exception:
     backoff_secs = 1
+    found_exception = Exception("empty exception")
     for _ in range(APICALLRETRIES):
         try:
             response = requests.get(url)
@@ -53,16 +59,17 @@ def get_request(url: str) -> dict | None:
         except Exception as e:
             logger.info(f"error in getting response, retrying after {backoff_secs} seconds")
             logger.debug(f"error: {e}")
+            found_exception = e
             time.sleep(backoff_secs)
             backoff_secs *= 2
-    return None
+    return found_exception
 
 
 def get_album_details(album_id: str) -> VgmdbAlbumData:
     url = urljoin(VGMDB_INFO_BASE_URL, f"album/{album_id}")
     vgmdb_album_data = get_request(url)
-    if not vgmdb_album_data:
-        raise Exception(f"could not retrieve album details from vgmdb for albumID: {album_id}, most likely server error")
+    if isinstance(vgmdb_album_data, Exception):
+        raise VgmdbRequestException(f"could not retrieve album details from vgmdb for albumID: {album_id}")
 
     return VgmdbAlbumData(**vgmdb_album_data, album_id=album_id)
 
@@ -70,8 +77,8 @@ def get_album_details(album_id: str) -> VgmdbAlbumData:
 def search_album(search_term: str) -> list[SearchAlbum]:
     url = urljoin(VGMDB_INFO_BASE_URL, f"search?q={search_term}")
     search_result = get_request(url)
-    if not search_result:
-        raise Exception(f"could not search for {search_term} from vgmdb, most likely server error")
+    if isinstance(search_result, Exception):
+        raise VgmdbRequestException(f"could not search for {search_term} from vgmdb")
     return [SearchAlbum.model_validate(result) for result in search_result["results"]["albums"]]
 
 

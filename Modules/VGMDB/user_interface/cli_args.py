@@ -95,10 +95,10 @@ class CLIArgs(Tap):
             config.composers = True
 
         elif self.english:
-            config.language_order = ["english", "romaji", "japanese", "other"]
+            config.language_order = ["english", "translated", "romaji", "japanese", "other"]
         elif self.romaji:
-            config.language_order = ["romaji", "english", "japanese", "other"]
+            config.language_order = ["romaji", "english", "translated", "japanese", "other"]
         if self.japanese:
-            config.language_order = ["japanese", "romaji", "english", "other"]
+            config.language_order = ["japanese", "romaji", "translated", "english", "other"]
 
         return config
