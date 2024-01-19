@@ -62,8 +62,13 @@ class CLI:
                 local_album_config = self.root_config.model_copy()
                 local_album_config.root_dir = album.album_folder_path
                 self.operate(album, local_album_config)
+                logger.info(SUB_LINE_SEPARATOR)
+                logger.info(f"successfully finished all oprations on {album.album_folder_name}")
+                logger.info(SUB_LINE_SEPARATOR)
             except Exception as e:
+                logger.info(SUB_LINE_SEPARATOR)
                 logger.error(f"error occurred: {type(e).__name__} -> {e}, skipping {album.album_folder_path}")
+                logger.info(SUB_LINE_SEPARATOR)
 
     def operate(self, local_album_data: LocalAlbumData, config: Config):
         logger.debug(f"fetching album id")
@@ -94,13 +99,13 @@ class CLI:
                 "Local Album Data is matching perfectly with VGMDB Album Data, Proceed?",
                 choices=[option.value for option in constants.choices],
                 default=constants.choices.yes.value,
-            )
+            ).skip_if(config.yes, default=constants.choices.yes.value)
         else:
             question = questionary.select(
                 "Local Album Data is NOT matching perfectly with VGMDB Album Data, Proceed?",
                 choices=[option.value for option in constants.choices],
                 default=constants.choices.no.value,
-            )
+            ).skip_if(config.no_input, default=constants.choices.no.value)
         choice = question.ask()
         if not choice:  # user cancelled
             return constants.choices.no
@@ -169,7 +174,8 @@ class CLI:
             Table.Column(header=f"Title{' [Translated]' if config.translate else ''}", justify="left", style="cyan"),
             Table.Column(header="File Name", justify="left", style="magenta"),
         )
-        Table.tabulate(table_data, columns=columns, title=f"Data Match Between Details from VGMDB Album and Local Album")
+        if not config.no_input:
+            Table.tabulate(table_data, columns=columns, title=f"Data Match Between Details from VGMDB Album and Local Album")
         is_perfect_match = all(col for row in table_data for col in row)  # perfect match only if nothing is "" or None
         return is_perfect_match
 
@@ -178,7 +184,7 @@ class CLI:
         vgmdb_id = audio_manager.getCustomTag(custom_tags.VGMDB_ID)
         if vgmdb_id and vgmdb_id[0].isdigit:
             logger.info("found album id in embedded tag")
-            use_embedded_id = questionary.confirm("use embedded album id?").ask()
+            use_embedded_id = questionary.confirm("use embedded album id?").skip_if(config.yes, default=constants.choices.yes.value).ask()
             if use_embedded_id:
                 return vgmdb_id[0]
 
@@ -211,7 +217,9 @@ class CLI:
                 Table.Column(header="Link", justify="left", style="green"),
                 Table.Column(header="Year", justify="center", style="yellow"),
             )
-            Table.tabulate(table_data, columns=columns, add_number_column=True, title=f"Search Results{f', year: {year}' if year and year_filter_flag else ' year: any'}")
+
+            if not config.no_input:
+                Table.tabulate(table_data, columns=columns, add_number_column=True, title=f"Search Results{f', year: {year}' if year and year_filter_flag else ' year: any'}")
 
             def is_choice_within_bounds(choice: str) -> bool | str:
                 if not choice:
@@ -223,17 +231,25 @@ class CLI:
                 return True if int(choice) >= 1 and int(choice) <= num_results else f"S.No. must be {f'between 1 and {num_results}' if num_results > 1 else 'equal to 1'}"
 
             if num_results == 0:
-                choice = questionary.text(
-                    f"No results found, provide: search term | {exit_ask} | {no_year_filter if year and year_filter_flag else year_filter} -> ",
-                    validate=is_choice_within_bounds,
-                ).ask()
+                choice = (
+                    questionary.text(
+                        f"No results found, provide: search term | {exit_ask} | {no_year_filter if year and year_filter_flag else year_filter} -> ",
+                        validate=is_choice_within_bounds,
+                    )
+                    .skip_if(config.no_input, default=None)
+                    .ask()
+                )
             else:
-                choice = questionary.text(
-                    f"Albums found: {num_results}, Provide S.No. [1-{num_results}] | Search Term | {exit_ask} | {no_year_filter if year and year_filter_flag else year_filter} -> ",
-                    default="1",
-                    validate=is_choice_within_bounds,
-                ).ask()
-            if choice is None:
+                choice = (
+                    questionary.text(
+                        f"Albums found: {num_results}, Provide S.No. [1-{num_results}] | Search Term | {exit_ask} | {no_year_filter if year and year_filter_flag else year_filter} -> ",
+                        default="1",
+                        validate=is_choice_within_bounds,
+                    )
+                    .skip_if(config.yes and num_results == 1, default="1")
+                    .ask()
+                )
+            if choice is None or (config.no_input and num_results):
                 return None
             if choice.lower() == no_year_filter.lower():
                 year_filter_flag = False

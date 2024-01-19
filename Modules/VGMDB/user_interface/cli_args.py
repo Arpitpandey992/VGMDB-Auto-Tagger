@@ -63,6 +63,9 @@ class CLIArgs(Tap):
             config.tag = False
         if self.no_rename:
             config.rename = False
+        if self.no_input:
+            config.no_input = True
+            config.yes = True
 
         if self.no_rename_folder:
             config.rename_folder = False
