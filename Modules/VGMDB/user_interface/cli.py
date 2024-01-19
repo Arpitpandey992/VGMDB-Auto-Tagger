@@ -1,7 +1,6 @@
-from enum import Enum
-import json
 import os
-from re import S
+import json
+import shutil
 
 # remove
 import sys
@@ -12,7 +11,7 @@ import questionary
 
 from typing import Callable
 
-from Imports.config import Config
+from Imports.config import Config, get_config
 from Modules.Mutagen.mutagenWrapper import IAudioManager
 from Modules.Mutagen.utils import extractYearFromDate
 from Modules.Print import Table
@@ -20,6 +19,7 @@ from Modules.Print.utils import LINE_SEPARATOR, SUB_LINE_SEPARATOR
 from Modules.Scan.Scanner import Scanner
 from Modules.Scan.models.local_album_data import LocalAlbumData
 from Modules.Tag import custom_tags
+from Modules.Tag.tagger import Tagger
 from Modules.Translate import translator
 from Modules.Utils.general_utils import get_default_logger, ifNot, printAndMoveBack
 from Modules.VGMDB.api import client
@@ -27,7 +27,7 @@ from Modules.VGMDB.models.vgmdb_album_data import VgmdbAlbumData
 from Modules.VGMDB.user_interface import constants
 from Modules.VGMDB.user_interface.cli_args import CLIArgs
 
-logger = get_default_logger(__name__, "debug")
+logger = get_default_logger(__name__, "info")
 
 
 """
@@ -47,7 +47,8 @@ ways to implement:
 
 class CLI:
     def __init__(self):
-        self.root_config = self._get_args().get_config()
+        cli_args = self._get_args()
+        self.root_config = self.get_config_from_args(cli_args)
         self.scanner = Scanner()
 
     def run(self):
@@ -55,6 +56,8 @@ class CLI:
         logger.info(LINE_SEPARATOR)
         logger.info(f"found {len(albums)} albums")
         for album in albums:
+            if self.root_config.backup:
+                self._backup_local_album(album)
             logger.info(SUB_LINE_SEPARATOR)
             logger.info(f"operating on {album.album_folder_name}")
             logger.info(SUB_LINE_SEPARATOR)
@@ -88,8 +91,11 @@ class CLI:
             logger.debug("operation cancelled by user")
             return
         if instruction == constants.choices.go_back:
-            self.operate(local_album_data, config)
+            return self.operate(local_album_data, config)
         # we are good to go :)
+
+        if config.tag:
+            Tagger(local_album_data, vgmdb_album_data, config).tag_files()
 
     # Private Functions
     def _confirm_before_proceeding(self, vgmdb_album_data: VgmdbAlbumData, config: Config) -> constants.choices:
@@ -135,11 +141,14 @@ class CLI:
                 for track_number, vgmdb_track in vgmdb_disc.tracks.items():
                     track_title = vgmdb_track.names.get_highest_priority_name([order for order in config.language_order if order != "translated"])  # don't wanna translate translated text ;)
                     printAndMoveBack(f"translating {track_title}")
+                    translated_names = []
                     for translate_language in config.translation_language:
                         translated_name = translator.translate(track_title, translate_language)
-                        vgmdb_track.names.add_names([translated_name], "translated") if translated_name else None
+                        translated_names.append(translated_name) if translated_name else None
+                    vgmdb_track.names.add_names(translated_names, "translated")
             printAndMoveBack("")
             logger.info("finished")
+
         table_data = []
         for disc_number, vgmdb_disc in vgmdb_album_data.discs.items():
             for track_number, vgmdb_track in vgmdb_disc.tracks.items():
@@ -243,7 +252,7 @@ class CLI:
                 choice = (
                     questionary.text(
                         f"Albums found: {num_results}, Provide S.No. [1-{num_results}] | Search Term | {exit_ask} | {no_year_filter if year and year_filter_flag else year_filter} -> ",
-                        default="1",
+                        default="1" if num_results == 1 else "",
                         validate=is_choice_within_bounds,
                     )
                     .skip_if(config.yes and num_results == 1, default="1")
@@ -285,14 +294,31 @@ class CLI:
                 return value[0], tag
         return None, None
 
-    def _get_args(self) -> CLIArgs:
+    def _backup_local_album(self, local_album_data: LocalAlbumData):
+        try:
+            backup_folder = self.root_config.backup_folder
+            album_folder = local_album_data.album_folder_path
+            backup_album_folder = os.path.join(backup_folder, os.path.basename(album_folder))
+            logger.info(f"backing Up {album_folder}")
+
+            if not os.path.exists(backup_folder):
+                os.makedirs(backup_folder)
+
+            shutil.copytree(album_folder, backup_album_folder, dirs_exist_ok=False)
+            logger.info(f"successfully backed up {album_folder} to {backup_album_folder}")
+        except Exception as e:
+            logger.error("backup couldn't Be completed, but this probably means that this folder was already backed up, so it 'should' be safe ;)")
+            logger.error(e)
+
+    def _get_args(self) -> dict:
+        """returns tuple of args combined from CLI and args derived from config.json file"""
         cli_args = CLIArgs().parse_args().as_dict()
         file_args = self._get_json_args()
         unexpected_args = set(file_args.keys()) - set(cli_args.keys())
         if unexpected_args:
             raise TypeError(f"unexpected argument in config.json: {', '.join(unexpected_args)}")
-        cli_args.update(file_args)  # config file has higher priority
-        return CLIArgs().from_dict(cli_args)
+        cli_args.update(file_args)
+        return cli_args
 
     def _get_json_args(self):
         """use config.json in root directory to override args"""
@@ -302,6 +328,59 @@ class CLI:
                 file_config = json.load(file)
                 return file_config
         return {}
+
+    def get_config_from_args(self, args: dict) -> Config:
+        config = get_config(**{k: v for k, v in args.items() if v})  # Removing None values first
+
+        if args["no_modify"]:
+            config.tag = False
+            config.rename = False
+        if args["no_tag"]:
+            config.tag = False
+        if args["no_rename"]:
+            config.rename = False
+        if args["no_input"]:
+            config.no_input = True
+            config.yes = True
+
+        if args["no_rename_folder"]:
+            config.rename_folder = False
+        if args["no_rename_files"]:
+            config.rename_files = False
+        if args["ksl"]:
+            config.folder_naming_template = "{[{catalog}] }{albumname}{ [{date}]}{ [{format}]}"
+
+        if args["no_title"]:
+            config.title = False
+        if args["no_scans"]:
+            config.scans_download = False
+        if args["no_cover"]:
+            config.album_cover = False
+        if args["cover_overwrite"]:
+            config.album_cover_overwrite = True
+
+        if args["one_lang"]:
+            config.all_lang = False
+        if args["album_data_only"]:
+            config.rename_files = False
+
+        if args["performers"]:
+            config.performers = True
+        if args["arrangers"]:
+            config.arrangers = True
+        if args["lyricists"]:
+            config.lyricists = True
+        if args["composers"]:
+            config.composers = True
+
+        elif args["english"]:
+            config.language_order = ["english", "translated", "romaji", "japanese", "other"]
+        elif args["romaji"]:
+            config.language_order = ["romaji", "english", "translated", "japanese", "other"]
+        if args["japanese"]:
+            config.language_order = ["japanese", "romaji", "translated", "english", "other"]
+
+        return config
 
 
 if __name__ == "__main__":

@@ -37,8 +37,9 @@ class Names(BaseModel):
             identified_language = self._identify_language(language_key)
             self.language_map[identified_language].append(value)
 
-    def add_names(self, name: list[str], language: LANGUAGES):
-        self.language_map[language] = name
+    def add_names(self, names: list[str], language: LANGUAGES):
+        self.language_map[language].clear()
+        self.language_map[language].extend(names)
 
     def clear_names(self, language: LANGUAGES):
         self.language_map[language].clear()

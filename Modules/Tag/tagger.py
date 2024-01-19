@@ -21,7 +21,6 @@ class Tagger:
     def __init__(self, local_album_data: LocalAlbumData, vgmdb_album_data: VgmdbAlbumData, config: Config):
         self.local_album_data, self.vgmdb_album_data = local_album_data, vgmdb_album_data
         self.config = config
-        self.vgmdb_album_data.link_local_album_data(self.local_album_data)
         self.matched_local_tracks = [track.local_track for _, disc in self.vgmdb_album_data.discs.items() for _, track in disc.tracks.items() if track.local_track]
         self.unmatched_local_tracks = self.vgmdb_album_data.unmatched_local_tracks
 
@@ -89,7 +88,7 @@ class Tagger:
             def addMultiValues(tag: list[ArrangerOrComposerOrLyricistOrPerformer] | None, tagInFile: str, flag: bool = True):
                 if not tag or not flag:
                     return
-                dude_names = [name for name in [dude.names.get_highest_priority_name(self.config.language_order) for dude in tag] if name]
+                dude_names = self._remove_duplicates([name for name in [dude.names.get_highest_priority_name(self.config.language_order) for dude in tag] if name])
                 audio_manager.setCustomTag(tagInFile, dude_names) if dude_names else None
 
             is_single = self.vgmdb_album_data.total_tracks_in_album == 1
@@ -119,8 +118,11 @@ class Tagger:
                     audio_manager.setTrackNumbers(track_number, disc.total_tracks)
 
     def _get_flag_filtered_names(self, names: Names) -> list[str]:
-        reordered_names = names.get_reordered_names(self.config.language_order)
+        reordered_names = self._remove_duplicates(names.get_reordered_names(self.config.language_order))
         return reordered_names if self.config.all_lang else reordered_names[:1]
+
+    def _remove_duplicates(self, arr: list) -> list:
+        return [x for i, x in enumerate(arr) if x not in arr[:i]]
 
 
 if __name__ == "__main__":

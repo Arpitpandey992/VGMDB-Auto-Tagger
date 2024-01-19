@@ -1,4 +1,5 @@
 {
-    "backup_folder": "~/Backup",
-    "romaji": true
+    "backup_folder": "/Users/arpit/Library/Custom/MusicBackup",
+    "backup": true,
+    "english": true
 }

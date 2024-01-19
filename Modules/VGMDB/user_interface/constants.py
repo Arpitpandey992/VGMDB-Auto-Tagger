@@ -20,6 +20,7 @@ CONFIG_MAP = {
     "Rename": "rename",
     "Tag Title (Enable/Disable tagging title field)": "title",
     "Keep Title (don't overwrite current title)": "keep_title",
+    "Album Data Only": "album_data_only",
     "Translate": "translate",
 }
 

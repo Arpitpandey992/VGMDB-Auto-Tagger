@@ -1,5 +1,4 @@
 from tap import Tap
-from Imports.config import Config, get_config
 
 from Utility.template import TemplateResolver
 
@@ -52,56 +51,3 @@ class CLIArgs(Tap):
     def process_args(self):
         if self.folder_naming_template:
             TemplateResolver.validateTemplate(self.folder_naming_template)  # will raise exception if not valid
-
-    def get_config(self) -> Config:
-        config = get_config(**{k: v for k, v in self.as_dict().items() if v})  # Removing None values first
-
-        if self.no_modify:
-            config.tag = False
-            config.rename = False
-        if self.no_tag:
-            config.tag = False
-        if self.no_rename:
-            config.rename = False
-        if self.no_input:
-            config.no_input = True
-            config.yes = True
-
-        if self.no_rename_folder:
-            config.rename_folder = False
-        if self.no_rename_files:
-            config.rename_files = False
-        if self.ksl:
-            config.folder_naming_template = "{[{catalog}] }{albumname}{ [{date}]}{ [{format}]}"
-
-        if self.no_title:
-            config.title = False
-        if self.no_scans:
-            config.scans_download = False
-        if self.no_cover:
-            config.album_cover = False
-        if self.cover_overwrite:
-            config.album_cover_overwrite = True
-
-        if self.one_lang:
-            config.all_lang = False
-        if self.album_data_only:
-            config.rename_files = False
-
-        if self.performers:
-            config.performers = True
-        if self.arrangers:
-            config.arrangers = True
-        if self.lyricists:
-            config.lyricists = True
-        if self.composers:
-            config.composers = True
-
-        elif self.english:
-            config.language_order = ["english", "translated", "romaji", "japanese", "other"]
-        elif self.romaji:
-            config.language_order = ["romaji", "english", "translated", "japanese", "other"]
-        if self.japanese:
-            config.language_order = ["japanese", "romaji", "translated", "english", "other"]
-
-        return config
