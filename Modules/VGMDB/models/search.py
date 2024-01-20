@@ -7,11 +7,11 @@ from Modules.VGMDB.models.vgmdb_album_data import Names
 
 class SearchAlbum(BaseModel):
     catalog: str
-    category: str
     link: str
-    media_format: str
     release_date: str
     titles: Names
+    media_format: str | None = None
+    category: str | None = None
 
     @property
     def album_id(self) -> str:

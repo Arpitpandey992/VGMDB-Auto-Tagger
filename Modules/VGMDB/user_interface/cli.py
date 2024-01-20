@@ -15,7 +15,7 @@ from Imports.config import Config, get_config
 from Modules.Mutagen.mutagenWrapper import IAudioManager
 from Modules.Mutagen.utils import extractYearFromDate
 from Modules.Print import Table
-from Modules.Print.utils import LINE_SEPARATOR, SUB_LINE_SEPARATOR
+from Modules.Print.utils import LINE_SEPARATOR
 from Modules.Scan.Scanner import Scanner
 from Modules.Scan.models.local_album_data import LocalAlbumData
 from Modules.Tag import custom_tags
@@ -25,6 +25,7 @@ from Modules.Utils.general_utils import get_default_logger, ifNot, printAndMoveB
 from Modules.VGMDB.api import client
 from Modules.VGMDB.models.vgmdb_album_data import VgmdbAlbumData
 from Modules.VGMDB.user_interface import constants
+from Modules.VGMDB.constants import VGMDB_OFFICIAL_BASE_URL
 from Modules.VGMDB.user_interface.cli_args import CLIArgs
 
 logger = get_default_logger(__name__, "info")
@@ -58,20 +59,20 @@ class CLI:
         for album in albums:
             if self.root_config.backup:
                 self._backup_local_album(album)
-            logger.info(SUB_LINE_SEPARATOR)
+            logger.info(LINE_SEPARATOR)
             logger.info(f"operating on {album.album_folder_name}")
-            logger.info(SUB_LINE_SEPARATOR)
+            logger.info(LINE_SEPARATOR)
             try:
                 local_album_config = self.root_config.model_copy()
                 local_album_config.root_dir = album.album_folder_path
                 self.operate(album, local_album_config)
-                logger.info(SUB_LINE_SEPARATOR)
+                logger.info(LINE_SEPARATOR)
                 logger.info(f"successfully finished all oprations on {album.album_folder_name}")
-                logger.info(SUB_LINE_SEPARATOR)
+                logger.info(LINE_SEPARATOR)
             except Exception as e:
-                logger.info(SUB_LINE_SEPARATOR)
+                logger.info(LINE_SEPARATOR)
                 logger.error(f"error occurred: {type(e).__name__} -> {e}, skipping {album.album_folder_path}")
-                logger.info(SUB_LINE_SEPARATOR)
+                logger.info(LINE_SEPARATOR)
 
     def operate(self, local_album_data: LocalAlbumData, config: Config):
         logger.debug(f"fetching album id")
@@ -79,7 +80,7 @@ class CLI:
         if not album_id:
             raise Exception(f"could not find album id for folder: {local_album_data.album_folder_path}")
 
-        logger.debug(f"fetching album data with album id: {album_id}")
+        logger.info(f"fetching album data with album id: {album_id}")
         vgmdb_album_data = client.get_album_details(album_id)
 
         logger.debug("linking local album data with vgmdb album data")
@@ -193,7 +194,7 @@ class CLI:
         vgmdb_id = audio_manager.getCustomTag(custom_tags.VGMDB_ID)
         if vgmdb_id and vgmdb_id[0].isdigit:
             logger.info("found album id in embedded tag")
-            use_embedded_id = questionary.confirm("use embedded album id?").skip_if(config.yes, default=constants.choices.yes.value).ask()
+            use_embedded_id = questionary.confirm(f"use embedded album id ({VGMDB_OFFICIAL_BASE_URL}/album/{vgmdb_id[0]})?").skip_if(config.yes, default=constants.choices.yes.value).ask()
             if use_embedded_id:
                 return vgmdb_id[0]
 
@@ -211,13 +212,13 @@ class CLI:
         year = extractYearFromDate(audio_manager.getDate())
 
         # keep searching for album using interaction with the user
-        album_found, exit_flag, album_id, year_filter_flag = False, False, None, True
-        exit_ask, year_filter, no_year_filter = "Exit", "yearFilter", "noYearFilter"
+        album_found, exit_flag, album_id = False, False, None
+        exit_ask, year_filter = "Exit", "Year"
         while not album_found and not exit_flag:
             logger.info(f"searching for {search_term}")
             search_result = client.search_album(search_term)
 
-            table_data = [(result.catalog, result.get_album_name(config.language_order), result.album_link, result.release_year) for result in search_result if (not year_filter_flag) or (year and result.release_year == year)]
+            table_data = [(result.catalog, result.get_album_name(config.language_order), result.album_link, result.release_year) for result in search_result if not year or result.release_year == year]
             num_results = len(table_data)
             table_data = sorted(table_data, key=lambda x: x[1])
             columns = (
@@ -228,7 +229,7 @@ class CLI:
             )
 
             if not config.no_input:
-                Table.tabulate(table_data, columns=columns, add_number_column=True, title=f"Search Results{f', year: {year}' if year and year_filter_flag else ' year: any'}")
+                Table.tabulate(table_data, columns=columns, add_number_column=True, title=f"Search Results, Search Term: {search_term}{f', year: {year}' if year else ''}")
 
             def is_choice_within_bounds(choice: str) -> bool | str:
                 if not choice:
@@ -239,10 +240,15 @@ class CLI:
                     return "No results available, provide search term or exit"
                 return True if int(choice) >= 1 and int(choice) <= num_results else f"S.No. must be {f'between 1 and {num_results}' if num_results > 1 else 'equal to 1'}"
 
+            def is_year_valid(year: str) -> bool | str:
+                if not year or (len(year) == 4 and year.isdigit()):
+                    return True
+                return "Year must contain exactly 4 Digits or be empty"
+
             if num_results == 0:
                 choice = (
                     questionary.text(
-                        f"No results found, provide: search term | {exit_ask} | {no_year_filter if year and year_filter_flag else year_filter} -> ",
+                        f"No results found, provide: search term | {year_filter} | {exit_ask}:",
                         validate=is_choice_within_bounds,
                     )
                     .skip_if(config.no_input, default=None)
@@ -251,19 +257,23 @@ class CLI:
             else:
                 choice = (
                     questionary.text(
-                        f"Albums found: {num_results}, Provide S.No. [1-{num_results}] | Search Term | {exit_ask} | {no_year_filter if year and year_filter_flag else year_filter} -> ",
+                        f"Albums found: {num_results}, Provide S.No. [1-{num_results}] | Search Term | {year_filter} | {exit_ask}:",
                         default="1" if num_results == 1 else "",
                         validate=is_choice_within_bounds,
                     )
                     .skip_if(config.yes and num_results == 1, default="1")
                     .ask()
                 )
+
             if choice is None or (config.no_input and num_results):
                 return None
-            if choice.lower() == no_year_filter.lower():
-                year_filter_flag = False
             elif choice.lower() == year_filter.lower():
-                year_filter_flag = True
+                choice = questionary.text(
+                    "Provide Year to Filter (Leave Empty to Disable Filter):",
+                    default=year if year else "",
+                    validate=is_year_valid,
+                ).ask()
+                year = choice if choice else None
             elif choice.lower() == exit_ask.lower():
                 exit_flag = True
             elif choice.isdigit():
