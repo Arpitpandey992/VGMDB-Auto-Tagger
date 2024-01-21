@@ -1,4 +1,3 @@
-import os
 from math import ceil, log10
 import re
 from typing import Any, Literal, Optional, Union
@@ -46,7 +45,7 @@ pictureTypes = Literal[
 ]
 
 
-def isString(var) -> bool:
+def isString(var: Any) -> bool:
     return isinstance(var, str)
 
 
@@ -89,10 +88,10 @@ def splitAndGetSecond(discNumber: Optional[str]) -> Optional[str]:
     return discNumber
 
 
-def getFirstElement(listVariable: Optional[Union[list, Any]]) -> Any:
-    if type(listVariable) is not list:
-        return listVariable
-    return listVariable[0]
+def getFirstElement(listVariable: list[Any] | Any) -> Any:
+    if isinstance(listVariable, list):
+        return listVariable[0] if listVariable else None
+    return listVariable
 
 
 def getProperCount(count: Union[str, int], totalCount: Union[str, int]) -> tuple[str, str]:
@@ -115,17 +114,19 @@ def convertStringToNumber(var: Optional[str]) -> Optional[int]:
     return int(var)
 
 
-def toList(var: Optional[list]) -> list:
+def toList(var: Optional[list[Any]]) -> list[Any]:
     """converts None to empty list"""
     if not var:
         return []
     return var
+
 
 def is_date_in_YYYY_MM_DD(date: str) -> bool:
     if not date:
         return False
     pattern = re.compile(r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$")
     return bool(pattern.match(date[0]))
+
 
 def cleanDate(date_str: str) -> str:
     """
@@ -145,17 +146,6 @@ def extractYearFromDate(dat: Optional[str]) -> Optional[str]:
         return None
     cleaned_date = cleanDate(dat)
     return cleaned_date[0:4] if len(cleaned_date) >= 4 else None
-
-
-def checkForEmptyListArgument(func):
-    def wrapper(self, *args, **kwargs):
-        for arg in args:
-            if not arg and isinstance(arg, list):
-                logger.debug(f"received an empty list for function call: {func.__name__} under class: {self.__class__.__name__} in file: {self.audio.filename}")
-                return  # Return early if the list is empty
-        return func(self, *args, **kwargs)
-
-    return wrapper
 
 
 def _ensureNumCharacters(s: str, numCharacters: int) -> str:

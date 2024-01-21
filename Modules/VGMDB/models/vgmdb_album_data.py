@@ -1,5 +1,5 @@
 import os
-from typing import get_args
+from typing import Any, get_args
 from pydantic import BaseModel, field_validator
 
 from Imports.constants import LANGUAGES
@@ -26,7 +26,7 @@ class Names(BaseModel):
 
     language_map: dict[LANGUAGES, list[str]] = {}
 
-    def __init__(self, **language_dict):
+    def __init__(self, **language_dict: Any):
         # for identifying whether the incoming data is from a pre existing Names object:
         if "language_map" in language_dict:
             super().__init__(**language_dict)
@@ -165,7 +165,7 @@ class VgmdbAlbumData(BaseModel):
 
     @field_validator("discs", mode="before")
     @classmethod
-    def convert_discs_from_list_to_dict(cls, discs: list | dict[int, VgmdbDiscData]) -> dict[int, VgmdbDiscData]:
+    def convert_discs_from_list_to_dict(cls, discs: list[Any] | dict[int, Any]) -> dict[int, VgmdbDiscData]:
         if isinstance(discs, dict) and all(isinstance(disc, VgmdbDiscData) for disc in discs.values()):
             # if we initializing this object with the proper value it is expecting
             return discs
@@ -189,7 +189,7 @@ class VgmdbAlbumData(BaseModel):
     def link_local_album_data(self, local_album_data: LocalAlbumData):
         """function for linking local files with vgmdb tracks"""
         # filling unmatched local tracks
-        temp_unmatched_local_tracks_set = set()
+        temp_unmatched_local_tracks_set: set[LocalTrackData] = set()
         temp_unmatched_local_tracks_set.update(local_album_data.get_all_tracks())
         # Firstly, using a simple algorithm to link files according to matching disc number and track number
         for disc_number, disc in self.discs.items():
@@ -248,7 +248,7 @@ class VgmdbAlbumData(BaseModel):
             os.makedirs(coverPath)
         for cover in self.covers:
             downloadFile(url=cover.full, output_dir=coverPath, name=cover.name)
-            if cover.name.lower() == "front" or cover.name.lower == "cover":
+            if cover.name.lower() == "front" or cover.name.lower() == "cover":
                 frontPictureExists = True
         if not frontPictureExists and self.picture_full:
             downloadFile(url=self.picture_full, output_dir=coverPath, name="Front")
@@ -259,7 +259,7 @@ def test():
 
     data = get_album_details("123")
     print(data.pprint())
-    new_data = VgmdbAlbumData(**data.model_dump())
+    VgmdbAlbumData(**data.model_dump())
 
 
 if __name__ == "__main__":

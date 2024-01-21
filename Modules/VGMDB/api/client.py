@@ -1,4 +1,5 @@
 import time
+from typing import Any
 from urllib.parse import urljoin
 import requests
 import os
@@ -23,6 +24,7 @@ class VgmdbRequestException(requests.RequestException):
         super().__init__(message)
 
 
+vgmdb_info_base_url = VGMDB_INFO_BASE_URL
 if USE_LOCAL_SERVER:
     try:
         from Modules.VGMDB.api.vgmdb_info import run_server
@@ -30,7 +32,7 @@ if USE_LOCAL_SERVER:
         logger.info("starting vgmdb.info server")
         logger.debug(SUB_LINE_SEPARATOR)
         baseAddress = run_server()
-        VGMDB_INFO_BASE_URL = baseAddress
+        vgmdb_info_base_url = baseAddress
         logger.debug(SUB_LINE_SEPARATOR)
     except Exception as e:
         logger.error(
@@ -45,12 +47,13 @@ error:
 """.strip()
         )
 
-logger.info(f"using {VGMDB_INFO_BASE_URL} for VGMDB API")
+logger.info(f"using {vgmdb_info_base_url} for VGMDB API")
 
-album_cache, search_cache = {}, {}
+album_cache: dict[str, VgmdbAlbumData] = {}
+search_cache: dict[str, list[SearchAlbum]] = {}
 
 
-def get_request(url: str) -> dict | Exception:
+def get_request(url: str) -> dict[str, Any] | Exception:
     backoff_secs = 1
     found_exception = Exception("empty exception")
     for _ in range(APICALLRETRIES):
@@ -72,7 +75,7 @@ def get_album_details(album_id: str) -> VgmdbAlbumData:
     if album_id in album_cache:
         return album_cache[album_id]
 
-    url = urljoin(VGMDB_INFO_BASE_URL, f"album/{album_id}")
+    url = urljoin(vgmdb_info_base_url, f"album/{album_id}")
     vgmdb_album_data = get_request(url)
     if isinstance(vgmdb_album_data, Exception):
         raise VgmdbRequestException(f"could not retrieve album details from vgmdb for albumID: {album_id}")
@@ -86,7 +89,7 @@ def search_album(search_term: str) -> list[SearchAlbum]:
     if search_term in search_cache:
         return search_cache[search_term]
 
-    url = urljoin(VGMDB_INFO_BASE_URL, f"search?q={search_term}")
+    url = urljoin(vgmdb_info_base_url, f"search?q={search_term}")
     search_result = get_request(url)
     if isinstance(search_result, Exception):
         raise VgmdbRequestException(f"could not search for {search_term} from vgmdb")

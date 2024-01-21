@@ -2,9 +2,9 @@
 import sys
 import os
 
-
 sys.path.append(os.getcwd())
 # remove
+from typing import Any
 
 from Imports.config import Config
 from Modules.Tag import custom_tags
@@ -121,7 +121,7 @@ class Tagger:
         reordered_names = self._remove_duplicates(names.get_reordered_names(self.config.language_order))
         return reordered_names if self.config.all_lang else reordered_names[:1]
 
-    def _remove_duplicates(self, arr: list) -> list:
+    def _remove_duplicates(self, arr: list[Any]) -> list[Any]:
         return [x for i, x in enumerate(arr) if x not in arr[:i]]
 
 

@@ -1,3 +1,4 @@
+from typing import Any
 from pydantic import BaseModel
 
 # REMOVE
@@ -68,15 +69,15 @@ class Config(BaseModel):
         """access the internal variables like a dict, will raise a KeyError if invalid key"""
         return self.__dict__[key]
 
-    def set_dynamically(self, key: str, val):
+    def set_dynamically(self, key: str, val: Any):
         """set the internal variables like a dict, will raise a KeyError if invalid key"""
         self.__dict__[key] = val
 
 
-config_cache = {}
+config_cache: dict[str, Any] = {}
 
 
-def get_config(root_dir, **kwargs):
+def get_config(root_dir: str, **kwargs: Any):
     global config_cache
     if root_dir in config_cache:
         return config_cache[root_dir]

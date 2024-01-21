@@ -82,7 +82,7 @@ def test():
     if not album:
         return
     print(album.pprint())
-    new_album = LocalAlbumData(**album.model_dump())
+    LocalAlbumData(**album.model_dump())
 
 
 if __name__ == "__main__":

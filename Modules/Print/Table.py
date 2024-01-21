@@ -1,3 +1,4 @@
+from typing import Any
 from pydantic import BaseModel
 from rich.console import Console, JustifyMethod, OverflowMethod
 from rich.align import VerticalAlignMethod
@@ -21,12 +22,12 @@ class Column(BaseModel):
 
 
 def tabulate(
-    table_data: list[tuple],
+    table_data: list[tuple[Any, ...]],
     *,
     columns: tuple[Column, ...] | None = None,
     add_number_column: bool = False,
     title: str | None = None,
-    **kwargs,
+    **kwargs: Any,
 ):
     show_header = any(column.header for column in columns) if columns else False
     show_footer = any(column.footer for column in columns) if columns else False

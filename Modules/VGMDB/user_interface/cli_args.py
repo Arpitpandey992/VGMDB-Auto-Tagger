@@ -1,4 +1,8 @@
+import json
+import os
+from typing import Any
 from tap import Tap
+from Imports.config import Config, get_config
 
 from Utility.template import TemplateResolver
 
@@ -51,3 +55,84 @@ class CLIArgs(Tap):
     def process_args(self):
         if self.folder_naming_template:
             TemplateResolver.validateTemplate(self.folder_naming_template)  # will raise exception if not valid
+
+
+def get_config_from_args() -> Config:
+    """returns a Config instance after parsing the cli arguments and config present in config.json"""
+    args = _get_args()
+    config = get_config(**{k: v for k, v in args.items() if v})  # Removing None values first
+
+    if args["no_modify"]:
+        config.tag = False
+        config.rename = False
+    if args["no_tag"]:
+        config.tag = False
+    if args["no_rename"]:
+        config.rename = False
+    if args["no_input"]:
+        config.no_input = True
+        config.yes = True
+
+    if args["no_rename_folder"]:
+        config.rename_folder = False
+    if args["no_rename_files"]:
+        config.rename_files = False
+    if args["ksl"]:
+        config.folder_naming_template = "{[{catalog}] }{albumname}{ [{date}]}{ [{format}]}"
+
+    if args["no_title"]:
+        config.title = False
+    if args["no_scans"]:
+        config.scans_download = False
+    if args["no_cover"]:
+        config.album_cover = False
+    if args["cover_overwrite"]:
+        config.album_cover_overwrite = True
+
+    if args["one_lang"]:
+        config.all_lang = False
+    if args["album_data_only"]:
+        config.rename_files = False
+
+    if args["performers"]:
+        config.performers = True
+    if args["arrangers"]:
+        config.arrangers = True
+    if args["lyricists"]:
+        config.lyricists = True
+    if args["composers"]:
+        config.composers = True
+
+    elif args["english"]:
+        config.language_order = ["english", "translated", "romaji", "japanese", "other"]
+    elif args["romaji"]:
+        config.language_order = ["romaji", "english", "translated", "japanese", "other"]
+    if args["japanese"]:
+        config.language_order = ["japanese", "romaji", "translated", "english", "other"]
+
+    return config
+
+
+def _get_args() -> dict[str, Any]:
+    """returns tuple of args combined from CLI and args derived from config.json file"""
+    cli_args = _get_cli_args()
+    file_args = _get_json_args()
+    unexpected_args = set(file_args.keys()) - set(cli_args.keys())
+    if unexpected_args:
+        raise TypeError(f"unexpected argument in config.json: {', '.join(unexpected_args)}")
+    cli_args.update(file_args)
+    return cli_args
+
+
+def _get_cli_args() -> dict[str, Any]:
+    return CLIArgs().parse_args().as_dict()
+
+
+def _get_json_args() -> dict[str, Any]:
+    """use config.json in root directory to override args"""
+    config_file_path = "config.json"
+    if os.path.exists(config_file_path):
+        with open(config_file_path, "r") as file:
+            file_config = json.load(file)
+            return file_config
+    return {}

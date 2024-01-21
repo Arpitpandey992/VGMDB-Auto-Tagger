@@ -1,7 +1,7 @@
 import os
 import sys
 import logging
-from typing import Literal, Union, Optional
+from typing import Any, Literal, Union, Optional
 from math import ceil, log10
 from dotenv import load_dotenv
 
@@ -42,7 +42,7 @@ def getProperCount(count: Union[str, int], totalCount: Union[str, int]) -> str:
     return str(count)
 
 
-def ifNot(var, otherwise):
+def ifNot(var: Any, otherwise: Any) -> Any:
     """checks if var is None (or empty list and all) and returns otherwise, else returns var"""
     return var if var else otherwise
 
@@ -101,10 +101,10 @@ def cleanSearchTerm(name: Optional[str]) -> Optional[str]:
     if name is None:
         return None
 
-    def isJapanese(ch):
+    def isJapanese(ch: str) -> bool:
         return ord(ch) >= 0x4E00 and ord(ch) <= 0x9FFF
 
-    def isChinese(ch):
+    def isChinese(ch: str) -> bool:
         return ord(ch) >= 0x3400 and ord(ch) <= 0x4DFF
 
     ans = ""

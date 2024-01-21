@@ -51,15 +51,15 @@ class Scanner:
             return None
         return self._compile_album_data_from_track_data(folder_path, audio_files)
 
-    def get_supported_audio_files_in_folder(self, folder_path: str, max_depth=-1) -> list[LocalTrackData]:
+    def get_supported_audio_files_in_folder(self, folder_path: str, max_depth: int = -1) -> list[LocalTrackData]:
         """get a list of all supported audio files inside a folder, provide max_depth for recursion depth while scanning"""
         return self._get_supported_audio_files_in_folder(folder_path, max_depth)
 
     # private functions
-    def _get_supported_audio_files_in_folder(self, folder_path: str, max_depth, current_depth: int = 1) -> list[LocalTrackData]:
+    def _get_supported_audio_files_in_folder(self, folder_path: str, max_depth: int, current_depth: int = 1) -> list[LocalTrackData]:
         if max_depth > 0 and current_depth > max_depth:
             return []
-        audio_tracks = []
+        audio_tracks: list[LocalTrackData] = []
         for entry in os.listdir(folder_path):
             entry_path = os.path.join(folder_path, entry)
             if os.path.isfile(entry_path):
@@ -150,7 +150,7 @@ class Scanner:
             if found_album:
                 return [found_album]
 
-        found_albums = []
+        found_albums: list[LocalAlbumData] = []
         for entry in os.listdir(folder_path):
             entry_path = os.path.join(folder_path, entry)
             if os.path.isdir(entry_path):

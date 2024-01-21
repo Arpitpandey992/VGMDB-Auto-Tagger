@@ -8,7 +8,7 @@ class choices(Enum):
     edit_configs = "Edit Configs"
 
     @classmethod
-    def from_value(cls, value):
+    def from_value(cls, value: str):
         for member in cls:
             if member.value == value:
                 return member
