@@ -1,5 +1,6 @@
 {
     "backup_folder": "/Users/arpit/Library/Custom/MusicBackup",
     "backup": true,
-    "english": true
+    "english": true,
+    "cover_overwrite": true
 }

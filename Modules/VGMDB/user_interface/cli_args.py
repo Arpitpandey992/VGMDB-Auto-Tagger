@@ -4,7 +4,7 @@ from typing import Any
 from tap import Tap
 from Imports.config import Config, get_config
 
-from Utility.template import TemplateResolver
+from Modules.organize.template import TemplateResolver
 
 
 class CLIArgs(Tap):

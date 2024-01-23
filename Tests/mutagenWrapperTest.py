@@ -1,15 +1,17 @@
 import os
 import shutil
 import string
-import sys
 import random
 from typing import Callable, Optional
 import unittest
 
-from Modules.Print.utils import LINE_SEPARATOR
+# remove
+import sys
 
 sys.path.append(os.getcwd())
-from Modules.Mutagen.mutagenWrapper import AudioFactory, IAudioManager, pictureTypes, pictureNameToNumber
+# remove
+from Modules.Print.utils import LINE_SEPARATOR
+from Modules.Mutagen.mutagenWrapper import AudioFactory, IAudioManager, pictureNameToNumber
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 baseFolder = os.path.join(__location__, "testSamples", "baseSamples")

@@ -1,6 +1,6 @@
 import os
 import base64
-from typing import Union, Optional
+from typing import Any, Union, Optional
 from abc import ABC, abstractmethod
 
 from mutagen.mp3 import MP3
@@ -159,11 +159,11 @@ class IAudioManager(ABC):
         """See the metadata information in Human Readable Format"""
 
     @abstractmethod
-    def getInfo(self):
+    def getInfo(self) -> Any:
         """get the info metadata object"""
 
     @abstractmethod
-    def getExtension(self) -> int:
+    def getExtension(self) -> str:
         """get the extension name of the file"""
 
     @abstractmethod
@@ -646,19 +646,19 @@ class MP4Wrapper(IAudioManager):
 
     def getDiscNumber(self):
         disk = toList(getFirstElement(self.audio.get("disk")))
-        return disk[0] if disk else None
+        return convertStringToNumber(disk[0]) if disk else None
 
     def getTotalDiscs(self):
         disk = toList(getFirstElement(self.audio.get("disk")))
-        return disk[1] if disk else None
+        return convertStringToNumber(disk[1]) if disk else None
 
     def getTrackNumber(self):
         trkn = toList(getFirstElement(self.audio.get("trkn")))
-        return trkn[0] if trkn else None
+        return convertStringToNumber(trkn[0]) if trkn else None
 
     def getTotalTracks(self):
         trkn = toList(getFirstElement(self.audio.get("trkn")))
-        return trkn[1] if trkn else None
+        return convertStringToNumber(trkn[1]) if trkn else None
 
     def getComment(self):
         return toList(self.audio.get("\xa9cmt"))

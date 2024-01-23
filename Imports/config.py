@@ -48,12 +48,14 @@ class Config(BaseModel):
     disc_numbers: bool = True
     track_numbers: bool = True
 
-    # Rename:
-    rename: bool = True
+    # Organization:
+    organize: bool = True
     rename_folder: bool = True
     rename_files: bool = True
     same_folder_name: bool = False
-    folder_naming_template: str = "{[{date}] }{albumname}{ [{catalog}]}{ [{format}]}"
+    folder_naming_template: str = "{[{date|year}] }{albumname|foldername}{ [{catalog}]}{ [{format}]}"
+    file_naming_template: str = "{{tracknumber|sortnumber}. }{tracktitle|trackname}{extension}"
+    disc_folder_naming_template: str = "Disc {discnumber}{. {discname|discfoldername}}"
 
     # Extra stuff
     scans_download: bool = True

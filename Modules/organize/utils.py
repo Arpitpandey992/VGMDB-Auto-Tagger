@@ -8,7 +8,7 @@ from Modules.Mutagen.mutagenWrapper import supportedExtensions
 from Utility.audioUtils import getFolderTrackData, getOneAudioFile
 from Modules.Utils.general_utils import cleanName, fixDate, getProperCount, printAndMoveBack
 from Modules.Mutagen.mutagenWrapper import AudioFactory, IAudioManager
-from Utility.template import TemplateResolver
+from Modules.organize.template import TemplateResolver
 from Modules.Utils.general_utils import get_default_logger
 
 FOLDER_NAMING_TEMPLATE = {
@@ -139,7 +139,14 @@ def renameAlbumFolder(folderPath: str, renameTemplate: str) -> None:
     if date:
         date = date.replace("-", ".")
 
-    templateMapping: dict[str, Optional[str]] = {"albumname": albumName, "catalog": audio.getCatalog(), "date": date, "foldername": folderName, "barcode": audio.getCustomTag("barcode"), "format": deduceAudioDetails(audio)}
+    templateMapping: dict[str, Optional[str]] = {
+        "albumname": albumName,
+        "catalog": audio.getCatalog(),
+        "date": date,
+        "foldername": folderName,
+        "barcode": audio.getCustomTag("barcode"),
+        "format": deduceAudioDetails(audio),
+    }
 
     templateResolver = TemplateResolver(templateMapping)
     newFolderName = templateResolver.evaluate(renameTemplate)

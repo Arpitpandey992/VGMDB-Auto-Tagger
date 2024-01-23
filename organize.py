@@ -4,7 +4,7 @@ from Imports.config import Config
 from Modules.Rename.utils import organizeFiles, renameFilesInternal
 from Modules.Rename.utils import organizeAlbum
 from Modules.Utils.general_utils import get_default_logger
-from Utility.template import isValidTemplate
+from Modules.organize.template import isValidTemplate
 
 
 def argumentParser():

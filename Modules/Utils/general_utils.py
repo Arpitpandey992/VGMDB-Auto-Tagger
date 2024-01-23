@@ -47,6 +47,12 @@ def ifNot(var: Any, otherwise: Any) -> Any:
     return var if var else otherwise
 
 
+def getFirstOrNone(var: list[Any] | None) -> Any | None:
+    if not var:
+        return None
+    return var[0]
+
+
 forbiddenCharacters = {
     "<": "ᐸ",
     ">": "ᐳ",

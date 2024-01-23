@@ -16,7 +16,7 @@ from Modules.VGMDB.vgmdbrip.vgmdbrip import downloadScans, downloadScansNoAuth
 
 from Modules.VGMDB.models.vgmdb_album_data import VgmdbAlbumData
 from Modules.VGMDB.models.search import SearchAlbumData
-from Utility.template import TemplateResolver, TemplateValidationException
+from Modules.organize.template import TemplateResolver, TemplateValidationException
 from Modules.VGMDB.api.client import get_album_details, searchAlbum
 
 logger = get_default_logger("albumTagger")

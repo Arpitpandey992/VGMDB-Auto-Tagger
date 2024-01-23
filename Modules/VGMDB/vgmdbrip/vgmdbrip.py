@@ -20,7 +20,7 @@ def is_logged_in(current_session) -> bool:
     return login_element is None
 
 
-def login(config):
+def login(config: str):
     global session
     logged_in = False
     if os.path.isfile(config):
@@ -29,6 +29,7 @@ def login(config):
             logged_in = True
             session = temp_session
     if not logged_in:
+        print("Please log in to VGMDB for downloading all scans")
         while True:
             username = input("VGMdb username:\t")
             password = getpass.getpass("VGMdb password:\t")
@@ -95,12 +96,12 @@ def downloadScans(output_dir: str, albumID: str):
     for scan in scans:
         url = scan["href"]
         title = remove(scan.text.strip(), '"*/:<>?\|')  # type: ignore
-        print(f"downloading {title}..........", end="", flush=True)
+        print(f"Downloading {title}..........", end="", flush=True)
         try:
             downloadFile(url=url, output_dir=finalScanFolder, name=title)
-            print("done")
+            print("Done")
         except Exception as e:
-            print(f"failed, error:\n{e}")
+            print(f"failed, error: {e}")
     pickle.dump(session, open(config, "wb"))
 
 

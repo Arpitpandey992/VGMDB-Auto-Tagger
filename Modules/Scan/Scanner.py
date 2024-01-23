@@ -45,7 +45,7 @@ class Scanner:
 
     def scan_album_in_folder_if_exists(self, folder_path: str) -> Optional[LocalAlbumData]:
         """returns a single album if the given folders contains files belonging to a single album"""
-        logger.info(f"scanning {folder_path}")
+        logger.info(f"Scanning {folder_path}")
         audio_files = self.get_supported_audio_files_in_folder(folder_path)
         if not self._does_audio_files_belong_to_one_album_only(audio_files):
             return None
@@ -65,7 +65,7 @@ class Scanner:
             if os.path.isfile(entry_path):
                 try:
                     audio_manager = mutagenWrapper.AudioFactory.buildAudioManager(entry_path)
-                    audio_tracks.append(LocalTrackData(file_path=entry_path, file_name=entry, audio_manager=audio_manager, depth_in_parent_folder=current_depth))
+                    audio_tracks.append(LocalTrackData(file_path=entry_path, audio_manager=audio_manager, depth_in_parent_folder=current_depth))
                 except mutagenWrapper.UnsupportedFileFormatError:
                     pass
                 except Exception as e:
@@ -86,10 +86,14 @@ class Scanner:
                 logger.debug(f"track number not present in {track.file_path}, adding to unclean tracks")
                 album_data.unclean_tracks.append(track)
                 continue
+            else:
+                track_number = int(track_number)
 
             if not disc_number:
                 logger.debug(f"disc number not present in {track.file_path}, taking default value: {constants.DEFAULT_DISC_NUMBER}")
                 disc_number = constants.DEFAULT_DISC_NUMBER
+            else:
+                disc_number = int(disc_number)
 
             existing_track = album_data.get_track(disc_number, track_number)
             if existing_track:
