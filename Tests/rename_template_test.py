@@ -83,6 +83,23 @@ class RenameTemplateTest(unittest.TestCase):
             TemplateResolver(self.mapping).evaluate("{{{{tracknumber|sortnumber}. }{tracktITle}}|filename}{extension}"),
             f"{self.mapping['fileName']}{self.mapping['extension']}",
         )
+        self.assertEqual(
+            TemplateResolver(self.mapping).evaluate("tracktITle|filename"),
+            f"{self.mapping['fileName']}",
+        )
+        self.assertEqual(
+            TemplateResolver(self.mapping).evaluate("filename |   tracktITle | "),
+            f"{self.mapping['fileName']}",
+        )
+        self.mapping["fileName"] = None
+        self.assertEqual(
+            TemplateResolver(self.mapping).evaluate("filename |   tracktITle |   "),
+            "   ",
+        )
+        self.assertEqual(
+            TemplateResolver(self.mapping).evaluate("filename |   tracktITle |Default Title"),
+            "Default Title",
+        )
 
 
 if __name__ == "__main__":

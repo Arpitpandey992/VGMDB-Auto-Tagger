@@ -4,6 +4,17 @@ class TemplateValidationException(ValueError):
 
 
 class TemplateResolver:
+    """
+    Template Resolver Class
+    Rules:
+        everything under curly braces '{}' is evaluated individually
+        if there is no top level | (OR operator) inside a curly braces, then:
+            the expression under curly braces is again evaluated and every curly brace under this MUST evaluate to non None value
+        otherwise:
+            The expression is broken into sub expressions separated by OR operator
+            every part is evaluated and the first part giving a non None value will be the resolved string for the entire expression
+    """
+
     # Public Functions:
     def __init__(self, mapping: dict[str, str | None]):
         self.mapping = {key.lower(): value for key, value in mapping.items()}
@@ -33,17 +44,7 @@ class TemplateResolver:
 
     # Private functions:
     def _evaluate(self, expression: str) -> str:
-        """
-        Recursively evaluate a given expression, not extremely optimized, but it's not needed here
-        """
-        """
-        what to do? : 
-            break the expression in all top level |
-            evaluate each part and return the first proper part
-            evaluate all top level names under {}
-            Now, the expression is without any {} with things which failed under {} returning None
-            evaluate all expression by splitting around | and returning the first one we get
-        """
+        """Recursively evaluate a given expression, not extremely optimized, but it's not needed here"""
         # Checking if this expression needs everything in it to be evaluated
         closingIndices = self._getClosingIndices(expression)
         returnNoneIfAnyFailure = False
