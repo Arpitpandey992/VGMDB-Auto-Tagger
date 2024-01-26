@@ -53,7 +53,9 @@ class CLI:
         self.root_config = get_config_from_args()
         self.scanner = Scanner()
         self.console = get_rich_console()
-        self.colors = {"red": "#f3aba8", "green": "#c4e5a5"}
+        self.colors = {"red": "#f3aba8", "green": "#d3f5b3"}
+        self.no_change = ""
+        self.not_available = "(Not Available)"
 
     def run(self):
         albums = self._scan_for_proper_albums(self.root_config.root_dir, self.root_config.recur)
@@ -132,13 +134,14 @@ class CLI:
 
     # Private Functions
     def _confirm_before_proceeding_to_organize(self, folder_organize_result: FolderOrganizeResult, config: Config) -> constants.choices:
-        all_good = self._find_and_show_match_for_organization(folder_organize_result, config)
-
+        all_good = self._find_and_show_match_for_organization(folder_organize_result, config) and folder_organize_result.no_unclean_files
+        message = "Please review changes, there might be issues" if not all_good else "Everything seems fine, proceed?"
         choice = (
             questionary.select(
-                "Proceed?",
+                message,
                 choices=[option.value for option in constants.choices if option != constants.choices.go_back],
                 default=constants.choices.yes.value if all_good else constants.choices.no.value,
+                style=questionary.Style([("question", f"fg:{self.colors['green'] if all_good else self.colors['red']} bold"), ("highlighted", "fg:white bold"), ("selected", "fg:white")]),
             )
             .skip_if(config.yes and all_good, default=constants.choices.yes.value)
             .ask()
@@ -166,23 +169,22 @@ class CLI:
         table_data: list[tuple[str, str, str, str]] = [
             (
                 result.old_name,
-                ifNot(result.new_name, "") if result.new_name != result.old_name else "<No Change>",
+                ifNot(result.new_name, self.not_available) if result.new_name != result.old_name else self.no_change,
                 ifNot(result.old_disc_folder_name, ""),
-                ifNot(result.new_disc_folder_name, "") if result.new_disc_folder_name != result.old_disc_folder_name else "<No Change>",
+                ifNot(result.new_disc_folder_name, "") if result.new_disc_folder_name != result.old_disc_folder_name else self.no_change,
             )
             for result in folder_organize_result.file_organize_results
         ]
         all_good = True
 
         if config.rename_folder:
-            new_folder_name = folder_organize_result.new_name if folder_organize_result.new_name != folder_organize_result.old_name else "<No Change>"
+            new_folder_name = folder_organize_result.new_name if folder_organize_result.new_name != folder_organize_result.old_name else self.no_change
             self.console.print(
                 textwrap.dedent(
-                    f"""
-                    [bold green]Folder Rename:
+                    f"""[bold green]Folder Rename:
                     [bright_red]{folder_organize_result.old_name}[/bright_red][bold white] -> [/bold white][bright_green]{new_folder_name}[/bright_green]
                     """
-                ).strip()
+                )
             )
             all_good = all_good and bool(folder_organize_result.new_name)
 
@@ -192,12 +194,12 @@ class CLI:
 
             columns = (
                 Table.Column(header="Old Name", justify="left", style="cyan"),
-                Table.Column(header="New Name", justify="left", style="magenta"),
+                Table.Column(header="New Name (if Changed)", justify="left", style="magenta"),
                 Table.Column(header="Disc Name (Old)", justify="left", style="yellow"),
-                Table.Column(header="Disc Name (New)", justify="left", style="green"),
+                Table.Column(header="Disc Name (New, if Changed)", justify="left", style="green"),
             )
             if not config.no_input:
-                Table.tabulate(table_data, columns=columns, title=f"Organizing Result for Files")
+                Table.tabulate(table_data, columns=columns, title=f"Organizing Result for Files (Blank Field Means No Change)")
 
             all_good = all_good and all(res.new_path for res in folder_organize_result.file_organize_results)
 
@@ -275,7 +277,7 @@ class CLI:
                     (
                         disc_number,
                         track_number,
-                        ifNot(vgmdb_track.names.get_highest_priority_name(config.language_order), "<Unavailable>"),
+                        vgmdb_track.names.get_highest_priority_name(config.language_order),
                         local_track.file_name if local_track else "",
                     )
                 )
@@ -445,12 +447,12 @@ if __name__ == "__main__":
     def test():
         import sys
 
-        all = True  # Important -> this variable causes issue if this is outside test() because it pollutes the global namespace (hence renders all usages of `all` keyword)
+        all = False  # Important -> this variable causes issue if this is outside test() because it pollutes the global namespace (hence renders all usages of `all` keyword)
         if all:
             sys.argv.append("/Users/arpit/Library/Custom/Music")
             sys.argv.append("--recur")
         else:
-            sys.argv.append("/Users/arpit/Library/Custom/music/Higurashi no Naku Koro ni 20th Anniversary Thanks／you -Sotsugyou- [MP3 320K]")
+            sys.argv.append("/Users/arpit/Library/Custom/music/[2011-08-12] Rewrite ORIGINAL SOUNDTRACK [KSLA-0073~5] [CD-MP3 241kbps]")
         cli_manager = CLI()
         cli_manager.run()
 

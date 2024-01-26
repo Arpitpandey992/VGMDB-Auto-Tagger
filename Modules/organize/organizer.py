@@ -27,8 +27,8 @@ class Organizer:
         new_name = clean_name(TemplateResolver(folder_naming_template_mapping).evaluate(self.config.folder_naming_template))
         new_path = os.path.join(base_path, new_name)
         files_organize_result = self._organize_album_files()
-
-        return FolderOrganizeResult(old_path=old_path, new_path=new_path, file_organize_results=files_organize_result)
+        no_unclean_files = (not self.config.rename_files) or len(self.local_album_data.unclean_tracks) == 0
+        return FolderOrganizeResult(old_path=old_path, new_path=new_path, file_organize_results=files_organize_result, no_unclean_files=no_unclean_files)
 
     def commit_changes(self, folder_organize_result: FolderOrganizeResult):
         """manually commit changes given by organize function"""
@@ -36,7 +36,7 @@ class Organizer:
             for file_organize_result in folder_organize_result.file_organize_results:
                 new_path = file_organize_result.new_path
                 if not new_path:
-                    logger.error(f"new name not present for {file_organize_result.old_name}")
+                    logger.debug(f"new name not present for {file_organize_result.old_name}")
                     continue
                 if file_organize_result.old_path == new_path:
                     continue

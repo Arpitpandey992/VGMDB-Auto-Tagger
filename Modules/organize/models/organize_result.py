@@ -49,6 +49,7 @@ class FileOrganizeResult(BaseModel):
 class FolderOrganizeResult(BaseModel):
     old_path: str
     new_path: str
+    no_unclean_files: bool = False
     file_organize_results: list[FileOrganizeResult]
 
     @property
