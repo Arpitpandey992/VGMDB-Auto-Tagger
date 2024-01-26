@@ -41,16 +41,16 @@ def downloadFile(url: str, output_dir: str, name: str | None = None) -> str:
     if not os.path.exists(output_dir):
         raise FileNotFoundError(f"download folder: {output_dir} does not exist")
     parsedUrl = urlparse(url)
-    imageName = os.path.basename(parsedUrl.path)
-    _, extension = os.path.splitext(imageName)
-    imageName = name + extension if name else imageName
-    imagePath = os.path.join(output_dir, imageName)
+    fileName = os.path.basename(parsedUrl.path)
+    _, extension = os.path.splitext(fileName)
+    fileName = name + extension if name else fileName
+    filePath = os.path.join(output_dir, fileName)
 
-    if os.path.exists(imagePath):
-        raise FileExistsError(f"file already exists: {imagePath}")
+    if os.path.exists(filePath):
+        raise FileExistsError(f"file already exists: {fileName}")  # logging fileName in error instead of filePath to reduce clutter in Console
 
-    urllib.request.urlretrieve(url, imagePath)
-    return imagePath
+    urllib.request.urlretrieve(url, filePath)
+    return filePath
 
 
 if __name__ == "__main__":

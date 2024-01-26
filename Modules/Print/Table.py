@@ -1,8 +1,10 @@
 from typing import Any
 from pydantic import BaseModel
-from rich.console import Console, JustifyMethod, OverflowMethod
+from rich.console import JustifyMethod, OverflowMethod
 from rich.align import VerticalAlignMethod
 from rich.table import Table
+
+from Modules.Print.utils import get_rich_console
 
 
 class Column(BaseModel):
@@ -13,7 +15,7 @@ class Column(BaseModel):
     style: str | None = None
     justify: JustifyMethod = "left"
     vertical: VerticalAlignMethod = "top"
-    overflow: OverflowMethod = "ellipsis"
+    overflow: OverflowMethod = "fold"
     width: int | None = None
     min_width: int | None = None
     max_width: int | None = None
@@ -42,8 +44,7 @@ def tabulate(
         if add_number_column:
             cleaned_data.insert(0, str(i + 1))
         table.add_row(*cleaned_data)
-    console = Console()
-    console.print(table)
+    get_rich_console().print(table)
 
 
 def test():

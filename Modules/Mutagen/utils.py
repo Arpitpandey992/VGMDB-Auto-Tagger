@@ -1,5 +1,5 @@
-from math import ceil, log10
 import re
+from math import ceil, log10
 from typing import Any, Literal, Optional, Union
 
 from Modules.Utils.general_utils import get_default_logger
@@ -49,6 +49,10 @@ def isString(var: Any) -> bool:
     return isinstance(var, str)
 
 
+def toString(var: Any) -> str:
+    return str(var) if var is not None else var
+
+
 def splitAndGetFirst(discNumber: Optional[str]) -> Optional[str]:
     # get the count of tracks -> checks if the input is something like 4/20 -> truncates to 4
     # output is a string, input can be an integer, float, ...
@@ -94,18 +98,19 @@ def getFirstElement(listVariable: list[Any] | Any) -> Any:
     return listVariable
 
 
-def getProperCount(count: Union[str, int], totalCount: Union[str, int]) -> tuple[str, str]:
+def getProperCount(count: Union[str, int, None], totalCount: Union[str, int, None]) -> tuple[str | None, str | None]:
     """
     if total tracks = 100, then this function will convert 1 to 001 for consistent sorting
     getProperCount(4,124) will return ["004", "124"]
+    will return count and total_count as strings (without modification) if either is not provided
     """
-    try:
-        upperBound = int(ceil(log10(int(totalCount) + 1)))
-        return str(count).zfill(upperBound), str(totalCount)
-    except Exception as e:
-        logger.exception(e)
-
-    return str(count), str(totalCount)
+    if count and totalCount:
+        try:
+            upperBound = int(ceil(log10(int(totalCount) + 1)))
+            return str(count).zfill(upperBound), str(totalCount)
+        except Exception as e:
+            logger.error(e)
+    return toString(count), toString(totalCount)
 
 
 def convertStringToNumber(var: Optional[str]) -> Optional[int]:
@@ -159,6 +164,13 @@ if __name__ == "__main__":
     print(getProperCount(4, "124"))
     print(getProperCount("45", 1240))
     print(getProperCount(3, 28))
+    print(getProperCount("12", 244))
+    print(getProperCount("12", ""))
+    print(getProperCount("1", None))
+    print(getProperCount(4, 7))
+    print(getProperCount("50", 2440))
+    print(getProperCount(None, None))
+    print(getProperCount(6, "60"))
 
     print(cleanDate("567-  4 /  14 "))
     print(cleanDate("2023-9 -  4 "))

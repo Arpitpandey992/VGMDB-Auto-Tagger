@@ -9,7 +9,7 @@ import sys
 
 sys.path.append(os.getcwd())
 # remove
-from Modules.Print.utils import SUB_LINE_SEPARATOR
+from Modules.Print.constants import SUB_LINE_SEPARATOR
 from Modules.VGMDB.constants import APICALLRETRIES, USE_LOCAL_SERVER, VGMDB_INFO_BASE_URL
 from Modules.Utils.general_utils import get_default_logger
 from Modules.VGMDB.models.vgmdb_album_data import VgmdbAlbumData

@@ -1,11 +1,12 @@
 import os
-import shutil
 
 # remove
 import sys
 
 sys.path.append(os.getcwd())
 # remove
+import shutil
+import textwrap
 import questionary
 
 from typing import Any, Callable
@@ -13,8 +14,11 @@ from typing import Any, Callable
 from Imports.config import Config
 from Modules.Mutagen.mutagenWrapper import IAudioManager
 from Modules.Mutagen.utils import extractYearFromDate
+from Modules.organize.organizer import Organizer
+from Modules.organize.models.organize_result import FolderOrganizeResult
 from Modules.Print import Table
-from Modules.Print.utils import LINE_SEPARATOR
+from Modules.Print.constants import LINE_SEPARATOR
+from Modules.Print.utils import get_rich_console
 from Modules.Scan.Scanner import Scanner
 from Modules.Scan.models.local_album_data import LocalAlbumData
 from Modules.Tag import custom_tags
@@ -49,6 +53,7 @@ class CLI:
     def __init__(self):
         self.root_config = get_config_from_args()
         self.scanner = Scanner()
+        self.console = get_rich_console()
 
     def run(self):
         albums = self._scan_for_proper_albums(self.root_config.root_dir, self.root_config.recur)
@@ -75,42 +80,131 @@ class CLI:
     def operate(self, local_album_data: LocalAlbumData, config: Config) -> None:
         """Operate on the album (tag, download scans, organize,...)"""
         if config.tag:
-            logger.info(f"Fetching Album ID")
-            album_id = self._get_album_id(local_album_data, config)
-            if not album_id:
-                raise Exception(f"Could Not Find Album ID For Folder: {local_album_data.album_folder_path}")
-
-            logger.info(f"Fetching Album Data With Album ID: {album_id}")
-            vgmdb_album_data = client.get_album_details(album_id)
-
-            logger.debug("linking local album data with vgmdb album data")
-            vgmdb_album_data.link_local_album_data(local_album_data)
-
-            logger.debug("showing match and getting confirmation")
-            instruction = self._confirm_before_proceeding(vgmdb_album_data, config)
-            if instruction == constants.choices.no:
-                logger.debug("operation cancelled by user")
-                return
-            if instruction == constants.choices.go_back:
-                return self.operate(local_album_data, config)
-
-            logger.info(LINE_SEPARATOR)
-            if config.scans_download:
-                logger.info("Downloading Scans")
-                vgmdb_album_data.download_scans(local_album_data.album_folder_path, no_auth=self.root_config.no_auth)
-            logger.info(LINE_SEPARATOR)
-
-            logger.info("Tagging Files")
-            Tagger(local_album_data, vgmdb_album_data, config).tag_files()
-            
-            logger.info(LINE_SEPARATOR)
-            
+            self.tag(local_album_data, config)
         if config.organize:
-            
+            self.organize(local_album_data, config)
+
+    def tag(self, local_album_data: LocalAlbumData, config: Config) -> bool:
+        logger.info(f"Fetching Album ID")
+        album_id = self._get_album_id(local_album_data, config)
+        if not album_id:
+            raise Exception(f"Could Not Find Album ID For Folder: {local_album_data.album_folder_path}")
+
+        logger.info(f"Fetching Album Data With Album ID: {album_id}")
+        vgmdb_album_data = client.get_album_details(album_id)
+
+        logger.debug("linking local album data with vgmdb album data")
+        vgmdb_album_data.link_local_album_data(local_album_data)
+
+        logger.debug("showing match and getting confirmation")
+        instruction = self._confirm_before_proceeding_to_tag(vgmdb_album_data, config)
+        if instruction == constants.choices.no:
+            logger.debug("tagging cancelled by user")
+            return False
+        if instruction == constants.choices.go_back:
+            return self.tag(local_album_data, config)
+
+        logger.info(LINE_SEPARATOR)
+        if config.scans_download:
+            logger.info("Downloading Scans")
+            vgmdb_album_data.download_scans(local_album_data.album_folder_path, no_auth=self.root_config.no_auth)
+        logger.info(LINE_SEPARATOR)
+
+        logger.info("Tagging Album")
+        Tagger(local_album_data, vgmdb_album_data, config).tag_files()
+        logger.info(LINE_SEPARATOR)
+        return True
+
+    def organize(self, local_album_data: LocalAlbumData, config: Config) -> bool:
+        logger.info("Organizing Album")
+        organizer = Organizer(local_album_data, config)
+        folder_organize_result = organizer.organize()
+        instruction = self._confirm_before_proceeding_to_organize(folder_organize_result, config)
+        if instruction == constants.choices.no:
+            logger.debug("orgznization cancelled by user")
+            return False
+        elif instruction == constants.choices.edit_configs:
+            return self.organize(local_album_data, config)
+        organizer.commit_changes(folder_organize_result)
+        return True
 
     # Private Functions
-    def _confirm_before_proceeding(self, vgmdb_album_data: VgmdbAlbumData, config: Config) -> constants.choices:
-        is_perfect_match = self._find_and_show_match(vgmdb_album_data, config)
+    def _confirm_before_proceeding_to_organize(self, folder_organize_result: FolderOrganizeResult, config: Config) -> constants.choices:
+        all_good = self._find_and_show_match_for_organization(folder_organize_result, config)
+
+        choice = (
+            questionary.select(
+                "Proceed?",
+                choices=[option.value for option in constants.choices if option != constants.choices.go_back],
+                default=constants.choices.yes.value if all_good else constants.choices.no.value,
+            )
+            .skip_if(config.yes and all_good, default=constants.choices.yes.value)
+            .ask()
+        )
+
+        if not choice:  # user cancelled
+            return constants.choices.no
+
+        if choice != constants.choices.edit_configs.value:
+            return constants.choices.from_value(choice)
+
+        choices = [questionary.Choice(flag_name, checked=config.get_dynamically(flag_value)) for flag_name, flag_value in constants.CONFIG_MAP_FOR_ORGANIZE.items()]
+        config_enable = questionary.checkbox("Toggle Configurations:", choices=choices).ask()
+        if config_enable is None:
+            return constants.choices.no
+        config_disable = [key for key in constants.CONFIG_MAP_FOR_ORGANIZE.keys() if key not in config_enable]
+        for flag in config_enable:
+            config.set_dynamically(constants.CONFIG_MAP_FOR_ORGANIZE[flag], True)
+        for flag in config_disable:
+            config.set_dynamically(constants.CONFIG_MAP_FOR_ORGANIZE[flag], False)
+
+        return constants.choices.edit_configs
+
+    def _find_and_show_match_for_organization(self, folder_organize_result: FolderOrganizeResult, config: Config) -> bool:
+        table_data: list[tuple[str, str, str, str]] = [
+            (
+                result.old_name,
+                ifNot(result.new_name, "") if result.new_name != result.old_name else "<No Change>",
+                ifNot(result.old_disc_folder_name, ""),
+                ifNot(result.new_disc_folder_name, "") if result.new_disc_folder_name != result.old_disc_folder_name else "<No Change>",
+            )
+            for result in folder_organize_result.file_organize_results
+        ]
+        all_good = True
+
+        if config.rename_folder:
+            new_folder_name = folder_organize_result.new_name if folder_organize_result.new_name != folder_organize_result.old_name else "<No Change>"
+            self.console.print(
+                textwrap.dedent(
+                    f"""
+                    Folder Rename:
+                    [bright_red]{folder_organize_result.old_name}[/bright_red]
+                    [bold white] ↓ [/bold white]
+                    [bright_green]{new_folder_name}[/bright_green]
+                    """
+                ).strip()
+            )
+            all_good = all_good and bool(folder_organize_result.new_name)
+
+        if config.rename_files:
+            sort_comparator: Callable[[Any], Any] = lambda x: (x[2], x[0], x[3], x[1])
+            table_data = sorted(table_data, key=sort_comparator)
+
+            columns = (
+                Table.Column(header="Old Name", justify="left", style="cyan"),
+                Table.Column(header="New Name", justify="left", style="magenta"),
+                Table.Column(header="Disc Name (Old)", justify="left", style="yellow"),
+                Table.Column(header="Disc Name (New)", justify="left", style="green"),
+            )
+            if not config.no_input:
+                Table.tabulate(table_data, columns=columns, title=f"Organizing Result for Files")
+
+            all_good = all_good and all(res.new_path for res in folder_organize_result.file_organize_results)
+
+        return all_good
+
+    def _confirm_before_proceeding_to_tag(self, vgmdb_album_data: VgmdbAlbumData, config: Config) -> constants.choices:
+        is_perfect_match = self._find_and_show_match_for_tagging(vgmdb_album_data, config)
         if is_perfect_match:
             question = questionary.select(
                 "Local Album Data is matching perfectly with VGMDB Album Data, Proceed?",
@@ -130,21 +224,21 @@ class CLI:
         if choice != constants.choices.edit_configs.value:
             return constants.choices.from_value(choice)
 
-        choices = [questionary.Choice(flag_name, checked=config.get_dynamically(flag_value)) for flag_name, flag_value in constants.CONFIG_MAP.items()]
+        choices = [questionary.Choice(flag_name, checked=config.get_dynamically(flag_value)) for flag_name, flag_value in constants.CONFIG_MAP_FOR_TAG.items()]
         config_enable = questionary.checkbox("Toggle Configurations:", choices=choices).ask()
         if config_enable is None:
             return constants.choices.no
-        config_disable = [key for key in constants.CONFIG_MAP.keys() if key not in config_enable]
+        config_disable = [key for key in constants.CONFIG_MAP_FOR_TAG.keys() if key not in config_enable]
         for flag in config_enable:
-            config.set_dynamically(constants.CONFIG_MAP[flag], True)
+            config.set_dynamically(constants.CONFIG_MAP_FOR_TAG[flag], True)
         for flag in config_disable:
-            config.set_dynamically(constants.CONFIG_MAP[flag], False)
-        if constants.REVERSE_CONFIG_MAP["translate"] in config_disable:
+            config.set_dynamically(constants.CONFIG_MAP_FOR_TAG[flag], False)
+        if constants.REVERSE_CONFIG_MAP_FOR_TAG["translate"] in config_disable:
             vgmdb_album_data.clear_names("translated")
 
-        return self._confirm_before_proceeding(vgmdb_album_data, config)
+        return self._confirm_before_proceeding_to_tag(vgmdb_album_data, config)
 
-    def _find_and_show_match(self, vgmdb_album_data: VgmdbAlbumData, config: Config) -> bool:
+    def _find_and_show_match_for_tagging(self, vgmdb_album_data: VgmdbAlbumData, config: Config) -> bool:
         """Find the match between the two data we have, and returns whether the albums are perfectly matching or not"""
         if config.translate:
             logger.info("Translating Track Names")
@@ -184,7 +278,7 @@ class CLI:
             )
         table_data.sort()
         for i, data in enumerate(table_data):
-            if data[0] == constants.NULL_INT:
+            if data[0] == constants.NULL_INT or data[1] == constants.NULL_INT:
                 data = ("", "", *data[2:])
                 table_data[i] = data
 
@@ -333,9 +427,17 @@ class CLI:
 
 
 if __name__ == "__main__":
-    import sys
 
-    sys.argv.append("/Users/arpit/Library/Custom/Music")
-    sys.argv.append("--recur")
-    cli_manager = CLI()
-    cli_manager.run()
+    def test():
+        import sys
+
+        all = False  # Important -> this variable causes issue if this is outside test() because it pollutes the global namespace (hence renders all usages of `all` keyword)
+        if all:
+            sys.argv.append("/Users/arpit/Library/Custom/Music")
+            sys.argv.append("--recur")
+        else:
+            sys.argv.append("/Users/arpit/Library/Custom/Music/test")
+        cli_manager = CLI()
+        cli_manager.run()
+
+    test()

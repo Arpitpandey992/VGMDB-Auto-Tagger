@@ -1,6 +1,8 @@
 import os
 from pydantic import BaseModel
 
+from Modules.organize.organize_utils import get_base_folder_under_parent
+
 
 class FileOrganizeResult(BaseModel):
     old_path: str
@@ -24,12 +26,12 @@ class FileOrganizeResult(BaseModel):
         return extension
 
     @property
-    def old_base_path_under_parent(self) -> str | None:
+    def old_disc_folder_name(self) -> str | None:
         """like album_name/disc_01/track1.mp3 -> disc_01"""
         return self._get_base_path_under_parent(self.old_path)
 
     @property
-    def new_base_path_under_parent(self) -> str | None:
+    def new_disc_folder_name(self) -> str | None:
         """like album_name/Disc 01. Old Tracks/Left Side/track1.mp3 -> Disc 01. Old Tracks/Left Side"""
         return self._get_base_path_under_parent(self.new_path) if self.new_path else None
 
@@ -41,15 +43,13 @@ class FileOrganizeResult(BaseModel):
         return name_without_extension
 
     def _get_base_path_under_parent(self, file_path: str) -> str | None:
-        relative_path = os.path.relpath(file_path, self.base_album_path)
-        base_dir = os.path.dirname(relative_path)
-        return base_dir if base_dir not in ["", ".", "/"] else None
+        return get_base_folder_under_parent(file_path, self.base_album_path)
 
 
 class FolderOrganizeResult(BaseModel):
     old_path: str
-    new_path: str | None = None
-    file_organize_results = list[FileOrganizeResult]
+    new_path: str
+    file_organize_results: list[FileOrganizeResult]
 
     @property
     def old_name(self) -> str:

@@ -3,7 +3,7 @@ from typing import Any, get_args
 from pydantic import BaseModel, field_validator
 
 from Imports.constants import LANGUAGES
-from Modules.Print.utils import LINE_SEPARATOR, SUB_LINE_SEPARATOR
+from Modules.Print.constants import LINE_SEPARATOR, SUB_LINE_SEPARATOR
 from Modules.Scan.models.local_album_data import LocalAlbumData, LocalTrackData
 from Modules.Utils.image_utils import compress_image_limit_max_width
 from Modules.Utils.network_utils import downloadFile, getRawDataFromUrl
@@ -147,6 +147,7 @@ class VgmdbAlbumData(BaseModel):
 
     # custom data
     album_id: str
+    local_album_data: LocalAlbumData | None = None
     unmatched_local_tracks: list[LocalTrackData] = []
     album_cover_cache: bytes | None = None
 
@@ -188,6 +189,7 @@ class VgmdbAlbumData(BaseModel):
     # helper functions
     def link_local_album_data(self, local_album_data: LocalAlbumData):
         """function for linking local files with vgmdb tracks"""
+        self.local_album_data = local_album_data
         # filling unmatched local tracks
         temp_unmatched_local_tracks_set: set[LocalTrackData] = set()
         temp_unmatched_local_tracks_set.update(local_album_data.get_all_tracks())

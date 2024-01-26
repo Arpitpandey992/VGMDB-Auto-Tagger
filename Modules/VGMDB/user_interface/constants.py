@@ -15,14 +15,23 @@ class choices(Enum):
         raise KeyError(f"No enum member found for value {value}")
 
 
-CONFIG_MAP = {
+CONFIG_MAP_FOR_TAG = {
     "Tag": "tag",
-    "Rename": "rename",
+    "Organize": "organize",
     "Tag Title (Enable/Disable tagging title field)": "title",
     "Keep Title (don't overwrite current title)": "keep_title",
     "Album Data Only": "album_data_only",
     "Translate": "translate",
 }
 
-REVERSE_CONFIG_MAP = {val: key for key, val in CONFIG_MAP.items()}
+REVERSE_CONFIG_MAP_FOR_TAG = {val: key for key, val in CONFIG_MAP_FOR_TAG.items()}
+
+CONFIG_MAP_FOR_ORGANIZE = {
+    "Rename Folder": "rename_folder",
+    "Rename Files": "rename_files",
+    "Same Folder Name": "same_folder_name",
+}
+
+REVERSE_CONFIG_MAP_FOR_ORGANIZE = {val: key for key, val in CONFIG_MAP_FOR_ORGANIZE.items()}
+
 NULL_INT = 10001

@@ -10,7 +10,7 @@ import sys
 
 sys.path.append(os.getcwd())
 # remove
-from Modules.Print.utils import LINE_SEPARATOR
+from Modules.Print.constants import LINE_SEPARATOR
 from Modules.Mutagen.mutagenWrapper import AudioFactory, IAudioManager, pictureNameToNumber
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))

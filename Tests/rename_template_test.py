@@ -24,6 +24,7 @@ class RenameTemplateTest(unittest.TestCase):
             "trackTitle": "whichTrackMightThisBeHuh?",
             "fileName": "originalFileNameDuh",
             "extension": ".flac",
+            "damn": "son",
         }
 
     def test_folder_reaname(self):
@@ -80,8 +81,12 @@ class RenameTemplateTest(unittest.TestCase):
         )
         self.mapping["trackTitle"] = None  # what if title is not present in file, the name should remain same
         self.assertEqual(
-            TemplateResolver(self.mapping).evaluate("{{{{tracknumber|sortnumber}. }{tracktITle}}|filename}{extension}"),
+            TemplateResolver(self.mapping).evaluate("{{{tracknumber|sortnumber}. {tracktITle}}|  filename}{extension}"),
             f"{self.mapping['fileName']}{self.mapping['extension']}",
+        )
+        self.assertEqual(
+            TemplateResolver(self.mapping).evaluate("{{{tracknumber|sortnumber}. {tracktITle}}|damn|filename}{extension}"),
+            f"{self.mapping['damn']}{self.mapping['extension']}",
         )
         self.assertEqual(
             TemplateResolver(self.mapping).evaluate("tracktITle|filename"),
@@ -91,7 +96,15 @@ class RenameTemplateTest(unittest.TestCase):
             TemplateResolver(self.mapping).evaluate("filename |   tracktITle | "),
             f"{self.mapping['fileName']}",
         )
+        self.assertEqual(
+            TemplateResolver(self.mapping).evaluate("{tracktitle|filename|damn}{extension}"),
+            f"{self.mapping['fileName']}{self.mapping['extension']}",
+        )
         self.mapping["fileName"] = None
+        self.assertEqual(
+            TemplateResolver(self.mapping).evaluate("{tracktitle|filename|damn}{extension}"),
+            f"{self.mapping['damn']}{self.mapping['extension']}",
+        )
         self.assertEqual(
             TemplateResolver(self.mapping).evaluate("filename |   tracktITle |   "),
             "   ",
@@ -99,6 +112,10 @@ class RenameTemplateTest(unittest.TestCase):
         self.assertEqual(
             TemplateResolver(self.mapping).evaluate("filename |   tracktITle |Default Title"),
             "Default Title",
+        )
+        self.assertEqual(
+            TemplateResolver(self.mapping).evaluate(""),
+            "",
         )
 
 

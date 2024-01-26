@@ -1,5 +1,6 @@
 import os
 from typing import Optional
+from Modules.Print.constants import SUB_LINE_SEPARATOR
 
 from Modules.Scan import constants
 from Modules.Tag import custom_tags
@@ -45,7 +46,9 @@ class Scanner:
 
     def scan_album_in_folder_if_exists(self, folder_path: str) -> Optional[LocalAlbumData]:
         """returns a single album if the given folders contains files belonging to a single album"""
+        logger.info(SUB_LINE_SEPARATOR)
         logger.info(f"Scanning {folder_path}")
+        logger.info(SUB_LINE_SEPARATOR)
         audio_files = self.get_supported_audio_files_in_folder(folder_path)
         if not self._does_audio_files_belong_to_one_album_only(audio_files):
             return None
@@ -83,7 +86,7 @@ class Scanner:
             disc_number, track_number = track.audio_manager.getDiscNumber(), track.audio_manager.getTrackNumber()
 
             if not track_number:
-                logger.debug(f"track number not present in {track.file_path}, adding to unclean tracks")
+                logger.info(f"track number not present in {track.file_name}, adding to unclean tracks")
                 album_data.unclean_tracks.append(track)
                 continue
             else:
@@ -102,18 +105,20 @@ class Scanner:
 
             album_data.set_track(disc_number, track_number, track)
 
-        # setting the disc name if files are under a folder inside the album
-        def get_disc_folder_name(file_path: str) -> str:
-            return os.path.basename(os.path.dirname(os.path.normpath(file_path)))
+        # # setting the disc name if files are under a folder inside the album
+        # def get_disc_folder_name(parent_directory: str, file_path: str) -> str | None:
+        #     relative_path = os.path.relpath(os.path.normpath(file_path), os.path.normpath(parent_directory))
+        #     base_dir = os.path.dirname(relative_path)
+        #     return base_dir if base_dir not in ["", ".", "/"] else None
 
-        for disc_number, disc in album_data.discs.items():
-            for track_number, track in disc.tracks.items():
-                file_depth = track.depth_in_parent_folder
-                if file_depth == 2:  # parent_folder -> Disc folder -> track.flac
-                    disc_name = get_disc_folder_name(track.file_path)
-                    if disc_name:
-                        disc.folder_name = disc_name
-                        break
+        # for disc_number, disc in album_data.discs.items():
+        #     for track_number, track in disc.tracks.items():
+        #         file_depth = track.depth_in_parent_folder
+        #         if file_depth == 2:  # parent_folder -> Disc folder -> track.flac
+        #             disc_name = get_disc_folder_name(parent_directory, track.file_path)
+        #             if disc_name:
+        #                 disc.disc_folder_name = disc_name
+        #                 break
 
         return album_data
 

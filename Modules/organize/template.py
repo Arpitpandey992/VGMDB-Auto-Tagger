@@ -20,6 +20,7 @@ class TemplateResolver:
         self.mapping = {key.lower(): value for key, value in mapping.items()}
 
     def evaluate(self, expression: str) -> str:
+        self.validateTemplate(expression)
         return self._evaluate(expression)
 
     @staticmethod
@@ -45,6 +46,8 @@ class TemplateResolver:
     # Private functions:
     def _evaluate(self, expression: str) -> str:
         """Recursively evaluate a given expression, not extremely optimized, but it's not needed here"""
+        if not expression:
+            return ""  # Empty expression -> empty output
         # Checking if this expression needs everything in it to be evaluated
         closingIndices = self._getClosingIndices(expression)
         returnNoneIfAnyFailure = False

@@ -1,19 +1,24 @@
 import os
-from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from Modules.Mutagen.mutagenWrapper import IAudioManager
-from Modules.Print.utils import LINE_SEPARATOR, SUB_LINE_SEPARATOR
+from Modules.Print.constants import LINE_SEPARATOR, SUB_LINE_SEPARATOR
 
 
 class LocalTrackData(BaseModel):
-    file_path: str
+    file_path: str = Field(frozen=True)
     depth_in_parent_folder: int
     audio_manager: IAudioManager
 
     @property
     def file_name(self) -> str:
-        return os.path.basename(self.file_path)
+        return os.path.basename(os.path.normpath(self.file_path))
+
+    @property
+    def extension(self) -> str:
+        """get extension of file (like .flac, .mp3, etc)"""
+        _, extension = os.path.splitext(self.file_path)
+        return extension
 
     class Config:
         arbitrary_types_allowed = True
@@ -56,7 +61,6 @@ class LocalTrackData(BaseModel):
 
 class LocalDiscData(BaseModel):
     tracks: dict[int, LocalTrackData] = {}
-    folder_name: Optional[str] = None  # It may represent Disc Name for properly stored albums (like Disc 1: The Rime of the Ancient Mariner)
 
     @property
     def total_tracks(self) -> int:
@@ -82,14 +86,14 @@ class LocalAlbumData(BaseModel):
 
     @property
     def total_tracks_in_album(self):
-        return sum(len(disc.tracks) for disc in self.discs.values())
+        return sum(len(disc.tracks) for disc in self.discs.values()) + len(self.unclean_tracks)
 
     # helper functions
     def pprint(self) -> str:
         """pretty printing only the useful information"""
         details = f"{LINE_SEPARATOR}\nalbum path: {self.album_folder_path}\n{LINE_SEPARATOR}\n"
         for disc_number, disc in sorted(self.discs.items()):
-            details += f"Disc {disc_number}:{f' {disc.folder_name}' if disc.folder_name else ''}\n{SUB_LINE_SEPARATOR}\n"
+            details += f"Disc {disc_number}\n{SUB_LINE_SEPARATOR}\n"
             for track_number, track in sorted(disc.tracks.items()):
                 details += f"Track {track_number}: {track.file_path}\n"
             details += f"{SUB_LINE_SEPARATOR}\n"

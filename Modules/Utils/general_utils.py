@@ -47,44 +47,14 @@ def ifNot(var: Any, otherwise: Any) -> Any:
     return var if var else otherwise
 
 
-def getFirstOrNone(var: list[Any] | None) -> Any | None:
+def getFirstProperOrNone(var: list[Any] | None) -> Any | None:
+    """return first proper (satisfies bool(element)) from list"""
     if not var:
         return None
-    return var[0]
-
-
-forbiddenCharacters = {
-    "<": "ᐸ",
-    ">": "ᐳ",
-    ":": "꞉",
-    '"': "ˮ",
-    "'": "ʻ",
-    # '/': '／', # Looks far too stretched, but is more popular for some reason
-    "/": "Ⳇ",  # This one looks more natural
-    "\\": "∖",
-    "|": "ǀ",
-    "?": "ʔ",
-    "*": "∗",
-    "+": "＋",
-    "%": "٪",
-    "!": "ⵑ",
-    "`": "՝",
-    "&": "&",  # keeping same as it is not forbidden, but it may cause problems
-    "{": "❴",
-    "}": "❵",
-    "=": "᐀",
-    "~": "～",  # Not using this because it could be present in catalog number as well, may cause problems though
-    "#": "#",  # couldn't find alternative
-    "$": "$",  # couldn't find alternative
-    "@": "@",  # couldn't find alternative
-}
-
-
-def cleanName(name: str) -> str:
-    output = name.strip()
-    for invalidCharacter, validAlternative in forbiddenCharacters.items():
-        output = output.replace(invalidCharacter, validAlternative)
-    return output
+    for item in var:
+        if item:
+            return item
+    return None
 
 
 def fixDate(date: Optional[str]) -> Optional[str]:
