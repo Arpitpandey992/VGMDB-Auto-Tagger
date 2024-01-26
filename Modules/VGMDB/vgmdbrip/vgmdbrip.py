@@ -1,20 +1,29 @@
 import os
+
+# remove
+import sys
+
+sys.path.append(os.getcwd())
+# remove
 import hashlib
 import getpass
 import pickle
 import requests
+import concurrent.futures
+from typing import Any
 from bs4 import BeautifulSoup, Tag
+
 from Modules.Print.utils import get_rich_console
 from Modules.Utils.network_utils import downloadFile
 
 session = requests.Session()
 
 
-def Soup(data):
+def Soup(data: Any):
     return BeautifulSoup(data, "html.parser")
 
 
-def is_logged_in(current_session) -> bool:
+def is_logged_in(current_session: Any) -> bool:
     x = current_session.get("https://vgmdb.net/forums/private.php")
     soup = Soup(x.content)
     login_element = soup.find("a", href="#", string="Login")
@@ -64,13 +73,13 @@ def login(config: str):
                 break
 
 
-def remove(instring, chars):
+def remove(instring: str, chars: str):
     for i in range(len(chars)):
         instring = instring.replace(chars[i], "")
     return instring
 
 
-def ensure_dir(f):
+def ensure_dir(f: str):
     d = os.path.dirname(f)
     if not os.path.exists(d):
         os.makedirs(d)
@@ -78,11 +87,11 @@ def ensure_dir(f):
 
 def downloadScans(output_dir: str, albumID: str):
     console = get_rich_console()
+    cwd = os.path.abspath(__file__)
+    scriptdir = os.path.dirname(cwd)
+    config = os.path.join(scriptdir, "vgmdbrip.pkl")
+    login(config)
     with console.status("[bold magenta]Authenticating and Fetching Scans") as status:
-        cwd = os.path.abspath(__file__)
-        scriptdir = os.path.dirname(cwd)
-        config = os.path.join(scriptdir, "vgmdbrip.pkl")
-        login(config)
         soup = Soup(session.get("https://vgmdb.net/album/" + albumID).content)
         gallery = soup.find("div", attrs={"class": "covertab", "id": "cover_gallery"})
 
@@ -95,10 +104,10 @@ def downloadScans(output_dir: str, albumID: str):
         finalScanFolder = os.path.join(output_dir, "Scans") if pictureCount > 1 else output_dir
         if not os.path.exists(finalScanFolder):
             os.makedirs(finalScanFolder)
-        for scan in scans:
+
+        def download_scan(scan: Any):
             url = scan["href"]
-            title = remove(scan.text.strip(), '"*/:<>?\|')  # type: ignore
-            status.update(f"[green]Downloading [bold magenta]{title}")
+            title = remove(scan.text.strip(), '"*/:<>?\\|')
             try:
                 downloadFile(url=url, output_dir=finalScanFolder, name=title)
                 console.log(f"[green]Downloaded:[/green] [magenta bold]{title}")
@@ -106,6 +115,13 @@ def downloadScans(output_dir: str, albumID: str):
                 console.log(f"[yellow]Already Exists:[/yellow] [cyan bold]{title}")
             except Exception as e:
                 console.log(f"[red]Error while downloading: {e}")
+
+        num_threads = 8
+        status.update(f"[bold magenta]Downloading Scans with {num_threads} Threads")
+        with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+            tasks = [executor.submit(download_scan, scan) for scan in scans]
+
+        concurrent.futures.wait(tasks)
 
     pickle.dump(session, open(config, "wb"))
 
@@ -115,4 +131,4 @@ if __name__ == "__main__":
 
     folder = "/Users/arpit/Downloads/test"
     shutil.rmtree(folder, ignore_errors=True)
-    downloadScans(folder, "27623")
+    downloadScans(folder, "87406")

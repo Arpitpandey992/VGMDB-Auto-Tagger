@@ -2,6 +2,7 @@ from ast import parse
 import dis
 from enum import Enum
 import os
+import random
 import re
 from urllib.parse import urlparse
 

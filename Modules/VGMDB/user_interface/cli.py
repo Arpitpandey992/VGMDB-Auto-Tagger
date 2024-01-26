@@ -6,10 +6,10 @@ import sys
 sys.path.append(os.getcwd())
 # remove
 import shutil
-import textwrap
 import questionary
 
 from typing import Any, Callable
+import concurrent.futures
 
 from Imports.config import Config
 from Modules.Mutagen.mutagenWrapper import IAudioManager
@@ -243,28 +243,12 @@ class CLI:
     def _find_and_show_match_for_tagging(self, vgmdb_album_data: VgmdbAlbumData, config: Config) -> bool:
         """Find the match between the two data we have, and returns whether the albums are perfectly matching or not"""
         if config.translate:
-            with self.console.status("[bold green]Translating Album Name") as status:
+            num_threads = 8
+            with self.console.status(f"[bold green]Translating Album Name and Track Names With {num_threads} threads"):
                 to_translate: list[Names] = [vgmdb_album_data.names] + [track.names for disc in vgmdb_album_data.discs.values() for track in disc.tracks.values()]
-
+                translated_names = self._translate_names(to_translate, config, num_threads)
                 for i, name_object in enumerate(to_translate):
-                    track_title = name_object.get_highest_priority_name([order for order in config.language_order if order != "translated"])  # don't wanna translate translated text ;)
-                    if i > 0:
-                        status.update(f"[bold green]Translating [bold magenta]{track_title}")
-                    try:
-                        translated_names: list[str] = []
-                        successfully_translated = False
-                        for translate_language in config.translation_language:
-                            translated_name = translator.translate(track_title, translate_language)
-                            translated_names.append(translated_name) if translated_name else None
-                            successfully_translated = successfully_translated or bool(translated_name)
-
-                        name_object.add_names(translated_names, "translated")
-                        if successfully_translated:
-                            self.console.log(f"[green]Translated [magenta bold]{track_title}")
-                        else:
-                            self.console.log(f"[yellow]No need to Translate [cyan bold]{track_title}")
-                    except Exception as e:
-                        self.console.log(f"[red bold]Error in Translating {track_title}, error: {e}")
+                    name_object.add_names(translated_names[i], "translated")
 
         table_data: list[tuple[int | str, int | str, str, str]] = []
         for disc_number, vgmdb_disc in vgmdb_album_data.discs.items():
@@ -438,18 +422,50 @@ class CLI:
             self.console.log(f"[bold bright_red]Error during backup: {e}")
             raise (e)
 
+    def _translate_names(self, to_translate: list[Names], config: Config, num_threads: int) -> list[list[str]]:
+        """Translates Names present in to_translate (multithreaded), Returns translated names (list) for every Name"""
+        num_threads = 8
+
+        def translate(name_object: Names) -> list[str]:
+            track_title = name_object.get_highest_priority_name([order for order in config.language_order if order != "translated"])  # don't wanna translate translated text ;)
+            try:
+                translated_names: list[str] = []
+                successfully_translated = False
+                for translate_language in config.translation_language:
+                    translated_name = translator.translate(track_title, translate_language)
+                    translated_names.append(translated_name) if translated_name else None
+                    successfully_translated = successfully_translated or bool(translated_name)
+
+                if successfully_translated:
+                    self.console.log(f"[green]Translated [magenta bold]{track_title}")
+                else:
+                    self.console.log(f"[yellow]No need to Translate [cyan bold]{track_title}")
+
+                return translated_names
+            except Exception as e:
+                self.console.log(f"[red bold]Error in Translating {track_title}, error: {e}")
+                return []
+
+        tasks: list[Any] = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+            for name_object in to_translate:
+                tasks.append(executor.submit(translate, name_object))
+
+        concurrent.futures.wait(tasks)
+        return [future.result() for future in tasks]
+
 
 if __name__ == "__main__":
 
     def test():
         import sys
 
-        all = True  # Important -> this variable causes issue if this is outside test() because it pollutes the global namespace (hence renders all usages of `all` keyword)
+        all = False  # Important -> this variable causes issue if this is outside test() because it pollutes the global namespace (hence renders all usages of `all` keyword)
         if all:
             sys.argv.append("/Users/arpit/Library/Custom/Music")
             sys.argv.append("--recur")
         else:
-            sys.argv.append("/Users/arpit/Library/Custom/music/[2011-08-12] Rewrite ORIGINAL SOUNDTRACK [KSLA-0073~5] [CD-MP3 241kbps]")
+            sys.argv.append("/Users/arpit/Library/Custom/music/[2022.10.15] Thanks Ⳇ you -Sotsugyou- [MGPG-0001] [CD-MP3 320kbps]")
         cli_manager = CLI()
         cli_manager.run()
 
