@@ -1,8 +1,8 @@
 import os
 from Imports.config import Config
-from Modules.Mutagen.utils import getProperCount
+from Modules.Mutagen.utils import cleanDate, getProperCount
 from Modules.Scan.models.local_album_data import LocalAlbumData, LocalTrackData
-from Modules.Utils.general_utils import get_default_logger, getFirstProperOrNone
+from Modules.Utils.general_utils import get_default_logger, getFirstProperOrNone, ifNot
 from Modules.organize.models.organize_result import FileOrganizeResult, FolderOrganizeResult
 from Modules.organize.template import TemplateResolver
 from Modules.organize.organize_utils import clean_name, extract_disc_name_from_folder_name, extract_disc_number_from_folder_name, extract_track_name_from_file_name, extract_track_number_from_file_name, get_base_folder_under_parent
@@ -146,11 +146,18 @@ class Organizer:
         return getFirstProperOrNone(disc_names)
 
     def _get_album_template_mapping(self) -> dict[str, str | None]:
+        date = cleanDate(ifNot(self.audio_manager.getDate(), ""))
+        if not date:
+            date = cleanDate(ifNot(getFirstProperOrNone(self.audio_manager.getCustomTag("year")), ""))
+        if date:
+            date = date.replace("-", ".")
+        else:
+            date = None
         return {
             "albumname": getFirstProperOrNone(self.audio_manager.getAlbum()) if not self.config.same_folder_name else None,
             "foldername": self.local_album_data.album_folder_name,
             "catalog": getFirstProperOrNone(self.audio_manager.getCatalog()),
-            "date": self.audio_manager.getDate(),
+            "date": date,
             "barcode": getFirstProperOrNone(self.audio_manager.getCustomTag("barcode")),
             "format": self.sample_file.get_audio_source(),
         }
