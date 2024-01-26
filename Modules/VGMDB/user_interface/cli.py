@@ -178,14 +178,11 @@ class CLI:
         all_good = True
 
         if config.rename_folder:
-            new_folder_name = folder_organize_result.new_name if folder_organize_result.new_name != folder_organize_result.old_name else self.no_change
-            self.console.print(
-                textwrap.dedent(
-                    f"""[bold green]Folder Rename:
-                    [bright_red]{folder_organize_result.old_name}[/bright_red][bold white] -> [/bold white][bright_green]{new_folder_name}[/bright_green]
-                    """
-                )
-            )
+            new_folder_name = folder_organize_result.new_name
+            folder_name_changed = folder_organize_result.new_name != folder_organize_result.old_name
+            self.console.print("[bold green]Folder Rename:")
+            self.console.print(f"[bright_red]{folder_organize_result.old_name}[/bright_red][bold white] {'==❯' if folder_name_changed else '==='} [/bold white][bright_green]{new_folder_name}[/bright_green]\n")
+
             all_good = all_good and bool(folder_organize_result.new_name)
 
         if config.rename_files:
@@ -447,7 +444,7 @@ if __name__ == "__main__":
     def test():
         import sys
 
-        all = False  # Important -> this variable causes issue if this is outside test() because it pollutes the global namespace (hence renders all usages of `all` keyword)
+        all = True  # Important -> this variable causes issue if this is outside test() because it pollutes the global namespace (hence renders all usages of `all` keyword)
         if all:
             sys.argv.append("/Users/arpit/Library/Custom/Music")
             sys.argv.append("--recur")
