@@ -1,4 +1,4 @@
-from Utility.mutagenWrapper import AudioFactory
+from Modules.Mutagen.mutagenWrapper import AudioFactory
 import os
 
 directory = "/run/media/arpit/DATA/Downloads/Torrents/New Folder/The Door into Next Season EP (Little Busters! arrange) [N-A]"

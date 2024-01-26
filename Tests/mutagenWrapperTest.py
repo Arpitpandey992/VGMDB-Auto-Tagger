@@ -1,178 +1,203 @@
 import os
-import sys
-import traceback
+import shutil
+import string
 import random
+from typing import Callable, Optional
+import unittest
+
+# remove
+import sys
+
 sys.path.append(os.getcwd())
-from Utility.mutagenWrapper import AudioFactory, IAudioManager
+# remove
+from Modules.Print.constants import LINE_SEPARATOR
+from Modules.Mutagen.mutagenWrapper import AudioFactory, IAudioManager, pictureNameToNumber
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-baseFolder = os.path.join(__location__, "testSamples")
+baseFolder = os.path.join(__location__, "testSamples", "baseSamples")
+modifiedFolder = os.path.join(__location__, "testSamples", "modifiedSamples")
 coversPath = os.path.join(baseFolder, "covers")
 covers = [os.path.join(coversPath, coverName) for coverName in os.listdir(coversPath)]
-SEE_PASSED = False
+
+# Unicode range for common Japanese characters (Hiragana, Katakana, and common Kanji)
+japanese_chars = [
+    (0x3041, 0x3096),  # Hiragana
+    (0x30A1, 0x30F6),  # Katakana
+    (0x4E00, 0x9FBF),  # Common Kanji
+]
+all_japanese_chars = "".join(chr(x) for x in [k for start, end in japanese_chars for k in range(start, end)])
+audioImpl: IAudioManager
+filePathImpl: str
 
 
-def getRandomCover():
+def getRandomCoverImageData() -> bytes:
     num_covers = len(covers)
     cover_index = random.randrange(0, num_covers, 1)
     path = covers[cover_index]
-    del covers[cover_index]
-    return path
+    # del covers[cover_index]
+    with open(path, "rb") as image_file:
+        image_data = image_file.read()
+    return image_data
 
 
-def testMutagenWrapper(audio: IAudioManager):
-    # Test setting and getting title
-    try:
-        audio.setTitle(["New Title"])
-        assert audio.getTitle() == "New Title"
-        if SEE_PASSED:
-            print("setTitle and getTitle test passed")
-    except Exception as e:
-        print("setTitle and getTitle test Failed:\n")
-        traceback.print_exc()
-        print('')
-
-    # Test setting and getting album
-    try:
-        audio.setAlbum(["New Album"])
-        assert audio.getAlbum() == "New Album"
-        if SEE_PASSED:
-            print("setAlbum and getAlbum test passed")
-    except Exception as e:
-        print("setAlbum and getAlbum test Failed:\n")
-        traceback.print_exc()
-        print('')
-
-    # Test setting and getting disc numbers
-    try:
-        audio.setDiscNumbers("1", "2")
-        assert audio.getDiscNumber() == "1"
-        assert audio.getTotalDiscs() == "2"
-        if SEE_PASSED:
-            print("setDiscNumbers, getDiscNumber and getTotalDiscs test passed")
-    except Exception as e:
-        print("setDiscNumbers, getDiscNumber and getTotalDiscs test Failed:\n")
-        traceback.print_exc()
-        print('')
-
-    # Test setting and getting track numbers
-    try:
-        audio.setTrackNumbers("1", "10")
-        assert audio.getTrackNumber() == "1"
-        assert audio.getTotalTracks() == "10"
-        if SEE_PASSED:
-            print("setTrackNumbers, getTrackNumber and getTotalTracks test passed")
-    except Exception as e:
-        print("setTrackNumbers, getTrackNumber and getTotalTracks test Failed:\n")
-        traceback.print_exc()
-        print('')
-
-    # Test setting and getting comment
-    try:
-        audio.setComment("This is a comment")
-        assert audio.getComment() == "This is a comment"
-        if SEE_PASSED:
-            print("setComment and getComment test passed")
-    except Exception as e:
-        print("setComment and getComment test Failed:\n")
-        traceback.print_exc()
-        print('')
-
-    # Test setting and getting album release date
-    try:
-        audio.setDate("2022-01-01")
-        assert audio.getDate() == "2022-01-01"
-        if SEE_PASSED:
-            print("setDate and getDate test passed")
-    except Exception as e:
-        print("setDate and getDate test Failed:\n")
-        traceback.print_exc()
-        print('')
-
-    # Test setting and getting Catalog
-    try:
-        audio.setCatalog("KSLA-01022")
-        assert audio.getCatalog() == "KSLA-01022"
-        if SEE_PASSED:
-            print("setCatalog and getCatalog test passed")
-    except Exception as e:
-        print("setCatalog and getCatalog test Failed:\n")
-        traceback.print_exc()
-        print('')
-    # Test setting and getting custom tags
-    try:
-        audio.setCustomTag("MY_TAG", "my_value")
-        assert audio.getCustomTag("MY_TAG") == "my_value"
-        if SEE_PASSED:
-            print("setCustomTag and getCustomTag test passed")
-    except Exception as e:
-        print("setCustomTag and getCustomTag test Failed:\n")
-        traceback.print_exc()
-        print('')
-
-    # Test setting and getting disc name
-    try:
-        audio.setDiscName("Disc 1")
-        assert audio.getDiscName() == "Disc 1"
-        if SEE_PASSED:
-            print("setDiscName and getDiscName test passed")
-    except Exception as e:
-        print("setDiscName and getDiscName test Failed:\n")
-        traceback.print_exc()
-        print('')
-
-    # Test getting information
-    try:
-        info = audio.printInfo()
-        assert isinstance(info, str)
-        if SEE_PASSED:
-            print("getInformation test passed")
-    except Exception as e:
-        print("getInformation test Failed:\n")
-        traceback.print_exc()
-        print('')
-
-    try:
-        # read the image file
-        with open(getRandomCover(), 'rb') as image_file:
-            image_data = image_file.read()
-
-        # set the picture of type 3
-        audio.setPictureOfType(image_data, 3)
-
-        # check if the picture exists
-        assert audio.hasPictureOfType(3) == True
-
-        # delete the picture
-        audio.deletePictureOfType(3)
-
-        # check if the picture was deleted
-        assert audio.hasPictureOfType(3) == False
-
-        # set and check again
-        audio.setPictureOfType(image_data, 3)
-
-        # check if the picture exists
-        assert audio.hasPictureOfType(3) == True
-
-    except AssertionError as e:
-        print("cover related tests Failed:\n")
-        traceback.print_exc()
-        print('')
-
-     # Test saving changes
-    try:
-        audio.save()
-        if SEE_PASSED:
-            print("save test passed")
-    except Exception as e:
-        print("save test Failed:\n")
-        traceback.print_exc()
-        print('')
+def generate_random_string(x: int, y: int):
+    siz = random.randint(x, y)
+    characters = string.ascii_letters + string.digits  # You can customize this further
+    random_string = "".join(random.choice(characters) for _ in range(siz))
+    return random_string
 
 
-extensions = ["flac", "mp3", "m4a", "wav", "ogg", "opus"]
-for extension in extensions:
-    print(f"Testing {extension} file")
-    filePath = os.path.join(baseFolder, f"{extension}_test.{extension}")
-    testMutagenWrapper(AudioFactory.buildAudioManager(filePath))
+def generate_random_japanese_string(x: int, y: int) -> str:
+    siz = random.randint(x, y)
+    random_string = "".join(random.choice(all_japanese_chars) for _ in range(siz))
+    return random_string
+
+
+def selectRandomKeysFromDict(input_dict: dict) -> list:
+    num_keys_to_select = random.randint(2, len(input_dict))
+    dict_keys = list(input_dict.keys())
+    selected_keys = random.sample(dict_keys, num_keys_to_select)
+    return selected_keys
+
+
+class MutagenWrapperTestCase(unittest.TestCase):
+    def setUp(self):
+        self.audio = audioImpl
+        self.file_path = filePathImpl
+
+    def test_title(self):
+        test_arr = ["title1", "title2", "title3", generate_random_string(5, 20), generate_random_japanese_string(8, 32)]
+        self._test_equality_list_arg(self.audio.setTitle, self.audio.getTitle, test_arr)
+
+    def test_album(self):
+        test_arr = ["album1", "album2", generate_random_string(5, 20), "album4", generate_random_japanese_string(8, 32), generate_random_string(50, 200)]
+        self._test_equality_list_arg(self.audio.setAlbum, self.audio.getAlbum, test_arr)
+
+    def test_track_disc_number(self):
+        disc, tot_discs, track, tot_tracks = 2, 5, 9, 55
+        self.audio.setDiscNumbers(disc, tot_discs)
+        self.audio.setTrackNumbers(track, tot_tracks)
+        self.assertEqual(disc, self.audio.getDiscNumber())
+        self.assertEqual(tot_discs, self.audio.getTotalDiscs())
+        self.assertEqual(track, self.audio.getTrackNumber())
+        self.assertEqual(tot_tracks, self.audio.getTotalTracks())
+
+    def test_comment(self):
+        test_arr = ["comment1", "find this album at vgmdb.net/damn_son", generate_random_string(5, 20), "album4", generate_random_japanese_string(8, 32), generate_random_string(50, 200)]
+        self._test_equality_list_arg(self.audio.setComment, self.audio.getComment, test_arr)
+
+    def test_date(self):
+        test_arr = ["2001-7-3", "567-  4 /  14 ", "2023-9 -  4 ", "2023- 9", "1969 ", "  2007/11-6"]
+        expected_arr = ["2001-07-03", "0567-04-14", "2023-09-04", "2023-09", "1969", "2007-11-06"]
+        for i, x in enumerate(test_arr):
+            self.audio.setDate(x)
+            self.assertEqual(self.audio.getDate(), expected_arr[i])
+
+    def test_catalog(self):
+        test_arr = ["KSLA-0211", "UNCD-0021~0025", generate_random_string(10, 10)]
+        self._test_equality_list_arg(self.audio.setCatalog, self.audio.getCatalog, test_arr)
+
+    def test_custom_tags(self):
+        key = "MY_TAG"
+
+        def generateValueList():
+            return [generate_random_string(5, 35), "My_value", "testing  ...", "damn son ", generate_random_japanese_string(10, 20), generate_random_string(5, 15), "last custom tag"]
+
+        self._test_equality_custom_tag(self.audio.setCustomTag, self.audio.getCustomTag, key, generateValueList())
+        self._test_equality_list_arg(self.audio.setCatalog, self.audio.getCatalog, generateValueList())
+        self._test_equality_list_arg(self.audio.setDiscName, self.audio.getDiscName, generateValueList())
+        self._test_equality_list_arg(self.audio.setBarcode, self.audio.getBarcode, generateValueList())
+
+    def test_getting_information(self):
+        self.assertIsInstance(self.audio.printInfo(), str)
+
+    def test_setting_deleting_front_cover(self):
+        self.audio.setPictureOfType(getRandomCoverImageData(), "Cover (front)")
+        self.assertTrue(self.audio.hasPictureOfType("Cover (front)"))
+
+        self.audio.deletePictureOfType("Cover (front)")
+        self.assertFalse(self.audio.hasPictureOfType("Cover (front)"))
+
+    def test_setting_multiple_pictures(self):
+        """This test is not for m4a files because they don't support multiple pictures"""
+        chosen_picture_types = selectRandomKeysFromDict(pictureNameToNumber)  # random selection of which type of picture to embed
+        # chosen_picture_types: list[pictureTypes] = [u'Other', u'File icon', u'Other file icon', u'Cover (front)', u'Cover (back)', u'Leaflet page', u'Media (e.g. lable side of CD)']
+        for picture_type in chosen_picture_types:
+            self.audio.setPictureOfType(getRandomCoverImageData(), picture_type)
+
+        for picture_type in chosen_picture_types:
+            self.assertTrue(self.audio.hasPictureOfType(picture_type))
+
+    def test_xx_save(self):
+        """xx is prepended so that the audio file is saved at the end"""
+        self.audio.save()
+
+    def _test_equality_list_arg(self, setter: Callable, getter: Callable, setter_arg: list, expected: Optional[list] = None):
+        if not expected:
+            expected = setter_arg
+
+        setter([])
+        self.assertEqual([], getter())
+
+        setter(setter_arg[0:1])
+        self.assertEqual(expected[0:1], getter())
+
+        setter(setter_arg)
+        self.assertEqual(expected, getter())
+
+    def _test_equality_custom_tag(self, setter: Callable, getter: Callable, key: str, val: list, expected: Optional[list] = None):
+        if not expected:
+            expected = val
+
+        self.audio.setCustomTag(key, [])
+        self.assertEqual(self.audio.getCustomTag(key), [])
+
+        self.audio.setCustomTag(key, val[0:1])
+        self.assertEqual(self.audio.getCustomTag(key), expected[0:1])
+
+        self.audio.setCustomTag(key, val)
+        self.assertEqual(self.audio.getCustomTag(key), expected)
+
+
+def copy_base_samples(force=False):
+    if not force and os.path.exists(modifiedFolder):
+        return
+    if os.path.exists(modifiedFolder):
+        shutil.rmtree(modifiedFolder)
+    os.makedirs(modifiedFolder)
+    for file in os.listdir(baseFolder):
+        file_path = os.path.join(baseFolder, file)
+        if os.path.isfile(file_path):
+            shutil.copy(file_path, modifiedFolder)
+
+
+def test_mutagen_wrapper():
+    extensions = ["mp3", "flac", "m4a", "wav", "ogg", "opus"]
+    for extension in extensions:
+        suite = unittest.TestLoader().loadTestsFromTestCase(MutagenWrapperTestCase)
+        print(f"\n{LINE_SEPARATOR}\nTesting {extension} file")
+        filePath = os.path.join(modifiedFolder, f"{extension}_test.{extension}")
+        global audioImpl, filePathImpl
+        audioImpl = AudioFactory.buildAudioManager(filePath)
+        # audioImpl.clearTags()
+        # audioImpl.save()
+        filePathImpl = filePath
+        unittest.TextTestRunner().run(suite)
+
+
+def custom_check():
+    extensions = ["mp3", "flac", "m4a", "wav", "ogg", "opus"]
+    for extension in extensions:
+        print(f"\n{LINE_SEPARATOR}\nTesting {extension} file")
+        filePath = os.path.join(baseFolder, f"{extension}_test.{extension}")
+        m1 = AudioFactory.buildAudioManager(filePath)
+        m2 = AudioFactory.buildAudioManager(filePath)
+        m1.setAlbum(["damn"])
+        m1.save()
+        print(m2.getAlbum())
+
+
+if __name__ == "__main__":
+    copy_base_samples()
+    test_mutagen_wrapper()
+    # custom_check()
