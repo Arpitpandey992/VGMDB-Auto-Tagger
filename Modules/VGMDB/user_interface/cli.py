@@ -23,9 +23,9 @@ from Modules.Scan.models.local_album_data import LocalAlbumData
 from Modules.Tag import custom_tags
 from Modules.Tag.tagger import Tagger
 from Modules.Translate import translator
-from Modules.Utils.general_utils import get_default_logger, ifNot, printAndMoveBack
+from Modules.Utils.general_utils import get_default_logger, ifNot
 from Modules.VGMDB.api import client
-from Modules.VGMDB.models.vgmdb_album_data import VgmdbAlbumData
+from Modules.VGMDB.models.vgmdb_album_data import Names, VgmdbAlbumData
 from Modules.VGMDB.user_interface import constants
 from Modules.VGMDB.constants import VGMDB_OFFICIAL_BASE_URL
 from Modules.VGMDB.user_interface.cli_args import get_config_from_args
@@ -53,15 +53,16 @@ class CLI:
         self.root_config = get_config_from_args()
         self.scanner = Scanner()
         self.console = get_rich_console()
+        self.colors = {"red": "#f3aba8", "green": "#c4e5a5"}
 
     def run(self):
         albums = self._scan_for_proper_albums(self.root_config.root_dir, self.root_config.recur)
         self.console.log(f"Found {len(albums)} Albums")
         print_separator()
         for album in albums:
-            self.console.print(f"[bright_magenta bold]Operating on {album.album_folder_name}[/bright_magenta bold]")
+            self.console.print(f"[bright_magenta bold]Operating on {album.album_folder_name}")
             if self.root_config.backup:
-                self.console.print(get_panel(f"[bold green]Backing Up[/bold green]"))
+                self.console.print(get_panel(f"[bold green]Backing Up"))
                 self._backup_local_album(album)
             print_separator()
             try:
@@ -69,11 +70,11 @@ class CLI:
                 local_album_config.root_dir = album.album_folder_path
                 self.operate(album, local_album_config)
                 print_separator()
-                self.console.log(f"[green]Successfully Finished All Oprations on {album.album_folder_name}[/green]")
+                self.console.log(f"[green]Successfully Finished All Oprations on {album.album_folder_name}")
                 print_separator()
             except Exception as e:
                 print_separator()
-                logger.error(f"Error Occurred: {type(e).__name__} -> {e}, skipping {album.album_folder_path}")
+                self.console.log(f"[bright_red bold]Error Occurred: {type(e).__name__} -> {e}, skipping {album.album_folder_path}")
                 print_separator()
 
     def operate(self, local_album_data: LocalAlbumData, config: Config) -> None:
@@ -84,7 +85,7 @@ class CLI:
             self.organize(local_album_data, config)
 
     def tag(self, local_album_data: LocalAlbumData, config: Config) -> bool:
-        self.console.print(get_panel("[bold green]Tagging Metadata[/bold green]"))
+        self.console.print(get_panel("[bold green]Tagging Metadata"))
         self.console.log(f"Fetching Album ID")
         album_id = self._get_album_id(local_album_data, config)
         if not album_id:
@@ -106,17 +107,18 @@ class CLI:
 
         if config.scans_download:
             print_separator()
-            self.console.print("[bold green]Downloading Scans[/bold green]")
+            self.console.print("[bold green]Downloading Scans")
             vgmdb_album_data.download_scans(local_album_data.album_folder_path, no_auth=self.root_config.no_auth)
             print_separator()
 
-        self.console.log("Tagging Album")
+        self.console.print("[bold green]Tagging Album")
         Tagger(local_album_data, vgmdb_album_data, config).tag_files()
         print_separator()
         return True
 
     def organize(self, local_album_data: LocalAlbumData, config: Config) -> bool:
-        self.console.print(get_panel("[bold green]Organizing[/bold green]"))
+        print_separator()
+        self.console.print(get_panel("[bold green]Organizing"))
         organizer = Organizer(local_album_data, config)
         folder_organize_result = organizer.organize()
         instruction = self._confirm_before_proceeding_to_organize(folder_organize_result, config)
@@ -177,10 +179,8 @@ class CLI:
             self.console.print(
                 textwrap.dedent(
                     f"""
-                    Folder Rename:
-                    [bright_red]{folder_organize_result.old_name}[/bright_red]
-                    [bold white] ↓ [/bold white]
-                    [bright_green]{new_folder_name}[/bright_green]
+                    [bold green]Folder Rename:
+                    [bright_red]{folder_organize_result.old_name}[/bright_red][bold white] -> [/bold white][bright_green]{new_folder_name}[/bright_green]
                     """
                 ).strip()
             )
@@ -210,12 +210,15 @@ class CLI:
                 "Local Album Data is matching perfectly with VGMDB Album Data, Proceed?",
                 choices=[option.value for option in constants.choices],
                 default=constants.choices.yes.value,
+                style=questionary.Style([("question", f"fg:{self.colors['green']} bold"), ("highlighted", "fg:white bold"), ("selected", "fg:white")]),
             ).skip_if(config.yes, default=constants.choices.yes.value)
         else:
             question = questionary.select(
                 "Local Album Data is NOT matching perfectly with VGMDB Album Data, Proceed?",
                 choices=[option.value for option in constants.choices],
                 default=constants.choices.no.value,
+                style=questionary.Style([("question", f"fg:{self.colors['red']} bold"), ("highlighted", "fg:white bold"), ("selected", "fg:white")]),
+                pointer="❯",
             ).skip_if(config.no_input, default=constants.choices.no.value)
         choice = question.ask()
         if not choice:  # user cancelled
@@ -241,19 +244,28 @@ class CLI:
     def _find_and_show_match_for_tagging(self, vgmdb_album_data: VgmdbAlbumData, config: Config) -> bool:
         """Find the match between the two data we have, and returns whether the albums are perfectly matching or not"""
         if config.translate:
-            with self.console.status("[bold green]Translating Track Names..."):
-                for disc_number, vgmdb_disc in vgmdb_album_data.discs.items():
-                    for track_number, vgmdb_track in vgmdb_disc.tracks.items():
-                        track_title = vgmdb_track.names.get_highest_priority_name([order for order in config.language_order if order != "translated"])  # don't wanna translate translated text ;)
-                        try:
-                            translated_names: list[str] = []
-                            for translate_language in config.translation_language:
-                                translated_name = translator.translate(track_title, translate_language)
-                                translated_names.append(translated_name) if translated_name else None
-                            vgmdb_track.names.add_names(translated_names, "translated")
-                            self.console.log(f"[green]Translated[/green] [cyan bold]{track_title}[cyan bold]")
-                        except Exception as e:
-                            self.console.log(f"[red bold]Error in translating {track_title}, error: {e}[/red bold]")
+            with self.console.status("[bold green]Translating Album Name") as status:
+                to_translate: list[Names] = [vgmdb_album_data.names] + [track.names for disc in vgmdb_album_data.discs.values() for track in disc.tracks.values()]
+
+                for i, name_object in enumerate(to_translate):
+                    track_title = name_object.get_highest_priority_name([order for order in config.language_order if order != "translated"])  # don't wanna translate translated text ;)
+                    if i > 0:
+                        status.update(f"[bold green]Translating [bold magenta]{track_title}")
+                    try:
+                        translated_names: list[str] = []
+                        successfully_translated = False
+                        for translate_language in config.translation_language:
+                            translated_name = translator.translate(track_title, translate_language)
+                            translated_names.append(translated_name) if translated_name else None
+                            successfully_translated = successfully_translated or bool(translated_name)
+
+                        name_object.add_names(translated_names, "translated")
+                        if successfully_translated:
+                            self.console.log(f"[green]Translated [magenta bold]{track_title}")
+                        else:
+                            self.console.log(f"[yellow]No need to Translate [cyan bold]{track_title}")
+                    except Exception as e:
+                        self.console.log(f"[red bold]Error in Translating {track_title}, error: {e}")
 
         table_data: list[tuple[int | str, int | str, str, str]] = []
         for disc_number, vgmdb_disc in vgmdb_album_data.discs.items():
@@ -290,7 +302,7 @@ class CLI:
             Table.Column(header="File Name", justify="left", style="magenta"),
         )
         if not config.no_input:
-            Table.tabulate(table_data, columns=columns, title=f"Data Match Between Details from VGMDB Album and Local Album")
+            Table.tabulate(table_data, columns=columns, title=f"Album Name{' [Translated]' if config.translate else ''}: {vgmdb_album_data.names.get_highest_priority_name(config.language_order)}")
         is_perfect_match = all(col for row in table_data for col in row)  # perfect match only if nothing is "" or None
         return is_perfect_match
 
@@ -320,7 +332,7 @@ class CLI:
         album_found, exit_flag, album_id = False, False, None
         exit_ask, year_filter = "Exit", "Year"
         while not album_found and not exit_flag:
-            self.console.log(f"Searching For {search_term}")
+            self.console.log(f"Searching For [bold cyan]{search_term}")
             search_result = client.search_album(search_term)
 
             table_data = [(result.catalog, result.get_album_name(config.language_order), result.album_link, result.release_year) for result in search_result if not year or result.release_year == year]
@@ -420,11 +432,11 @@ class CLI:
                 os.makedirs(backup_folder)
 
             shutil.copytree(album_folder, backup_album_folder, dirs_exist_ok=False)
-            self.console.print(f"[green]Successfully Backed up {album_folder} to {backup_album_folder}[/green]")
+            self.console.print(f"[green]Successfully Backed up {album_folder} to {backup_album_folder}")
         except FileExistsError as e:
-            self.console.log(f"[yellow]Backup Couldn't Be completed because folder already exists (most likely already backed up before)[/yellow]")
+            self.console.log(f"[yellow]Backup Couldn't Be completed because folder already exists (most likely already backed up before)")
         except Exception as e:
-            self.console.log(f"[bold bright_red]Error during backup: {e}[/bold bright_red]")
+            self.console.log(f"[bold bright_red]Error during backup: {e}")
             raise (e)
 
 
@@ -433,7 +445,7 @@ if __name__ == "__main__":
     def test():
         import sys
 
-        all = False  # Important -> this variable causes issue if this is outside test() because it pollutes the global namespace (hence renders all usages of `all` keyword)
+        all = True  # Important -> this variable causes issue if this is outside test() because it pollutes the global namespace (hence renders all usages of `all` keyword)
         if all:
             sys.argv.append("/Users/arpit/Library/Custom/Music")
             sys.argv.append("--recur")

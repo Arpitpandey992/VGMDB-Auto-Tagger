@@ -29,7 +29,7 @@ REVERSE_CONFIG_MAP_FOR_TAG = {val: key for key, val in CONFIG_MAP_FOR_TAG.items(
 CONFIG_MAP_FOR_ORGANIZE = {
     "Rename Folder": "rename_folder",
     "Rename Files": "rename_files",
-    "Same Folder Name": "same_folder_name",
+    "Same Folder Name (Use current folder name and add other fields on top like date)": "same_folder_name",
 }
 
 REVERSE_CONFIG_MAP_FOR_ORGANIZE = {val: key for key, val in CONFIG_MAP_FOR_ORGANIZE.items()}

@@ -34,6 +34,8 @@ class Names(BaseModel):
         super().__init__()
         self.language_map = {"english": self.english, "translated": self.translated, "japanese": self.japanese, "romaji": self.romaji, "other": self.others}
         for language_key, value in language_dict.items():
+            if value == "None":
+                continue
             identified_language = self._identify_language(language_key)
             self.language_map[identified_language].append(value)
 
@@ -48,10 +50,10 @@ class Names(BaseModel):
         """get all names reordered according to the given order"""
         return [name for lang in order for name in self.language_map[lang]]
 
-    def get_highest_priority_name(self, priority: list[LANGUAGES] = ["english", "translated", "romaji", "japanese", "other"]) -> str | None:
+    def get_highest_priority_name(self, priority: list[LANGUAGES] = ["english", "translated", "romaji", "japanese", "other"]) -> str:
         """get the name with highest priority"""
         reordered_names = self.get_reordered_names(priority)
-        return reordered_names[0] if reordered_names else None
+        return reordered_names[0] if reordered_names else "(Not Available)"
 
     def _identify_language(self, s: str) -> LANGUAGES:
         lang = s.lower().strip()

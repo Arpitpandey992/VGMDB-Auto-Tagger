@@ -107,7 +107,7 @@ translate_cache: dict[tuple[str, TRANSLATE_LANGUAGES], str | None] = {}
 
 def translate(text: str | None, target_language: TRANSLATE_LANGUAGES = "english") -> str | None:
     if not text:
-        return
+        return None
     global translate_cache
     if (text, target_language) in translate_cache:
         return translate_cache.get((text, target_language))

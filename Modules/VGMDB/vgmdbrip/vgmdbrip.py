@@ -77,40 +77,42 @@ def ensure_dir(f):
 
 
 def downloadScans(output_dir: str, albumID: str):
-    cwd = os.path.abspath(__file__)
-    scriptdir = os.path.dirname(cwd)
-    config = os.path.join(scriptdir, "vgmdbrip.pkl")
-    login(config)
-    soup = Soup(session.get("https://vgmdb.net/album/" + albumID).content)
-    gallery = soup.find("div", attrs={"class": "covertab", "id": "cover_gallery"})
-
-    if not isinstance(gallery, Tag):
-        return
-
-    scans = gallery.find_all("a", attrs={"class": "highslide"})
-    pictureCount = len(scans)
-
-    finalScanFolder = os.path.join(output_dir, "Scans") if pictureCount > 1 else output_dir
-    if not os.path.exists(finalScanFolder):
-        os.makedirs(finalScanFolder)
-
     console = get_rich_console()
-    with console.status("[bold green]Downloading Scans..."):
-        while scans:
-            scan = scans.pop(0)
+    with console.status("[bold magenta]Authenticating and Fetching Scans") as status:
+        cwd = os.path.abspath(__file__)
+        scriptdir = os.path.dirname(cwd)
+        config = os.path.join(scriptdir, "vgmdbrip.pkl")
+        login(config)
+        soup = Soup(session.get("https://vgmdb.net/album/" + albumID).content)
+        gallery = soup.find("div", attrs={"class": "covertab", "id": "cover_gallery"})
+
+        if not isinstance(gallery, Tag):
+            return
+
+        scans = gallery.find_all("a", attrs={"class": "highslide"})
+        pictureCount = len(scans)
+
+        finalScanFolder = os.path.join(output_dir, "Scans") if pictureCount > 1 else output_dir
+        if not os.path.exists(finalScanFolder):
+            os.makedirs(finalScanFolder)
+        for scan in scans:
             url = scan["href"]
             title = remove(scan.text.strip(), '"*/:<>?\|')  # type: ignore
+            status.update(f"[green]Downloading [bold magenta]{title}")
             try:
                 downloadFile(url=url, output_dir=finalScanFolder, name=title)
-                console.log(f"[green]Downloaded:[/green] [cyan bold]{title}[/cyan bold]")
+                console.log(f"[green]Downloaded:[/green] [magenta bold]{title}")
             except FileExistsError:
-                console.log(f"[yellow]Already Exists:[/yellow] [cyan bold]{title}[/cyan bold]")
+                console.log(f"[yellow]Already Exists:[/yellow] [cyan bold]{title}")
             except Exception as e:
-                console.log(f"[red]Error while downloading:[/red] {e}")
+                console.log(f"[red]Error while downloading: {e}")
 
     pickle.dump(session, open(config, "wb"))
 
 
 if __name__ == "__main__":
+    import shutil
+
     folder = "/Users/arpit/Downloads/test"
-    downloadScans(folder, "135542")
+    shutil.rmtree(folder, ignore_errors=True)
+    downloadScans(folder, "27623")

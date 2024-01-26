@@ -13,7 +13,7 @@ def get_rich_console():
 
 def print_separator():
     """prints a wide line to separate sections"""
-    get_rich_console().print(Rule(style="white"))
+    get_rich_console().print(Rule(style="white", characters="━"))
 
 
 def get_panel(text: str, *args: Any, expand: bool = False, **kwargs: Any) -> Panel:

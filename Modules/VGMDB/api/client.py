@@ -85,16 +85,33 @@ def get_album_details(album_id: str) -> VgmdbAlbumData:
 
 
 def search_album(search_term: str) -> list[SearchAlbum]:
+    cleaned_search_term = _clean_search_term(search_term)
     global search_cache
-    if search_term in search_cache:
-        return search_cache[search_term]
+    if cleaned_search_term in search_cache:
+        return search_cache[cleaned_search_term]
 
-    url = urljoin(vgmdb_info_base_url, f"search?q={search_term}")
+    url = urljoin(vgmdb_info_base_url, f"search?q={cleaned_search_term}")
     search_result = get_request(url)
     if isinstance(search_result, Exception):
-        raise VgmdbRequestException(f"could not search for {search_term} from vgmdb")
-    search_cache[search_term] = [SearchAlbum.model_validate(result) for result in search_result["results"]["albums"]]
-    return search_cache[search_term]
+        raise VgmdbRequestException(f"could not search for {cleaned_search_term} from vgmdb")
+    search_cache[cleaned_search_term] = [SearchAlbum.model_validate(result) for result in search_result["results"]["albums"]]
+    return search_cache[cleaned_search_term]
+
+
+def _clean_search_term(name: str) -> str:
+    def isJapanese(ch: str) -> bool:
+        return ord(ch) >= 0x4E00 and ord(ch) <= 0x9FFF
+
+    def isChinese(ch: str) -> bool:
+        return ord(ch) >= 0x3400 and ord(ch) <= 0x4DFF
+
+    ans = ""
+    for ch in name:
+        if ch.isalnum() or ch == " " or isJapanese(ch) or isChinese(ch):
+            ans += ch
+        else:
+            ans += " "
+    return ans
 
 
 if __name__ == "__main__":
