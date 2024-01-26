@@ -55,8 +55,9 @@ class Config(BaseModel):
     rename_files: bool = True
     same_folder_name: bool = False
     folder_naming_template: str = "{[{date|year}] }{albumname|foldername}{ [{catalog}]}{ [{format}]}"
+    folder_naming_template_ksl: str = "{[{catalog}] }{albumname|foldername}{ [{date|year}]}{ [{format}]}"
     file_naming_template_single: str = "{tracktitle|filename}{extension}"
-    file_naming_template_multiple: str = "{{{tracknumber|sortnumber}. {tracktitle}}|filename}{extension}"
+    file_naming_template_multiple: str = "{{{tracknumber}. {tracktitle}}|filename}{extension}"
     disc_folder_naming_template_single: str = ""
     disc_folder_naming_template_multiple: str = "{Disc {discnumber}. {discname}}|discfoldername"
 

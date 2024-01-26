@@ -24,7 +24,7 @@ class Organizer:
         old_path = self.local_album_data.album_folder_path
         base_path = os.path.dirname(old_path)
         folder_naming_template_mapping = self._get_album_template_mapping()
-        new_name = TemplateResolver(folder_naming_template_mapping).evaluate(self.config.folder_naming_template)
+        new_name = clean_name(TemplateResolver(folder_naming_template_mapping).evaluate(self.config.folder_naming_template))
         new_path = os.path.join(base_path, new_name)
         files_organize_result = self._organize_album_files()
 
@@ -73,8 +73,8 @@ class Organizer:
                 file_organize_result = FileOrganizeResult(old_path=file.file_path, new_path=new_file_path, base_album_path=self.local_album_data.album_folder_path)
                 file_organize_results.append(file_organize_result)
 
-        for sort_number, file in enumerate(self.local_album_data.unclean_tracks):
-            new_file_name = self._get_new_file_name(file, sort_number=sort_number)
+        for file in self.local_album_data.unclean_tracks:
+            new_file_name = self._get_new_file_name(file)
             new_file_path = os.path.join(self.album_folder_path, new_file_name)
             file_organize_result = FileOrganizeResult(old_path=file.file_path, new_path=new_file_path, base_album_path=self.local_album_data.album_folder_path)
             file_organize_results.append(file_organize_result)
@@ -89,7 +89,6 @@ class Organizer:
         total_tracks: int | None = None,
         disc_number: int | None = None,
         total_discs: int | None = None,
-        sort_number: int | None = None,
     ) -> str:
         """get new file path after renaming and moving file under disc if applicable (does not include base path, needs to be prepended later)"""
 
@@ -107,7 +106,6 @@ class Organizer:
 
         track_number_fixed, _ = getProperCount(track_number, total_tracks)
         disc_number_fixed, _ = getProperCount(disc_number, total_discs)
-        fixed_sort_number, _ = getProperCount(sort_number + 1, len(self.local_album_data.unclean_tracks)) if sort_number else (None, None)
 
         disc_naming_template = self.config.disc_folder_naming_template_single if is_album_single_disc else self.config.disc_folder_naming_template_multiple
         disc_naming_template_mapping: dict[str, str | None] = {
@@ -119,7 +117,6 @@ class Organizer:
         file_naming_template = self.config.file_naming_template_single if is_disc_single else self.config.file_naming_template_multiple
         file_naming_template_mapping: dict[str, str | None] = {
             "tracknumber": track_number_fixed,
-            "sortnumber": fixed_sort_number,
             "tracktitle": title,
             "filename": file_name,
             "extension": file.extension,

@@ -4,6 +4,7 @@ import getpass
 import pickle
 import requests
 from bs4 import BeautifulSoup, Tag
+from Modules.Print.utils import get_rich_console
 from Modules.Utils.network_utils import downloadFile
 
 session = requests.Session()
@@ -93,15 +94,20 @@ def downloadScans(output_dir: str, albumID: str):
     if not os.path.exists(finalScanFolder):
         os.makedirs(finalScanFolder)
 
-    for scan in scans:
-        url = scan["href"]
-        title = remove(scan.text.strip(), '"*/:<>?\|')  # type: ignore
-        print(f"Downloading {title}..........", end="", flush=True)
-        try:
-            downloadFile(url=url, output_dir=finalScanFolder, name=title)
-            print("Done")
-        except Exception as e:
-            print(f"failed, error: {e}")
+    console = get_rich_console()
+    with console.status("[bold green]Downloading Scans..."):
+        while scans:
+            scan = scans.pop(0)
+            url = scan["href"]
+            title = remove(scan.text.strip(), '"*/:<>?\|')  # type: ignore
+            try:
+                downloadFile(url=url, output_dir=finalScanFolder, name=title)
+                console.log(f"[green]Downloaded:[/green] [cyan bold]{title}[/cyan bold]")
+            except FileExistsError:
+                console.log(f"[yellow]Already Exists:[/yellow] [cyan bold]{title}[/cyan bold]")
+            except Exception as e:
+                console.log(f"[red]Error while downloading:[/red] {e}")
+
     pickle.dump(session, open(config, "wb"))
 
 

@@ -48,9 +48,9 @@ class CLIArgs(Tap):
     japanese: bool = False  # Give Priority to Japanese
 
     def configure(self):
-        self.add_argument("root_dir")
-        self.add_argument("-r", "--recur")
-        self.add_argument("-y", "--yes")
+        self.add_argument("root_dir")  # type: ignore
+        self.add_argument("-r", "--recur")  # type: ignore
+        self.add_argument("-y", "--yes")  # type: ignore
 
     def process_args(self):
         if self.folder_naming_template:
@@ -78,7 +78,7 @@ def get_config_from_args() -> Config:
     if args["no_rename_files"]:
         config.rename_files = False
     if args["ksl"]:
-        config.folder_naming_template = "{[{catalog}] }{albumname}{ [{date}]}{ [{format}]}"
+        config.folder_naming_template = config.folder_naming_template_ksl  # easier to maintain if done like this
 
     if args["no_title"]:
         config.title = False
