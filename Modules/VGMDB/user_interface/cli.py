@@ -465,7 +465,7 @@ if __name__ == "__main__":
             sys.argv.append("/Users/arpit/Library/Custom/Music")
             sys.argv.append("--recur")
         else:
-            sys.argv.append("/Users/arpit/Library/Custom/music/[2022.10.15] Thanks Ⳇ you -Sotsugyou- [MGPG-0001] [CD-MP3 320kbps]")
+            sys.argv.append("/run/media/arpit/DATA/Downloads/Torrents/[STEINS;GATE／命运石之门] Lossless Collection V1 by 石学sos团devil/Lossless Collection/09/[2009.03.31] Luminous no Izumi Ⳇ Afilia Saga East [FPBD-0085] [CD-FLAC 16bit 44.1kHz]")
         cli_manager = CLI()
         cli_manager.run()
 

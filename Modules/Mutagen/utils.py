@@ -146,10 +146,10 @@ def cleanDate(date_str: str) -> str:
     return "-".join(parts)
 
 
-def extractYearFromDate(dat: Optional[str]) -> Optional[str]:
-    if not dat:
+def extractYearFromDate(date: Optional[str]) -> Optional[str]:
+    if not date:
         return None
-    cleaned_date = cleanDate(dat)
+    cleaned_date = cleanDate(date)
     return cleaned_date[0:4] if len(cleaned_date) >= 4 else None
 
 
