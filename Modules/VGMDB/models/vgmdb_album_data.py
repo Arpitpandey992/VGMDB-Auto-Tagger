@@ -1,10 +1,12 @@
 import os
+import threading
 from typing import Any, get_args
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, root_validator
 
 from Imports.constants import LANGUAGES
 from Modules.Print.constants import LINE_SEPARATOR, SUB_LINE_SEPARATOR
 from Modules.Scan.models.local_album_data import LocalAlbumData, LocalTrackData
+from Modules.Utils.general_utils import get_default_logger
 from Modules.Utils.image_utils import compress_image_limit_max_width
 from Modules.Utils.network_utils import downloadFile, getRawDataFromUrl
 from Modules.VGMDB.vgmdbrip.vgmdbrip import downloadScans
@@ -15,6 +17,8 @@ language_aliases: dict[LANGUAGES, list[str]] = {
     "romaji": ["ja-latn", "Romaji"],
     "japanese": ["ja", "Japanese"],
 }
+
+logger = get_default_logger(__name__, "info")
 
 
 class Names(BaseModel):
@@ -160,6 +164,15 @@ class VgmdbAlbumData(BaseModel):
     @property
     def total_tracks_in_album(self):
         return sum(len(disc.tracks) for disc in self.discs.values())
+
+    def model_post_init(self, _) -> None:
+        """
+        Fetching the album cover data post init using a side thread to reduce runtime later
+        We don't have to use mutex for locking the function because the fetched value is always the same
+        """
+        thread = threading.Thread(target=self.get_album_cover_data)
+        thread.start()
+        logger.info("fetching for album cover in background")
 
     @field_validator("catalog", mode="before")
     @classmethod
