@@ -460,7 +460,7 @@ if __name__ == "__main__":
     def test():
         import sys
 
-        all = True  # Important -> this variable causes issue if this is outside test() because it pollutes the global namespace (hence renders all usages of `all` keyword)
+        all = True  # Important -> this variable causes issue if this is outside test() because it pollutes the global namespace (hence renders very usage of `all` keyword ambiguous)
         if all:
             sys.argv.append("/Users/arpit/Library/Custom/Music")
             sys.argv.append("--recur")

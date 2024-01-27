@@ -5,7 +5,7 @@ from rich import get_console
 from tap import Tap
 from Imports.config import Config, get_config
 
-from Modules.organize.template import TemplateResolver
+from Modules.organize.template import TemplateResolver, TemplateValidationException
 
 
 class CLIArgs(Tap):
@@ -55,7 +55,12 @@ class CLIArgs(Tap):
 
     def process_args(self):
         if self.folder_naming_template:
-            TemplateResolver.validateTemplate(self.folder_naming_template)  # will raise exception if not valid
+            try:
+                TemplateResolver.validateTemplate(self.folder_naming_template)  # will raise exception if not valid
+            except TemplateValidationException:
+                escaped_folder_naming_template = self.folder_naming_template.replace("[", r"\[")
+                get_console().print(f"[red]Provided folder naming template: [cyan bold]{escaped_folder_naming_template}[/] is invalid")
+                exit(0)
 
 
 def get_config_from_args() -> Config:
