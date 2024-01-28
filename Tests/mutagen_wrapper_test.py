@@ -2,7 +2,7 @@ import os
 import shutil
 import string
 import random
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 import unittest
 
 # remove
@@ -11,7 +11,7 @@ import sys
 sys.path.append(os.getcwd())
 # remove
 from Modules.Print.constants import LINE_SEPARATOR
-from Modules.Mutagen.mutagenWrapper import AudioFactory, IAudioManager, pictureNameToNumber
+from Modules.Mutagen.mutagen_wrapper import AudioFactory, IAudioManager, pictureNameToNumber
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 baseFolder = os.path.join(__location__, "testSamples", "baseSamples")
@@ -53,7 +53,7 @@ def generate_random_japanese_string(x: int, y: int) -> str:
     return random_string
 
 
-def selectRandomKeysFromDict(input_dict: dict) -> list:
+def select_random_keys_from_dict(input_dict: dict[Any, Any]) -> list[Any]:
     num_keys_to_select = random.randint(2, len(input_dict))
     dict_keys = list(input_dict.keys())
     selected_keys = random.sample(dict_keys, num_keys_to_select)
@@ -103,7 +103,7 @@ class MutagenWrapperTestCase(unittest.TestCase):
         def generateValueList():
             return [generate_random_string(5, 35), "My_value", "testing  ...", "damn son ", generate_random_japanese_string(10, 20), generate_random_string(5, 15), "last custom tag"]
 
-        self._test_equality_custom_tag(self.audio.setCustomTag, self.audio.getCustomTag, key, generateValueList())
+        self._test_equality_custom_tag(key, generateValueList())
         self._test_equality_list_arg(self.audio.setCatalog, self.audio.getCatalog, generateValueList())
         self._test_equality_list_arg(self.audio.setDiscName, self.audio.getDiscName, generateValueList())
         self._test_equality_list_arg(self.audio.setBarcode, self.audio.getBarcode, generateValueList())
@@ -120,7 +120,7 @@ class MutagenWrapperTestCase(unittest.TestCase):
 
     def test_setting_multiple_pictures(self):
         """This test is not for m4a files because they don't support multiple pictures"""
-        chosen_picture_types = selectRandomKeysFromDict(pictureNameToNumber)  # random selection of which type of picture to embed
+        chosen_picture_types = select_random_keys_from_dict(pictureNameToNumber)  # random selection of which type of picture to embed
         # chosen_picture_types: list[pictureTypes] = [u'Other', u'File icon', u'Other file icon', u'Cover (front)', u'Cover (back)', u'Leaflet page', u'Media (e.g. lable side of CD)']
         for picture_type in chosen_picture_types:
             self.audio.setPictureOfType(getRandomCoverImageData(), picture_type)
@@ -132,7 +132,7 @@ class MutagenWrapperTestCase(unittest.TestCase):
         """xx is prepended so that the audio file is saved at the end"""
         self.audio.save()
 
-    def _test_equality_list_arg(self, setter: Callable, getter: Callable, setter_arg: list, expected: Optional[list] = None):
+    def _test_equality_list_arg(self, setter: Callable[[list[Any]], None], getter: Callable[[], list[Any]], setter_arg: list[Any], expected: Optional[list[Any]] = None):
         if not expected:
             expected = setter_arg
 
@@ -145,7 +145,7 @@ class MutagenWrapperTestCase(unittest.TestCase):
         setter(setter_arg)
         self.assertEqual(expected, getter())
 
-    def _test_equality_custom_tag(self, setter: Callable, getter: Callable, key: str, val: list, expected: Optional[list] = None):
+    def _test_equality_custom_tag(self, key: str, val: list[str], expected: Optional[list[str]] = None):
         if not expected:
             expected = val
 
@@ -159,14 +159,13 @@ class MutagenWrapperTestCase(unittest.TestCase):
         self.assertEqual(self.audio.getCustomTag(key), expected)
 
 
-def copy_base_samples(force=False):
-    if not force and os.path.exists(modifiedFolder):
-        return
-    if os.path.exists(modifiedFolder):
-        shutil.rmtree(modifiedFolder)
-    os.makedirs(modifiedFolder)
+def copy_base_samples(force: bool = False):
+    os.makedirs(modifiedFolder, exist_ok=True)
     for file in os.listdir(baseFolder):
         file_path = os.path.join(baseFolder, file)
+        modified_file_path = os.path.join(modifiedFolder, file)
+        if not force and os.path.exists(modified_file_path):
+            continue
         if os.path.isfile(file_path):
             shutil.copy(file_path, modifiedFolder)
 
@@ -179,7 +178,7 @@ def test_mutagen_wrapper():
         filePath = os.path.join(modifiedFolder, f"{extension}_test.{extension}")
         global audioImpl, filePathImpl
         audioImpl = AudioFactory.buildAudioManager(filePath)
-        # audioImpl.clearTags()
+        audioImpl.clearTags()
         # audioImpl.save()
         filePathImpl = filePath
         unittest.TextTestRunner().run(suite)

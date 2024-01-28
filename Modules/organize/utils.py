@@ -4,10 +4,10 @@ from typing_extensions import TypedDict
 from tabulate import tabulate
 from mutagen.flac import StreamInfo
 from Imports.config import Config
-from Modules.Mutagen.mutagenWrapper import supportedExtensions
+from Modules.Mutagen.mutagen_wrapper import supportedExtensions
 from Utility.audioUtils import getFolderTrackData, getOneAudioFile
 from Modules.Utils.general_utils import cleanName, fixDate, getProperCount, printAndMoveBack
-from Modules.Mutagen.mutagenWrapper import AudioFactory, IAudioManager
+from Modules.Mutagen.mutagen_wrapper import AudioFactory, IAudioManager
 from Modules.organize.template import TemplateResolver
 from Modules.Utils.general_utils import get_default_logger
 

@@ -1,6 +1,6 @@
 import os
 import base64
-from typing import Any, Union, Optional
+from typing import Any, Literal, Union, Optional
 from abc import ABC, abstractmethod
 
 from mutagen.mp3 import MP3
@@ -242,9 +242,10 @@ class CustomFLAC(FLAC):
 
 
 class VorbisWrapper(IAudioManager):
-    def __init__(self, mutagen_object: Union[CustomFLAC, CustomOgg, CustomOpus], extension: str):
+    def __init__(self, file_path: str, extension: Literal[".flac", ".ogg", ".opus"]):
+        extension_handlers = {".flac": CustomFLAC, ".ogg": CustomOgg, ".opus": CustomOpus}
         self.extension = extension.lower()
-        self.audio = mutagen_object
+        self.audio = extension_handlers[extension](file_path)
 
     def setTitle(self, newTitle):
         self.audio["title"] = newTitle
@@ -414,9 +415,10 @@ class CustomMP3(ID3):
 
 
 class ID3Wrapper(IAudioManager):
-    def __init__(self, mutagen_object: Union[CustomMP3, CustomWAVE], extension: str):
-        self.audio = mutagen_object
-        self.extension = extension.lower()
+    def __init__(self, file_path: str, extension: Literal[".mp3", ".wav"]):
+        extension_handlers = {".mp3": CustomMP3, ".wav": CustomWAVE}
+        self.extension = extension
+        self.audio = extension_handlers[extension](file_path)
 
     def setTitle(self, newTitle):
         self.audio.add(TIT2(encoding=3, text=[title for title in newTitle[:1]]))
@@ -580,9 +582,10 @@ class ID3Wrapper(IAudioManager):
 
 
 class MP4Wrapper(IAudioManager):
-    def __init__(self, mutagen_object: MP4, extension: str):
+    def __init__(self, file_path: str, extension: Literal[".m4a"]):
+        extension_handlers = {".m4a": MP4}
         self.extension = extension.lower()
-        self.audio = mutagen_object
+        self.audio = extension_handlers[extension](file_path)
 
     def setTitle(self, newTitle):
         self.audio["\xa9nam"] = newTitle
@@ -708,21 +711,20 @@ class MP4Wrapper(IAudioManager):
 
 
 class UnsupportedFileFormatError(Exception):
-    def __init__(self, file_path):
+    def __init__(self, file_path: str):
         self.file_path = file_path
         message = f"unsupported file format for the file: {file_path}"
         super().__init__(message)
 
 
 audioFileHandler = {
-    ".flac": [VorbisWrapper, CustomFLAC],
-    ".wav": [ID3Wrapper, CustomWAVE],
-    ".mp3": [ID3Wrapper, CustomMP3],
-    ".ogg": [VorbisWrapper, CustomOgg],
-    ".opus": [VorbisWrapper, CustomOpus],
-    ".m4a": [MP4Wrapper, MP4],
+    ".flac": VorbisWrapper,
+    ".wav": ID3Wrapper,
+    ".mp3": ID3Wrapper,
+    ".ogg": VorbisWrapper,
+    ".opus": VorbisWrapper,
+    ".m4a": MP4Wrapper,
 }
-
 supportedExtensions = audioFileHandler.keys()
 
 
@@ -738,16 +740,14 @@ class AudioFactory:
             raise UnsupportedFileFormatError(filePath)
         _, extension = os.path.splitext(filePath)
         extension = extension.lower()
-        codec = audioFileHandler[extension][0]
-        handler = audioFileHandler[extension][1]
-        return codec(handler(filePath), extension)
+        codec = audioFileHandler[extension]
+        return codec(filePath, extension)  # type: ignore
 
 
 if __name__ == "__main__":
     filePath = "/Users/arpit/Library/Custom/Downloads/example.mp3"
     audio = AudioFactory.buildAudioManager(filePath)
     print(type(audio))
-    print(isinstance(audio, IAudioManager))
     audio.setCustomTag("yourssss", ["yepyep", "ei", "213dasfdad"])
     audio.setTitle(["damn", "sons", "huh"])
     audio.setComment(["This is a comment", "This as well", "maybe this one too ;)"])

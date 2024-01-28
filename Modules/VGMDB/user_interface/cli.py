@@ -6,7 +6,7 @@ from typing import Any, Callable
 
 from Imports.config import Config
 from Imports.constants import THREAD_EXECUTOR_NUM_THREADS
-from Modules.Mutagen.mutagenWrapper import IAudioManager
+from Modules.Mutagen.mutagen_wrapper import IAudioManager
 from Modules.Mutagen.utils import extractYearFromDate
 from Modules.organize.organizer import Organizer
 from Modules.organize.models.organize_result import FolderOrganizeResult

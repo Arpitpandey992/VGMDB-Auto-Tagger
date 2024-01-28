@@ -1,7 +1,7 @@
 import os
 from pydantic import BaseModel, Field
 
-from Modules.Mutagen.mutagenWrapper import IAudioManager
+from Modules.Mutagen.mutagen_wrapper import IAudioManager
 from Modules.Print.constants import LINE_SEPARATOR, SUB_LINE_SEPARATOR
 
 

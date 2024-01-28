@@ -4,7 +4,7 @@ from Modules.Print.constants import SUB_LINE_SEPARATOR
 
 from Modules.Scan import constants
 from Modules.Tag import custom_tags
-from Modules.Mutagen import mutagenWrapper, utils as mutagenUtils
+from Modules.Mutagen import mutagen_wrapper, utils as mutagenUtils
 from Modules.Scan.models.local_album_data import LocalAlbumData, LocalTrackData
 from Modules.Utils.general_utils import get_default_logger
 
@@ -67,9 +67,9 @@ class Scanner:
             entry_path = os.path.join(folder_path, entry)
             if os.path.isfile(entry_path):
                 try:
-                    audio_manager = mutagenWrapper.AudioFactory.buildAudioManager(entry_path)
+                    audio_manager = mutagen_wrapper.AudioFactory.buildAudioManager(entry_path)
                     audio_tracks.append(LocalTrackData(file_path=entry_path, audio_manager=audio_manager, depth_in_parent_folder=current_depth))
-                except mutagenWrapper.UnsupportedFileFormatError:
+                except mutagen_wrapper.UnsupportedFileFormatError:
                     pass
                 except Exception as e:
                     logger.error(f"unable to read the file at {folder_path}, error:\n{e}")
@@ -176,7 +176,7 @@ class Scanner:
                 self._precalculate_max_depths_with_audio_files(entry_path, max_depths)
                 if max_depths[entry_path] != -1:  # there is an audio file inside entry_path
                     max_depth = max(max_depth, 1 + max_depths[entry_path])
-            elif os.path.isfile(entry_path) and mutagenWrapper.isFileFormatSupported(entry_path):
+            elif os.path.isfile(entry_path) and mutagen_wrapper.isFileFormatSupported(entry_path):
                 max_depth = max(max_depth, 1)
 
         max_depths[folder_path] = max_depth

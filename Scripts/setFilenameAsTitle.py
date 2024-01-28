@@ -1,7 +1,7 @@
 import os
 import sys
 sys.path.append(os.getcwd())
-from Modules.Mutagen.mutagenWrapper import AudioFactory
+from Modules.Mutagen.mutagen_wrapper import AudioFactory
 
 
 folderPath = "/run/media/arpit/DATA/Downloads/Music/Soulseek/red_book/Radio CDs/New Folder"
