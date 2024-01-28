@@ -127,12 +127,12 @@ class Tagger:
 
 if __name__ == "__main__":
     from Modules.Scan.Scanner import Scanner
-    from Modules.VGMDB.api import client
+    from Modules.VGMDB.api.client import VgmdbClient
 
     folder = "/Users/arpit/Library/Custom/Music/Rewrite OST Bak"
     scanner = Scanner()
     local_album_data = scanner.scan_album_in_folder_if_exists(folder)
-    vgmdb_album_data = client.get_album_details("27623")
+    vgmdb_album_data = VgmdbClient().get_album_details("27623")
     if not local_album_data:
         print(f"nothing found in {folder}")
         exit(0)

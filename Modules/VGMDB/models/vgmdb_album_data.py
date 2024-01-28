@@ -1,7 +1,7 @@
 import os
 import threading
 from typing import Any, get_args
-from pydantic import BaseModel, field_validator, root_validator
+from pydantic import BaseModel, field_validator
 
 from Imports.constants import LANGUAGES
 from Modules.Print.constants import LINE_SEPARATOR, SUB_LINE_SEPARATOR
@@ -272,9 +272,9 @@ class VgmdbAlbumData(BaseModel):
 
 
 def test():
-    from Modules.VGMDB.api.client import get_album_details
+    from Modules.VGMDB.api.client import VgmdbClient
 
-    data = get_album_details("123")
+    data = VgmdbClient().get_album_details("123")
     print(data.pprint())
     VgmdbAlbumData(**data.model_dump())
 

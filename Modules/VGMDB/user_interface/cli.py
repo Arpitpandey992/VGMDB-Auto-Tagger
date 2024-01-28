@@ -12,6 +12,7 @@ from typing import Any, Callable
 import concurrent.futures
 
 from Imports.config import Config
+from Imports.constants import THREAD_EXECUTOR_NUM_THREADS
 from Modules.Mutagen.mutagenWrapper import IAudioManager
 from Modules.Mutagen.utils import extractYearFromDate
 from Modules.organize.organizer import Organizer
@@ -24,11 +25,10 @@ from Modules.Tag import custom_tags
 from Modules.Tag.tagger import Tagger
 from Modules.Translate import translator
 from Modules.Utils.general_utils import get_default_logger, ifNot
-from Modules.VGMDB.api import client
+from Modules.VGMDB.api.client import VgmdbClient
 from Modules.VGMDB.models.vgmdb_album_data import Names, VgmdbAlbumData
 from Modules.VGMDB.user_interface import constants
 from Modules.VGMDB.constants import VGMDB_OFFICIAL_BASE_URL
-from Modules.VGMDB.user_interface.cli_args import get_config_from_args
 
 logger = get_default_logger(__name__, "info")
 
@@ -49,9 +49,10 @@ ways to implement:
 
 
 class CLI:
-    def __init__(self):
-        self.root_config = get_config_from_args()
+    def __init__(self, config: Config):
+        self.root_config = config
         self.scanner = Scanner()
+        self.vgmdb_client = VgmdbClient()
         self.console = get_rich_console()
         self.colors = {"red": "#f3aba8", "green": "#d3f5b3"}
         self.no_change = ""
@@ -94,7 +95,7 @@ class CLI:
             raise Exception(f"Could Not Find Album ID For Folder: {local_album_data.album_folder_path}")
 
         self.console.log(f"Fetching Album Data With Album ID: {album_id}")
-        vgmdb_album_data = client.get_album_details(album_id)
+        vgmdb_album_data = self.vgmdb_client.get_album_details(album_id)
 
         logger.debug("linking local album data with vgmdb album data")
         vgmdb_album_data.link_local_album_data(local_album_data)
@@ -243,7 +244,7 @@ class CLI:
     def _find_and_show_match_for_tagging(self, vgmdb_album_data: VgmdbAlbumData, config: Config) -> bool:
         """Find the match between the two data we have, and returns whether the albums are perfectly matching or not"""
         if config.translate:
-            num_threads = 8
+            num_threads = THREAD_EXECUTOR_NUM_THREADS
             with self.console.status(f"[bold green]Translating Album Name and Track Names With {num_threads} threads"):
                 to_translate: list[Names] = [vgmdb_album_data.names] + [track.names for disc in vgmdb_album_data.discs.values() for track in disc.tracks.values()]
                 translated_names = self._translate_names(to_translate, config, num_threads)
@@ -316,7 +317,7 @@ class CLI:
         exit_ask, year_filter = "Exit", "Year"
         while not album_found and not exit_flag:
             self.console.log(f"Searching For [bold cyan]{search_term}")
-            search_result = client.search_album(search_term)
+            search_result = self.vgmdb_client.search_album(search_term)
 
             table_data = [(result.catalog, result.get_album_name(config.language_order), result.album_link, result.release_year) for result in search_result if not year or result.release_year == year]
             num_results = len(table_data)
@@ -459,6 +460,7 @@ if __name__ == "__main__":
 
     def test():
         import sys
+        from Modules.VGMDB.user_interface.cli_args import get_config_from_args
 
         all = True  # Important -> this variable causes issue if this is outside test() because it pollutes the global namespace (hence renders very usage of `all` keyword ambiguous)
         if all:
@@ -466,7 +468,7 @@ if __name__ == "__main__":
             sys.argv.append("--recur")
         else:
             sys.argv.append("/run/media/arpit/DATA/Downloads/Torrents/[STEINS;GATE／命运石之门] Lossless Collection V1 by 石学sos团devil/Lossless Collection/09/[2009.03.31] Luminous no Izumi Ⳇ Afilia Saga East [FPBD-0085] [CD-FLAC 16bit 44.1kHz]")
-        cli_manager = CLI()
+        cli_manager = CLI(get_config_from_args())
         cli_manager.run()
 
     test()

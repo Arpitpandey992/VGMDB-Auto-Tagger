@@ -1,10 +1,4 @@
 import os
-
-# remove
-import sys
-
-sys.path.append(os.getcwd())
-# remove
 import hashlib
 import getpass
 import pickle
@@ -13,6 +7,7 @@ import concurrent.futures
 from typing import Any
 from bs4 import BeautifulSoup, Tag
 
+from Imports.constants import THREAD_EXECUTOR_NUM_THREADS
 from Modules.Print.utils import get_rich_console
 from Modules.Utils.network_utils import downloadFile
 
@@ -107,7 +102,7 @@ def downloadScans(output_dir: str, albumID: str):
 
         def download_scan(scan: Any):
             url = scan["href"]
-            title = remove(scan.text.strip(), '"*/:<>?\\|')
+            title = remove(scan.text.strip(), r'"*/:<>?\|')
             try:
                 downloadFile(url=url, output_dir=finalScanFolder, name=title)
                 console.log(f"[green]Downloaded:[/green] [magenta bold]{title}")
@@ -116,7 +111,7 @@ def downloadScans(output_dir: str, albumID: str):
             except Exception as e:
                 console.log(f"[red]Error while downloading: {e}")
 
-        num_threads = 8
+        num_threads = THREAD_EXECUTOR_NUM_THREADS
         status.update(f"[bold magenta]Downloading Scans with {num_threads} Threads")
         with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
             tasks = [executor.submit(download_scan, scan) for scan in scans]
