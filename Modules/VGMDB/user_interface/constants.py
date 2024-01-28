@@ -21,7 +21,7 @@ CONFIG_MAP_FOR_TAG = {
     "Tag Title (Enable/Disable tagging title field)": "title",
     "Keep Title (don't overwrite current title)": "keep_title",
     "Album Data Only": "album_data_only",
-    "Translate": "translate",
+    "Translate (will enable Keep Title as well for safety)": "translate",
 }
 
 REVERSE_CONFIG_MAP_FOR_TAG = {val: key for key, val in CONFIG_MAP_FOR_TAG.items()}

@@ -208,7 +208,10 @@ class CLI:
         if choice != constants.choices.edit_configs.value:
             return constants.choices.from_value(choice)
 
-        choices = [questionary.Choice(flag_name, checked=config.get_dynamically(flag_value)) for flag_name, flag_value in constants.CONFIG_MAP_FOR_TAG.items()]
+        choices = [
+            questionary.Choice(flag_name, checked=config.get_dynamically(flag_value)) if flag_value != "keep_title" or config.translate == False else questionary.Choice(flag_name, checked=config.keep_title, disabled="Enabled because Translation is Enabled")
+            for flag_name, flag_value in constants.CONFIG_MAP_FOR_TAG.items()
+        ]
         config_enable = questionary.checkbox("Toggle Configurations:", choices=choices).ask()
         if config_enable is None:
             return constants.choices.no
@@ -217,6 +220,8 @@ class CLI:
             config.set_dynamically(constants.CONFIG_MAP_FOR_TAG[flag], True)
         for flag in config_disable:
             config.set_dynamically(constants.CONFIG_MAP_FOR_TAG[flag], False)
+        if constants.REVERSE_CONFIG_MAP_FOR_TAG["translate"] in config_enable:
+            config.keep_title = True
         if constants.REVERSE_CONFIG_MAP_FOR_TAG["translate"] in config_disable:
             vgmdb_album_data.clear_names("translated")
 

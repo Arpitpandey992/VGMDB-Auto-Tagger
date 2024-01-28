@@ -36,7 +36,7 @@ class CLIArgs(Tap):
     cover_overwrite: bool = False  # Overwrite album cover within files
 
     one_lang: bool = False  # For tags with multiple values, only keep the highest priority one
-    translate: bool = False  # Translate all text to english
+    translate: bool = False  # Translate all text to English and Romaji (will enable keep_title flag as well)
     album_data_only: bool = False  # Only tag album specific details to ALL files in the folder, this option will tag those files as well which are not matching with any track in albumData received from VGMDB. Thus, this is a dangerous option, be careful
 
     performers: bool = False  # tag performers in the files
@@ -68,6 +68,8 @@ def get_config_from_args() -> Config:
     args = _get_args()
     config = get_config(**{k: v for k, v in args.items() if v})  # Removing None values first
 
+    if args["translate"]:
+        config.keep_title = True
     if args["no_modify"]:
         config.tag = False
         config.rename = False
