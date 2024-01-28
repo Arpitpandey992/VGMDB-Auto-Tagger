@@ -1,15 +1,8 @@
 import os
-
-# remove
-import sys
-
-sys.path.append(os.getcwd())
-# remove
 import shutil
 import questionary
-
-from typing import Any, Callable
 import concurrent.futures
+from typing import Any, Callable
 
 from Imports.config import Config
 from Imports.constants import THREAD_EXECUTOR_NUM_THREADS
@@ -31,21 +24,6 @@ from Modules.VGMDB.user_interface import constants
 from Modules.VGMDB.constants import VGMDB_OFFICIAL_BASE_URL
 
 logger = get_default_logger(__name__, "info")
-
-
-"""
-Implementing layering using call stack
-getting root dir + scanning + for each album:  {layer 0}   [Not considering this for layering rn]
-    getting album id (user input is considered) + fetch data  {layer 1} [No need to implement back, topmost layer]
-        show match + ask for direction  {layer 2} [Flag change mech is implemented here]
-
-ways to implement:
-1) iterative stack based, with stack containing Callable functions, but the implementation will be very difficult to understand statically
-2) simple recursive solution, this will require nesting functions inside function, need to follow code to understand
-3) make a generic module for this layering functionality (can use some existing lib as well)
-4) Since this is currently a simple two layer module (and thus linear), we can hard code the back commands, like where to go after back, but that's a bad design + no scope for adding layers, so let's go with this one ;)
-
-"""
 
 
 class CLI:
@@ -454,21 +432,3 @@ class CLI:
 
         concurrent.futures.wait(tasks)
         return [future.result() for future in tasks]
-
-
-if __name__ == "__main__":
-
-    def test():
-        import sys
-        from Modules.VGMDB.user_interface.cli_args import get_config_from_args
-
-        all = True  # Important -> this variable causes issue if this is outside test() because it pollutes the global namespace (hence renders very usage of `all` keyword ambiguous)
-        if all:
-            sys.argv.append("/Users/arpit/Library/Custom/Music")
-            sys.argv.append("--recur")
-        else:
-            sys.argv.append("/run/media/arpit/DATA/Downloads/Torrents/[STEINS;GATE／命运石之门] Lossless Collection V1 by 石学sos团devil/Lossless Collection/09/[2009.03.31] Luminous no Izumi Ⳇ Afilia Saga East [FPBD-0085] [CD-FLAC 16bit 44.1kHz]")
-        cli_manager = CLI(get_config_from_args())
-        cli_manager.run()
-
-    test()
