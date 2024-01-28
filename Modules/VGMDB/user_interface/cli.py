@@ -115,16 +115,19 @@ class CLI:
     def _confirm_before_proceeding_to_organize(self, folder_organize_result: FolderOrganizeResult, config: Config) -> constants.choices:
         all_good = self._find_and_show_match_for_organization(folder_organize_result, config) and folder_organize_result.no_unclean_files
         message = "Please review changes, there might be issues" if not all_good else "Everything seems fine, proceed?"
-        choice = (
-            questionary.select(
-                message,
-                choices=[option.value for option in constants.choices if option != constants.choices.go_back],
-                default=constants.choices.yes.value if all_good else constants.choices.no.value,
-                style=questionary.Style([("question", f"fg:{self.colors['green'] if all_good else self.colors['red']} bold"), ("highlighted", "fg:white bold"), ("selected", "fg:white")]),
+        if config.no_input:
+            choice = constants.choices.yes.value if all_good else constants.choices.no.value
+        else:
+            choice = (
+                questionary.select(
+                    message,
+                    choices=[option.value for option in constants.choices if option != constants.choices.go_back],
+                    default=constants.choices.yes.value if all_good else constants.choices.no.value,
+                    style=questionary.Style([("question", f"fg:{self.colors['green'] if all_good else self.colors['red']} bold"), ("highlighted", "fg:white bold"), ("selected", "fg:white")]),
+                )
+                .skip_if(config.yes and all_good, default=constants.choices.yes.value)
+                .ask()
             )
-            .skip_if(config.yes and all_good, default=constants.choices.yes.value)
-            .ask()
-        )
 
         if not choice:  # user cancelled
             return constants.choices.no
@@ -189,7 +192,7 @@ class CLI:
                 choices=[option.value for option in constants.choices],
                 default=constants.choices.yes.value,
                 style=questionary.Style([("question", f"fg:{self.colors['green']} bold"), ("highlighted", "fg:white bold"), ("selected", "fg:white")]),
-            ).skip_if(config.yes, default=constants.choices.yes.value)
+            ).skip_if(config.yes or config.no_input, default=constants.choices.yes.value)
         else:
             question = questionary.select(
                 "Local Album Data is NOT matching perfectly with VGMDB Album Data, Proceed?",
@@ -291,9 +294,9 @@ class CLI:
         year = extractYearFromDate(audio_manager.getDate())
 
         # keep searching for album using interaction with the user
-        album_found, exit_flag, album_id = False, False, None
+        album_id: str | None = None
         exit_ask, year_filter = "Exit", "Year"
-        while not album_found and not exit_flag:
+        while not album_id:
             self.console.log(f"Searching For [bold cyan]{search_term}")
             search_result = self.vgmdb_client.search_album(search_term)
 
@@ -325,27 +328,26 @@ class CLI:
                     return True
                 return "Year must contain exactly 4 Digits or be empty"
 
-            if num_results == 0:
-                choice = (
-                    questionary.text(
+            if config.no_input:
+                choice = "1" if num_results == 1 else None
+            else:
+                if num_results == 0:
+                    choice = questionary.text(
                         f"No results found, provide: search term | {year_filter} | {exit_ask}:",
                         validate=is_choice_within_bounds,
+                    ).ask()
+                else:
+                    choice = (
+                        questionary.text(
+                            f"Albums found: {num_results}, Provide S.No. [1-{num_results}] | Search Term | {year_filter} | {exit_ask}:",
+                            default="1" if num_results == 1 else "",
+                            validate=is_choice_within_bounds,
+                        )
+                        .skip_if(config.yes and num_results == 1, default="1")
+                        .ask()
                     )
-                    .skip_if(config.no_input, default=None)
-                    .ask()
-                )
-            else:
-                choice = (
-                    questionary.text(
-                        f"Albums found: {num_results}, Provide S.No. [1-{num_results}] | Search Term | {year_filter} | {exit_ask}:",
-                        default="1" if num_results == 1 else "",
-                        validate=is_choice_within_bounds,
-                    )
-                    .skip_if(config.yes and num_results == 1, default="1")
-                    .ask()
-                )
 
-            if choice is None or (config.no_input and num_results):
+            if choice is None or choice.lower() == exit_ask.lower():  # User pressed ctrl + c or wrote exit
                 return None
             elif choice.lower() == year_filter.lower():
                 choice = questionary.text(
@@ -354,10 +356,7 @@ class CLI:
                     validate=is_year_valid,
                 ).ask()
                 year = choice if choice else None
-            elif choice.lower() == exit_ask.lower():
-                exit_flag = True
             elif choice.isdigit():
-                album_found = True
                 album_id = os.path.basename(table_data[int(choice) - 1][2])
             else:
                 config.search = choice
