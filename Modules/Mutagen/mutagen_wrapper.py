@@ -1,6 +1,6 @@
 import os
 import base64
-from typing import Any, Literal, Union, Optional
+from typing import Any, Literal, Optional
 from abc import ABC, abstractmethod
 
 from mutagen.mp3 import MP3

@@ -1,5 +1,5 @@
 import os
-
+import re
 
 forbiddenCharacters = {
     "<": "ᐸ",
@@ -53,11 +53,12 @@ def extract_disc_name_from_folder_name(disc_folder_name: str | None) -> str | No
     for example:
     CD01: Ryme of the Ancient Mariner -> Ryme of the Ancient Mariner
     Disc 01 - Et tu, Brute? -> Et tu, Brute
-    Damn son -> Damn Son
+    1. Damn son -> Damn Son
     Disc3 -> `None`
+    yooo -> `None`  [Because we expect disc name to have a number as well]
     """
-    if not disc_folder_name:
-        return None
+    matches = _split_disc_folder_name(disc_folder_name)
+    return matches.get("disc_name", None)
 
 
 def extract_disc_number_from_folder_name(disc_folder_name: str | None) -> int | None:
@@ -69,8 +70,8 @@ def extract_disc_number_from_folder_name(disc_folder_name: str | None) -> int | 
     Damn son -> `None`
     Disc3 -> 3
     """
-    if not disc_folder_name:
-        return None
+    disc_number = _split_disc_folder_name(disc_folder_name).get("disc_number", None)
+    return int(disc_number) if disc_number else None
 
 
 def extract_track_number_from_file_name(file_name: str | None) -> int | None:
@@ -99,3 +100,32 @@ def extract_track_name_from_file_name(file_name_full: str) -> str | None:
     """
     file_name, _ = os.path.splitext(file_name_full)
     return file_name.strip()
+
+
+def _split_disc_folder_name(disc_folder_name: str | None) -> dict[str, str | None]:
+    if not disc_folder_name:
+        return {}
+    separators = ":-. _~"
+    separators += clean_name(separators)
+    separators = "".join(set(separators))
+    disc_names = ["disc", "cd", ""]
+    spaces = " *"
+    pattern = f"^{spaces}({'|'.join(disc_names)}){spaces}([0-9]+){spaces}([{re.escape(separators)}])(.*)$"
+    matches = re.findall(pattern, disc_folder_name, re.IGNORECASE)
+    if len(matches) == 0:
+        return {}
+    return {
+        "disc_number": matches[0][0].strip() if matches[0][1].strip() else None,
+        "disc_name": matches[0][3].strip() if matches[0][3].strip() else None,
+    }
+
+
+if __name__ == "__main__":
+    print(extract_disc_name_from_folder_name("disc01- what da dog doin?"))
+    print(extract_disc_name_from_folder_name("cd 4 : damn"))
+    print(extract_disc_name_from_folder_name("6.    disc name   ."))
+    print(extract_disc_name_from_folder_name(" 8 "))
+    print(extract_disc_name_from_folder_name("  disc 003.  "))
+    print(extract_disc_name_from_folder_name("  disc 003.  disc 005 - damn boi"))
+    print(extract_disc_name_from_folder_name("CD - huh"))
+    print(extract_disc_name_from_folder_name("CD 55- huh"))
