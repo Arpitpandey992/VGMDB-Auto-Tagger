@@ -1,17 +1,8 @@
 import unittest
-
-# remove
-import os
-import sys
-
-
-sys.path.append(os.getcwd())
-# remove
-
 from Modules.organize.organize_utils import extract_disc_name_from_folder_name, extract_disc_number_from_folder_name, extract_track_name_from_file_name, extract_track_number_from_file_name
 
 
-class RenameTemplateTest(unittest.TestCase):
+class TestOrganizeUtils(unittest.TestCase):
     def setUp(self):
         self.disc_folder_names_tests = [
             ["disc01- what da dog doin?", "what da dog doin?", 1],

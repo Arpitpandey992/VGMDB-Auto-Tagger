@@ -1,16 +1,8 @@
 import unittest
-
-# remove
-import os
-import sys
-
-sys.path.append(os.getcwd())
-# remove
-
 from Modules.organize.template import TemplateResolver
 
 
-class RenameTemplateTest(unittest.TestCase):
+class TestRenameTemplate(unittest.TestCase):
     def setUp(self):
         self.mapping: dict[str, str | None] = {
             "catalog": "KSLA-0020",

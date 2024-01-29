@@ -2,16 +2,11 @@ import os
 import shutil
 import string
 import random
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, get_args
 import unittest
 
-# remove
-import sys
-
-sys.path.append(os.getcwd())
-# remove
 from Modules.Print.constants import LINE_SEPARATOR
-from Modules.Mutagen.mutagen_wrapper import AudioFactory, IAudioManager, pictureNameToNumber
+from Modules.Mutagen.mutagen_wrapper import AudioFactory, IAudioManager, pictureTypes
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 baseFolder = os.path.join(__location__, "testSamples", "baseSamples")
@@ -53,17 +48,16 @@ def generate_random_japanese_string(x: int, y: int) -> str:
     return random_string
 
 
-def select_random_keys_from_dict(input_dict: dict[Any, Any]) -> list[Any]:
-    num_keys_to_select = random.randint(2, len(input_dict))
-    dict_keys = list(input_dict.keys())
-    selected_keys = random.sample(dict_keys, num_keys_to_select)
-    return selected_keys
+def select_random_keys_from_list(arr: list[Any]) -> list[Any]:
+    num_keys_to_select = random.randint(2, len(arr))
+    return random.sample(arr, num_keys_to_select)
 
 
-class MutagenWrapperTestCase(unittest.TestCase):
+class TestMutagenWrapper(unittest.TestCase):
     def setUp(self):
         self.audio = audioImpl
         self.file_path = filePathImpl
+        self.single_cover_test = True  # for optimization, this will only test for one cover embed, hence greatly reducing test run time
 
     def test_title(self):
         test_arr = ["title1", "title2", "title3", generate_random_string(5, 20), generate_random_japanese_string(8, 32)]
@@ -120,8 +114,12 @@ class MutagenWrapperTestCase(unittest.TestCase):
 
     def test_setting_multiple_pictures(self):
         """This test is not for m4a files because they don't support multiple pictures"""
-        chosen_picture_types = select_random_keys_from_dict(pictureNameToNumber)  # random selection of which type of picture to embed
-        # chosen_picture_types: list[pictureTypes] = [u'Other', u'File icon', u'Other file icon', u'Cover (front)', u'Cover (back)', u'Leaflet page', u'Media (e.g. lable side of CD)']
+        # chosen_picture_types = select_random_keys_from_dict(pictureNameToNumber)  # random selection of which type of picture to embed
+        chosen_picture_types: list[pictureTypes] = list(get_args(pictureTypes))
+        if self.single_cover_test:
+            chosen_picture_types = [random.choice(chosen_picture_types)]
+        else:
+            chosen_picture_types = select_random_keys_from_list(chosen_picture_types)
         for picture_type in chosen_picture_types:
             self.audio.setPictureOfType(getRandomCoverImageData(), picture_type)
 
@@ -160,6 +158,7 @@ class MutagenWrapperTestCase(unittest.TestCase):
 
 
 def copy_base_samples(force: bool = False):
+    print("copying base samples to modified folder")
     os.makedirs(modifiedFolder, exist_ok=True)
     for file in os.listdir(baseFolder):
         file_path = os.path.join(baseFolder, file)
@@ -173,7 +172,7 @@ def copy_base_samples(force: bool = False):
 def test_mutagen_wrapper():
     extensions = ["mp3", "flac", "m4a", "wav", "ogg", "opus"]
     for extension in extensions:
-        suite = unittest.TestLoader().loadTestsFromTestCase(MutagenWrapperTestCase)
+        suite = unittest.TestLoader().loadTestsFromTestCase(TestMutagenWrapper)
         print(f"\n{LINE_SEPARATOR}\nTesting {extension} file")
         filePath = os.path.join(modifiedFolder, f"{extension}_test.{extension}")
         global audioImpl, filePathImpl
@@ -184,19 +183,5 @@ def test_mutagen_wrapper():
         unittest.TextTestRunner().run(suite)
 
 
-def custom_check():
-    extensions = ["mp3", "flac", "m4a", "wav", "ogg", "opus"]
-    for extension in extensions:
-        print(f"\n{LINE_SEPARATOR}\nTesting {extension} file")
-        filePath = os.path.join(baseFolder, f"{extension}_test.{extension}")
-        m1 = AudioFactory.buildAudioManager(filePath)
-        m2 = AudioFactory.buildAudioManager(filePath)
-        m1.setAlbum(["damn"])
-        m1.save()
-        print(m2.getAlbum())
-
-
-if __name__ == "__main__":
-    copy_base_samples()
-    test_mutagen_wrapper()
-    # custom_check()
+copy_base_samples()
+test_mutagen_wrapper()
