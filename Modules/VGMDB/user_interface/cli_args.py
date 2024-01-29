@@ -1,14 +1,16 @@
 import json
 import os
+from tap import Tap
 from typing import Any
 from rich import get_console
-from tap import Tap
-from Imports.config import Config, get_config
 
+from Imports.config import Config, get_config
 from Modules.organize.template import TemplateResolver, TemplateValidationException
 
 
 class CLIArgs(Tap):
+    """Automatically Tag Local Albums using Album Data from VGMDB.net!"""
+
     root_dir: str  # Album root directory (Required Argument)
     recur: bool = False  # recursively check the directory for albums
     id: str | None = None  # Provide Album ID to avoid searching for the album
@@ -23,7 +25,7 @@ class CLIArgs(Tap):
     no_rename: bool = False  # Do not rename or move anything
     no_modify: bool = False  # Do not tag or rename, for searching and testing
 
-    no_rename_folder: bool = False  # Do not Rename the containing folder?
+    no_rename_folder: bool = False  # Do not Rename the containing folder
     no_rename_files: bool = False  # Do not rename the files
     same_folder_name: bool = False  # While renaming the folder, use the current folder name instead of getting it from album name
     folder_naming_template: str | None = None  # Give a folder naming template like "{[{catalog}] }{albumname}{ [{date}]}"

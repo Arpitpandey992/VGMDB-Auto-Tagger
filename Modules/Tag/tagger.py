@@ -1,9 +1,3 @@
-# remove
-import sys
-import os
-
-sys.path.append(os.getcwd())
-# remove
 from typing import Any
 
 from Imports.config import Config

@@ -15,67 +15,60 @@ install all requirements using:
 `pip install -r requirements.txt`
 then, use it like:
 ```
-python albumTagger.py [-h] [--id ID] [--search SEARCH] [--no-title] [--keep-title] [--no-auth] [--yes] [--no-input]
-                      [--backup] [--no-scans] [--no-pics] [--pic-overwrite] [--rename-folder] [--no-rename-folder]
-                      [--rename-files] [--no-rename-files] [--tag] [--no-tag] [--no-modify] [--one-lang] [--translate]
-                      [--single] [--performers] [--arrangers] [--composers] [--lyricists] [--japanese] [--english]
-                      [--romaji]
-                      folderPath
+usage: album_tagger.py [-r] [--id ID] [--search SEARCH] [-y] [--no_input] [--backup] [--backup_folder BACKUP_FOLDER]
+                       [--no_auth] [--no_tag] [--no_rename] [--no_modify] [--no_rename_folder] [--no_rename_files]
+                       [--same_folder_name] [--folder_naming_template FOLDER_NAMING_TEMPLATE] [--ksl] [--no_title]
+                       [--keep_title] [--no_scans] [--no_cover] [--cover_overwrite] [--one_lang] [--translate]
+                       [--album_data_only] [--performers] [--arrangers] [--composers] [--lyricists] [--english]
+                       [--romaji] [--japanese] [-h]
+                       root_dir
 
-Automatically Tag Music folders using data from VGMDB.net!
+Automatically Tag Local Albums using Album Data from VGMDB.net!
 
 positional arguments:
-  folderPath            Album directory path (Required Argument)
+  root_dir              (str, required) Album root directory (Required Argument)
 
 options:
+  -r, --recur           (bool, default=False) recursively check the directory for albums
+  --id ID               (str | None, default=None) Provide Album ID to avoid searching for the album
+  --search SEARCH       (str | None, default=None) Provide Custom Search Term
+  -y, --yes             (bool, default=False) Skip Yes prompt, and when only 1 album comes up in search results
+  --no_input            (bool, default=False) Go full auto mode, and only tag those albums where no user input is
+                        required!
+  --backup              (bool, default=False) Backup the albums before modifying
+  --backup_folder BACKUP_FOLDER
+                        (str, default=~/Music/Backups) folder to backup the albums to before modification
+  --no_auth             (bool, default=False) Do not authenticate for downloading Scans
+  --no_tag              (bool, default=False) Do not tag the files
+  --no_rename           (bool, default=False) Do not rename or move anything
+  --no_modify           (bool, default=False) Do not tag or rename, for searching and testing
+  --no_rename_folder    (bool, default=False) Do not Rename the containing folder
+  --no_rename_files     (bool, default=False) Do not rename the files
+  --same_folder_name    (bool, default=False) While renaming the folder, use the current folder name instead of
+                        getting it from album name
+  --folder_naming_template FOLDER_NAMING_TEMPLATE
+                        (str | None, default=None) Give a folder naming template like "{[{catalog}] }{albumname}{
+                        [{date}]}"
+  --ksl                 (bool, default=False) for KSL folder, (custom setting), keep catalog first in naming
+  --no_title            (bool, default=False) Do not touch track titles
+  --keep_title          (bool, default=False) Keep the current title and add other available titles
+  --no_scans            (bool, default=False) Do not download Scans
+  --no_cover            (bool, default=False) Do not embed album cover into files
+  --cover_overwrite     (bool, default=False) Overwrite album cover within files
+  --one_lang            (bool, default=False) For tags with multiple values, only keep the highest priority one
+  --translate           (bool, default=False) Translate all text to English and Romaji (will enable keep_title flag as
+                        well)
+  --album_data_only     (bool, default=False) Only tag album specific details to ALL files in the folder, this option
+                        will tag those files as well which are not matching with any track in albumData received from
+                        VGMDB. Thus, this is a dangerous option, be careful
+  --performers          (bool, default=False) tag performers in the files
+  --arrangers           (bool, default=False) tag arrangers in the files
+  --composers           (bool, default=False) tag composers in the files
+  --lyricists           (bool, default=False) tag lyricists in the files
+  --english             (bool, default=False) Give Priority to English
+  --romaji              (bool, default=False) Give Priority to Romaji
+  --japanese            (bool, default=False) Give Priority to Japanese
   -h, --help            show this help message and exit
-  --id ID, -i ID        Provide Album ID
-  --search SEARCH, -s SEARCH
-                        Provide Custom Search Term
-  --no-title            Do not change the title of tracks
-  --keep-title          keep the current title as well, and add other available titles
-  --no-auth             Do not authenticate for downloading Scans
-  --yes, -y             Skip Yes prompt, and when only 1 album comes up in search results
-  --no-input            Go full auto mode, and only tag those albums where no user input is required!
-  --backup, -b          Backup the albums before modifying
-  --no-scans            Do not download Scans
-  --no-pics             Do not embed album cover into files
-  --pic-overwrite       overwrite album cover within files
-  --rename-folder       Rename the containing folder
-  --no-rename-folder    Do not Rename the containing folder?
-  --rename-files        rename the files
-  --no-rename-files     Do not rename the files
-  --tag                 tag the files
-  --no-tag              Do not tag the files
-  --no-modify           Do not modify the files or folder in any way
-  --one-lang            Only keep the best names
-  --translate           Translate all text to english
-  --single              enable this if there is only one track in the album
-  --performers          tag performers in the files
-  --arrangers           tag arrangers in the files
-  --composers           tag composers in the files
-  --lyricists           tag lyricists in the files
-  --japanese, -ja       Give Priority to Japanese
-  --english, -en        Give Priority to English
-  --romaji, -ro         Give Priority to Romaji
-```
-
-There is also an `organize.py` script for simply organizing a directory (renaming and all)
-use it like:
-
-```
-python organize.py [-h] [--rename-only] [--same-folder-name] folderPath
-
-Organize a music album folder using file tags!
-
-positional arguments:
-  folderPath          Album directory path (Required Argument)
-
-options:
-  -h, --help          show this help message and exit
-  --rename-only       Recursively Rename Files within Directory, considering no relationship between files
-  --same-folder-name  Keep the same folder name as [date] {foldername} [Catalog]
-
 ```
 
 ### For providing naming template in CLI argument
