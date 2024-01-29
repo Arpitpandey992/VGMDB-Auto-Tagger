@@ -94,15 +94,15 @@ class Organizer:
 
         is_album_single_disc = total_discs == 1
         is_disc_single = total_tracks == 1
-        title = getFirstProperOrNone(file.audio_manager.getTitle())
-        disc_folder_name = get_base_folder_under_parent(file.file_path, self.album_folder_path)
 
+        title = self._get_title(file)
         track_number = track_number if track_number else self._get_track_number(file)
-        total_tracks = total_tracks if total_tracks else self._get_total_tracks(file)
+        total_tracks = total_tracks if total_tracks else ifNot(self._get_total_tracks(file), 20)
+
+        disc_folder_name = get_base_folder_under_parent(file.file_path, self.album_folder_path)
         disc_number = disc_number if disc_number else self._get_disc_number(file, disc_folder_name)
         total_discs = total_discs if total_discs else self._get_total_discs(file)
         disc_name = self._get_disc_name(file, disc_folder_name)
-        file_name = extract_track_name_from_file_name(file.file_name)
 
         track_number_fixed, _ = getProperCount(track_number, total_tracks)
         disc_number_fixed, _ = getProperCount(disc_number, total_discs)
@@ -118,7 +118,7 @@ class Organizer:
         file_naming_template_mapping: dict[str, str | None] = {
             "tracknumber": track_number_fixed,
             "tracktitle": title,
-            "filename": file_name,
+            "filename": file.file_name,
             "extension": file.extension,
         }
 
@@ -144,6 +144,10 @@ class Organizer:
     def _get_disc_name(self, file: LocalTrackData, disc_folder_name: str | None) -> str | None:
         disc_names = [getFirstProperOrNone(file.audio_manager.getDiscName()), extract_disc_name_from_folder_name(disc_folder_name)]
         return getFirstProperOrNone(disc_names)
+
+    def _get_title(self, file: LocalTrackData) -> str | None:
+        titles: list[str | None] = [getFirstProperOrNone(file.audio_manager.getTitle()), extract_track_name_from_file_name(file.file_name)]
+        return getFirstProperOrNone(titles)
 
     def _get_album_template_mapping(self) -> dict[str, str | None]:
         date = cleanDate(ifNot(self.audio_manager.getDate(), ""))

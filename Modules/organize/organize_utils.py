@@ -61,20 +61,7 @@ def extract_disc_name_from_folder_name(disc_folder_name: str | None) -> str | No
     return matches.get("disc_name", None)
 
 
-def extract_disc_number_from_folder_name(disc_folder_name: str | None) -> int | None:
-    """
-    extract the name from a folder representing a disc
-    for example:
-    CD01: Ryme of the Ancient Mariner -> 01
-    Disc 01 - Et tu, Brute? -> 01
-    Damn son -> `None`
-    Disc3 -> 3
-    """
-    disc_number = _split_disc_folder_name(disc_folder_name).get("disc_number", None)
-    return int(disc_number) if disc_number and disc_number.isdigit() else None
-
-
-def extract_track_number_from_file_name(file_name: str | None) -> int | None:
+def extract_track_number_from_file_name(file_name: str) -> int | None:
     """
     extracts file number from file names for audio files
     for example:
@@ -84,8 +71,8 @@ def extract_track_number_from_file_name(file_name: str | None) -> int | None:
     3 author.m4a -> 3
     14 -> 14
     """
-    if not file_name:
-        return None
+    track_number = _split_file_name(file_name).get("track_number", None)
+    return int(track_number) if track_number and track_number.isdigit() else None
 
 
 def extract_track_name_from_file_name(file_name_full: str) -> str | None:
@@ -99,18 +86,31 @@ def extract_track_name_from_file_name(file_name_full: str) -> str | None:
     14 -> `None`
     """
     file_name, _ = os.path.splitext(file_name_full)
-    return file_name.strip()
+    return _split_file_name(file_name).get("track_name", None)
+
+
+def extract_disc_number_from_folder_name(disc_folder_name: str | None) -> int | None:
+    """
+    extract the name from a folder representing a disc
+    for example:
+    CD01: Ryme of the Ancient Mariner -> 01
+    Disc 01 - Et tu, Brute? -> 01
+    Damn son -> `None`
+    Disc3 -> 3
+    """
+    disc_number = _split_disc_folder_name(disc_folder_name).get("disc_number", None)
+    return int(disc_number) if disc_number and disc_number.isdigit() else None
 
 
 def _split_disc_folder_name(disc_folder_name: str | None) -> dict[str, str | None]:
     if not disc_folder_name:
         return {}
-    separators = ":-. _~"
+    separators = ":-. _~>"
     separators += clean_name(separators)
-    separators = "".join(set(separators))
+    separators = re.escape("".join(set(separators)))
     disc_names = ["disc", "cd", "dvd", ""]
     spaces = " *"
-    pattern = f"^{spaces}({'|'.join(disc_names)}){spaces}([0-9]+){spaces}([{re.escape(separators)}])(.*)$"
+    pattern = f"^{spaces}({'|'.join(disc_names)}){spaces}([0-9]+)([{separators}]*)(.*)$"
     matches = re.findall(pattern, disc_folder_name, re.IGNORECASE)
     if len(matches) == 0:
         return {}
@@ -120,18 +120,18 @@ def _split_disc_folder_name(disc_folder_name: str | None) -> dict[str, str | Non
     }
 
 
-if __name__ == "__main__":
-    test_disc_names = [
-        "disc01- what da dog doin?",
-        "cd 4 : damn",
-        "6.    disc name   .",
-        " 8 ",
-        "  Disc 003.  ",
-        "  DIsc 003.  disc 005 - damn boi",
-        "CD - huh",
-        "CD 55- huh",
-        "Diks 3        :  disc name?",
-        "      Disc   3        :  disc name?",
-    ]
-    for disc_folder_name in test_disc_names:
-        print(f'foldername: "{disc_folder_name}"\ndisc number: "{extract_disc_number_from_folder_name(disc_folder_name)}"\ndisc name: "{extract_disc_name_from_folder_name(disc_folder_name)}"\n\n')
+def _split_file_name(file_name: str | None) -> dict[str, str | None]:
+    if not file_name:
+        return {}
+    separators = ":-. _~>"
+    separators += clean_name(separators)
+    separators = re.escape("".join(set(separators)))
+    spaces = " *"
+    pattern = f"^{spaces}([0-9]*)([{separators}]*)(.*)$"
+    matches = re.findall(pattern, file_name, re.IGNORECASE)
+    if len(matches) == 0:
+        return {}
+    return {
+        "track_number": matches[0][0].strip() if matches[0][0].strip() else None,
+        "track_name": matches[0][2].strip() if matches[0][2].strip() else None,
+    }
