@@ -7,8 +7,15 @@ import concurrent.futures
 from typing import Any
 from bs4 import BeautifulSoup, Tag
 
+# remove
+import sys
+
+sys.path.append(os.getcwd())
+# remove
+
 from Imports.constants import THREAD_EXECUTOR_NUM_THREADS
 from Modules.Print.utils import get_rich_console
+from Modules.Utils.general_utils import getSha256
 from Modules.Utils.network_utils import downloadFile
 
 session = requests.Session()
@@ -80,7 +87,7 @@ def ensure_dir(f: str):
         os.makedirs(d)
 
 
-def downloadScans(output_dir: str, albumID: str):
+def downloadScans(outputDir: str, albumID: str):
     console = get_rich_console()
     cwd = os.path.abspath(__file__)
     scriptdir = os.path.dirname(cwd)
@@ -96,7 +103,7 @@ def downloadScans(output_dir: str, albumID: str):
         scans = gallery.find_all("a", attrs={"class": "highslide"})
         pictureCount = len(scans)
 
-        finalScanFolder = os.path.join(output_dir, "Scans") if pictureCount > 1 else output_dir
+        finalScanFolder = os.path.join(outputDir, "Scans") if pictureCount > 1 else outputDir
         if not os.path.exists(finalScanFolder):
             os.makedirs(finalScanFolder)
 
@@ -111,20 +118,38 @@ def downloadScans(output_dir: str, albumID: str):
             except Exception as e:
                 console.log(f"[red]Error while downloading: {e}")
 
-        num_threads = THREAD_EXECUTOR_NUM_THREADS
-        status.update(f"[bold magenta]Downloading Scans with {num_threads} Threads")
-        with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+        numThreads = THREAD_EXECUTOR_NUM_THREADS
+        status.update(f"[bold magenta]Downloading Scans with {numThreads} Threads")
+        with concurrent.futures.ThreadPoolExecutor(max_workers=numThreads) as executor:
             tasks = [executor.submit(download_scan, scan) for scan in scans]
 
         concurrent.futures.wait(tasks)
 
+    removeOldDuplicateScans(finalScanFolder)
     pickle.dump(session, open(config, "wb"))
+
+
+def removeOldDuplicateScans(scanFolder: str):
+    console = get_rich_console()
+    files = [os.path.join(scanFolder, file) for file in os.listdir(scanFolder) if os.path.isfile(os.path.join(scanFolder, file))]
+    sorted_files = sorted(files, key=lambda x: os.path.getmtime(x), reverse=True)
+    hashes_found = set()
+    filesToRemove = []
+    for filePath in sorted_files:
+        sha256 = getSha256(filePath)
+        if sha256 not in hashes_found:
+            hashes_found.add(sha256)
+        else:
+            filesToRemove.append(filePath)
+
+    for filePath in sorted(filesToRemove):
+        os.remove(filePath)
+        console.log(f"removing {os.path.basename(filePath)} as it is a duplicate")
 
 
 if __name__ == "__main__":
     import shutil
 
     folder = f"{os.path.expanduser('~')}/Downloads/test"
-    print(folder)
-    shutil.rmtree(folder, ignore_errors=True)
+    # shutil.rmtree(folder, ignore_errors=True)
     downloadScans(folder, "87406")
