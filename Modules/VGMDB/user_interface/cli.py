@@ -162,8 +162,8 @@ class CLI:
         if config.rename_folder:
             new_folder_name = folder_organize_result.new_name
             folder_name_changed = folder_organize_result.new_name != folder_organize_result.old_name
-            self.console.print("[bold green]Folder Rename:")
-            self.console.print(f"[bright_red]{folder_organize_result.old_name}[/bright_red][bold white] {'==❯' if folder_name_changed else '==='} [/bold white][bright_green]{new_folder_name}[/bright_green]\n")
+            self.console.print(f"[bold green]Folder Rename:{' (No Change)' if not folder_name_changed else ''}")
+            self.console.print(f"[bright_red]{folder_organize_result.old_name}[/bright_red]\n[bright_green]{new_folder_name}[/bright_green]\n")
 
             all_good = all_good and bool(folder_organize_result.new_name)
 
