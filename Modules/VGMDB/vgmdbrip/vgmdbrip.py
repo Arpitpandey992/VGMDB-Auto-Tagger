@@ -124,6 +124,7 @@ def downloadScans(output_dir: str, albumID: str):
 if __name__ == "__main__":
     import shutil
 
-    folder = "/Users/arpit/Downloads/test"
+    folder = f"{os.path.expanduser('~')}/Downloads/test"
+    print(folder)
     shutil.rmtree(folder, ignore_errors=True)
     downloadScans(folder, "87406")
