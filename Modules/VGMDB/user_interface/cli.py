@@ -61,9 +61,25 @@ class CLI:
     def operate(self, local_album_data: LocalAlbumData, config: Config) -> None:
         """Operate on the album (tag, download scans, organize,...)"""
         if config.tag:
-            self.tag(local_album_data, config)
+            try:
+                tagged_properly = self.tag(local_album_data, config)
+                if not tagged_properly:
+                    config.yes = False
+            except Exception as e:
+                config.yes = False
+                print_separator()
+                self.console.log(f"[bright_red bold]Error While Tagging: {type(e).__name__} -> {e}, not Tagging {local_album_data.album_folder_name}")
+                print_separator()
         if config.organize:
-            self.organize(local_album_data, config)
+            try:
+                organized_properly = self.organize(local_album_data, config)
+                if not organized_properly:
+                    config.yes = False
+            except Exception as e:
+                config.yes = False
+                print_separator()
+                self.console.log(f"[bright_red bold]Error While Organizing: {type(e).__name__} -> {e}, not Organizing {local_album_data.album_folder_name}")
+                print_separator()
 
     def tag(self, local_album_data: LocalAlbumData, config: Config) -> bool:
         self.console.print(get_panel("[bold green]Tagging Metadata"))
