@@ -17,6 +17,7 @@ class Config(BaseModel):
     recur: bool = False
     id: str | None = None
     search: str | None = None
+    year_search: str | None = None
     yes: bool = False
     no_input: bool = False
     backup: bool = False

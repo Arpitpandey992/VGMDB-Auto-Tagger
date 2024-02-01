@@ -84,6 +84,7 @@ class CLI:
             logger.debug("tagging cancelled by user")
             return False
         if instruction == constants.choices.go_back:
+            config.year_search = ""
             return self.tag(local_album_data, config)
 
         if config.scans_download:
@@ -128,6 +129,9 @@ class CLI:
                 .skip_if(config.yes and all_good, default=constants.choices.yes.value)
                 .ask()
             )
+
+        if config.yes and not all_good:
+            config.yes = False
 
         if not choice:  # user cancelled
             return constants.choices.no
@@ -201,6 +205,10 @@ class CLI:
                 style=questionary.Style([("question", f"fg:{self.colors['red']} bold"), ("highlighted", "fg:white bold"), ("selected", "fg:white")]),
                 pointer="❯",
             ).skip_if(config.no_input, default=constants.choices.no.value)
+
+        if config.yes and not is_perfect_match:
+            config.yes = False
+
         choice = question.ask()
         if not choice:  # user cancelled
             return constants.choices.no
@@ -286,26 +294,27 @@ class CLI:
                 return vgmdb_id[0]
 
         # get search term
-        search_term, reason = (config.search), "provided search term"
-        if not search_term:
-            search_term, reason = self._extract_search_term_from_audio_file(audio_manager)
-        if not search_term:
-            search_term, reason = local_album_data.album_folder_name, "folder name"
-        if not search_term:
+        search_reason = "provided search term"
+        if not config.search:
+            config.search, search_reason = self._extract_search_term_from_audio_file(audio_manager)
+        if not config.search:
+            config.search, search_reason = local_album_data.album_folder_name, "folder name"
+        if not config.search:
             return None
-        logger.debug(f"using {reason} as search term")
+        logger.debug(f"using {search_reason} as search term")
 
         # get year for filtering search results
-        year = extractYearFromDate(audio_manager.getDate())
+        if config.year_search is None:
+            config.year_search = extractYearFromDate(audio_manager.getDate())
 
         # keep searching for album using interaction with the user
         album_id: str | None = None
         exit_ask, year_filter = "Exit", "Year"
         while not album_id:
-            self.console.log(f"Searching For [bold cyan]{search_term}")
-            search_result = self.vgmdb_client.search_album(search_term)
+            self.console.log(f"Searching For [bold cyan]{config.search}")
+            search_result = self.vgmdb_client.search_album(config.search)
 
-            table_data = [(result.catalog, result.get_album_name(config.language_order), result.album_link, result.release_year) for result in search_result if not year or result.release_year == year]
+            table_data = [(result.catalog, result.get_album_name(config.language_order), result.album_link, result.release_year) for result in search_result if not config.year_search or result.release_year == config.year_search]
             num_results = len(table_data)
             get_second_key: Callable[[Any], Any] = lambda x: x[1]
             table_data = sorted(table_data, key=get_second_key)
@@ -317,7 +326,7 @@ class CLI:
             )
 
             if not config.no_input:
-                Table.tabulate(table_data, columns=columns, add_number_column=True, title=f"Search Results, Search Term: {search_term}{f', year: {year}' if year else ''}")
+                Table.tabulate(table_data, columns=columns, add_number_column=True, title=f"Search Results, Search Term: {config.search}{f', year: {config.year_search}' if config.year_search else ''}")
 
             def is_choice_within_bounds(choice: str) -> bool | str:
                 if not choice:
@@ -351,21 +360,22 @@ class CLI:
                         .skip_if(config.yes and num_results == 1, default="1")
                         .ask()
                     )
-
+            if config.yes and num_results != 1:
+                config.yes = False
             if choice is None or choice.lower() == exit_ask.lower():  # User pressed ctrl + c or wrote exit
                 return None
             elif choice.lower() == year_filter.lower():
                 choice = questionary.text(
                     "Provide Year to Filter (Leave Empty to Disable Filter):",
-                    default=year if year else "",
+                    default=config.year_search if config.year_search else "",
                     validate=is_year_valid,
                 ).ask()
-                year = choice if choice else None
+                config.year_search = choice
             elif choice.isdigit():
                 album_id = os.path.basename(table_data[int(choice) - 1][2])
             else:
                 config.search = choice
-                search_term = choice
+                config.year_search = ""
         return album_id
 
     def _scan_for_proper_albums(self, root_dir: str, recur: bool) -> list[LocalAlbumData]:
