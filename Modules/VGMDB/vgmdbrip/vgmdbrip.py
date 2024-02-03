@@ -133,8 +133,8 @@ def removeOldDuplicateScans(scanFolder: str):
     console = get_rich_console()
     files = [os.path.join(scanFolder, file) for file in os.listdir(scanFolder) if os.path.isfile(os.path.join(scanFolder, file))]
     sorted_files = sorted(files, key=lambda x: os.path.getmtime(x), reverse=True)
-    hashes_found = set()
-    filesToRemove = []
+    hashes_found: set[str] = set()
+    filesToRemove: list[str] = []
     for filePath in sorted_files:
         sha256 = getSha256(filePath)
         if sha256 not in hashes_found:
@@ -151,5 +151,5 @@ if __name__ == "__main__":
     import shutil
 
     folder = f"{os.path.expanduser('~')}/Downloads/test"
-    # shutil.rmtree(folder, ignore_errors=True)
+    shutil.rmtree(folder, ignore_errors=True)
     downloadScans(folder, "87406")
