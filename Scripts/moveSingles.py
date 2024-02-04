@@ -2,7 +2,7 @@ import os
 import shutil
 
 # Specify the directory to search
-directory = "/run/media/arpit/Seagate Backup Plus Slim 1TB/Music/Indie Creators/Epic Mountain"
+directory = "/run/media/arpit/Seagate Backup Plus Slim 1TB/found.000/dir0000.chk"
 DELETE_AS_WELL = False
 
 
@@ -18,6 +18,6 @@ for item in os.listdir(directory):
                 os.remove(os.path.join(item_path, "cover.jpg"))
                 print(f'delete : {os.path.join(item_path, "cover.jpg")}')
                 # check if the directory is now empty
-                if (len(os.listdir(item_path)) == 0):
-                    print(f'delete empty directory: {item_path}')
+                if len(os.listdir(item_path)) == 0:
+                    print(f"delete empty directory: {item_path}")
                     os.rmdir(item_path)

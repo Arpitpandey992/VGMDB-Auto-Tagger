@@ -99,9 +99,17 @@ def printAndMoveBack(text: str):
     sys.stdout.write("\033[K")  # Clear to the end of line, this will not clear the current line because we are not flushing stdout at this point
 
 
-def getSha256(filePath: str, block_size: int = 8192) -> str:
+def getSha256(filePath, block_size=8192):
     sha256Hash = hashlib.sha256()
     with open(filePath, "rb") as file:
         for block in iter(lambda: file.read(block_size), b""):
             sha256Hash.update(block)
     return sha256Hash.hexdigest()
+
+
+def to_sentence_case(input_string: str) -> str:
+    do_not_capitalize = ("a", "an", "the", "and", "but", "or", "for", "nor", "on", "at", "to", "by", "of", "in", "is", "are")
+    words = input_string.split()
+    capitalized_words = [words[0].capitalize()] + [word if word.isupper() or word.lower() in do_not_capitalize else word.capitalize() for word in words[1:]]
+    sentence_case_string = " ".join(capitalized_words)
+    return sentence_case_string

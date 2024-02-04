@@ -17,7 +17,7 @@ from Modules.Scan.models.local_album_data import LocalAlbumData
 from Modules.Tag import custom_tags
 from Modules.Tag.tagger import Tagger
 from Modules.Translate import translator
-from Modules.Utils.general_utils import get_default_logger, ifNot
+from Modules.Utils.general_utils import get_default_logger, ifNot, to_sentence_case
 from Modules.VGMDB.api.client import VgmdbClient
 from Modules.VGMDB.models.vgmdb_album_data import Names, VgmdbAlbumData
 from Modules.VGMDB.user_interface import constants
@@ -439,12 +439,12 @@ class CLI:
             track_title = name_object.get_highest_priority_name([order for order in config.language_order if order != "translated"])  # don't wanna translate translated text ;)
             try:
                 translated_names: list[str] = []
-                successfully_translated = False
                 for translate_language in config.translation_language:
                     translated_name = translator.translate(track_title, translate_language)
-                    translated_names.append(translated_name) if translated_name else None
-                    successfully_translated = successfully_translated or bool(translated_name)
+                    if translated_name and translated_name != track_title:
+                        translated_names.append(to_sentence_case(translated_name))
 
+                successfully_translated = len(translated_names) > 0
                 if successfully_translated:
                     self.console.log(f"[green]Translated [magenta bold]{track_title}")
                 else:
