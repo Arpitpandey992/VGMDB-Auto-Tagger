@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 import urllib.request
 
 
-def getRawDataFromUrl(url: str) -> bytes:
+def get_raw_data_from_url(url: str) -> bytes:
     """
     fetches and returns the raw data present inside url
 
@@ -17,7 +17,7 @@ def getRawDataFromUrl(url: str) -> bytes:
     return response.content
 
 
-def downloadFile(url: str, output_dir: str, name: str | None = None) -> str:
+def download_file(url: str, output_dir: str, name: str | None = None) -> str:
     """
     downloads a file to local file system which is directly accessible online
 
@@ -55,7 +55,7 @@ def downloadFile(url: str, output_dir: str, name: str | None = None) -> str:
 
 if __name__ == "__main__":
     print(
-        downloadFile(
+        download_file(
             "https://i0.wp.com/www.alphr.com/wp-content/uploads/2021/04/Screenshot_9-26.png?extra=3",
             "/Users/arpit/Downloads",
             "launch_2",

@@ -16,7 +16,7 @@ sys.path.append(os.getcwd())
 from Imports.constants import THREAD_EXECUTOR_NUM_THREADS
 from Modules.Print.utils import get_rich_console
 from Modules.Utils.general_utils import getSha256
-from Modules.Utils.network_utils import downloadFile
+from Modules.Utils.network_utils import download_file
 
 session = requests.Session()
 
@@ -111,7 +111,7 @@ def downloadScans(outputDir: str, albumID: str):
             url = scan["href"]
             title = remove(scan.text.strip(), r'"*/:<>?\|')
             try:
-                downloadFile(url=url, output_dir=finalScanFolder, name=title)
+                download_file(url=url, output_dir=finalScanFolder, name=title)
                 console.log(f"[green]Downloaded:[/green] [magenta bold]{title}")
             except FileExistsError:
                 console.log(f"[yellow]Already Exists:[/yellow] [cyan bold]{title}")

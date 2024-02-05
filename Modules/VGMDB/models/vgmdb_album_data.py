@@ -8,7 +8,7 @@ from Modules.Print.constants import LINE_SEPARATOR, SUB_LINE_SEPARATOR
 from Modules.Scan.models.local_album_data import LocalAlbumData, LocalTrackData
 from Modules.Utils.general_utils import get_default_logger
 from Modules.Utils.image_utils import compress_image_limit_max_width
-from Modules.Utils.network_utils import downloadFile, getRawDataFromUrl
+from Modules.Utils.network_utils import download_file, get_raw_data_from_url
 from Modules.VGMDB.vgmdbrip.vgmdbrip import downloadScans
 
 language_aliases: dict[LANGUAGES, list[str]] = {
@@ -223,7 +223,7 @@ class VgmdbAlbumData(BaseModel):
             return None
         if self.album_cover_cache:
             return self.album_cover_cache
-        self.album_cover_cache = compress_image_limit_max_width(getRawDataFromUrl(self.picture_full))
+        self.album_cover_cache = compress_image_limit_max_width(get_raw_data_from_url(self.picture_full))
         return self.album_cover_cache
 
     def download_scans(self, output_dir: str, no_auth: bool = False):
@@ -264,11 +264,11 @@ class VgmdbAlbumData(BaseModel):
         if not os.path.exists(coverPath):
             os.makedirs(coverPath)
         for cover in self.covers:
-            downloadFile(url=cover.full, output_dir=coverPath, name=cover.name)
+            download_file(url=cover.full, output_dir=coverPath, name=cover.name)
             if cover.name.lower() == "front" or cover.name.lower() == "cover":
                 frontPictureExists = True
         if not frontPictureExists and self.picture_full:
-            downloadFile(url=self.picture_full, output_dir=coverPath, name="Front")
+            download_file(url=self.picture_full, output_dir=coverPath, name="Front")
 
 
 def test():
