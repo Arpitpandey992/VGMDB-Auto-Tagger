@@ -432,8 +432,7 @@ class CLI:
             raise (e)
 
     def _translate_names(self, to_translate: list[Names], config: Config, num_threads: int) -> list[list[str]]:
-        """Translates Names present in to_translate (multithreaded), Returns translated names (list) for every Name"""
-        num_threads = 8
+        """Translates Names present in to_translate, Returns translated names (list) for every Name"""
 
         def translate(name_object: Names) -> list[str]:
             track_title = name_object.get_highest_priority_name([order for order in config.language_order if order != "translated"])  # don't wanna translate translated text ;)
