@@ -6,7 +6,7 @@
     "configurations": [
         {
             "name": "Python: Current File",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
@@ -14,7 +14,7 @@
         },
         {
             "name": "Run Tagger",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "album_tagger.py",
             "args": [

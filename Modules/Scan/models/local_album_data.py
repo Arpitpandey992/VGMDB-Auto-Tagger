@@ -1,6 +1,11 @@
 import os
-from pydantic import BaseModel, Field
 
+# REMOVE
+import sys
+
+sys.path.append(os.getcwd())
+# REMOVE
+from pydantic import BaseModel, Field
 from Modules.Mutagen.mutagen_wrapper import IAudioManager
 from Modules.Print.constants import LINE_SEPARATOR, SUB_LINE_SEPARATOR
 
@@ -31,7 +36,7 @@ class LocalTrackData(BaseModel):
         # Flac contains most info variables, hence using it here for type hints only
         info = self.audio_manager.getInfo()
         if extension.lower() in [".flac", ".wav"]:
-            format = "FLAC" if extension == ".flac" else "WAV"
+            codec = "FLAC" if extension == ".flac" else "WAV"
             bits = info.bits_per_sample
             sample_rate = info.sample_rate / 1000
             if sample_rate.is_integer():
@@ -40,14 +45,18 @@ class LocalTrackData(BaseModel):
             if sample_rate >= 192 or bits > 24:
                 source = "VINYL"  # Scuffed way, but assuming Vinyl rips have extremely high sample rate, but Qobuz does provide 192kHz files so yeah...
             # Edge cases should be edited manually later
-            return f"{source}-{format} {bits}bit {sample_rate}kHz"
+            return f"{source}-{codec} {bits}bit {sample_rate}kHz"
         elif extension == ".mp3":
             # CD-MP3 because in 99% cases, an mp3 album is a lossy cd rip
             bitrate = int(info.bitrate / 1000)
             return f"CD-MP3 {bitrate}kbps"
-        elif extension == ".m4a":
-            # aac files are usually provided by websites directly for lossy versions. apple music files are also m4a
+        elif extension == ".m4a" or extension == ".aac":
+            # aac files are usually provided by websites directly for lossy versions. apple music files are also m4a, m4a can also contain Apple ALAC files
             bitrate = int(info.bitrate / 1000)
+            if info.codec.lower() == "alac":
+                bits = info.bits_per_sample
+                sample_rate = info.sample_rate / 1000
+                return f"WEB-ALAC {bits}bit {sample_rate}kHz"
             return f"WEB-AAC {bitrate}kbps"
         elif extension == ".ogg":
             # Usually from spotify
@@ -127,11 +136,15 @@ class LocalAlbumData(BaseModel):
 def test():
     from Modules.Scan.Scanner import Scanner
 
-    test_music_dir = "/Users/arpit/Library/Custom/Music/Rewrite OST Bak"
+    test_music_dir = "/mnt/B0C019ADC0197B34/Downloads/Browser Downloads/Mariya Nishiuchi - 7 WONDERS - EP  [1647145089]"
+    # test_music_dir = "/mnt/0AA0B344A0B334D3/Music/Indian/[2013] Gajendra Verma - Emptiness"
+    # test_music_dir = "/mnt/0AA0B344A0B334D3/Music/Indian/[2013] Bhaag Milkha Bhaag (Original Motion Picture Soundtrack)"
     scanner = Scanner()
     album = scanner.scan_album_in_folder_if_exists(test_music_dir)
     if not album:
         return
+    sample = album.get_one_sample_track()
+    print(sample.get_audio_source())
     print(album.pprint())
     LocalAlbumData(**album.model_dump())
 

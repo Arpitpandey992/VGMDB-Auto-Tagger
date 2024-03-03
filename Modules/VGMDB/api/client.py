@@ -4,6 +4,12 @@ import time
 from typing import Any
 from urllib.parse import urljoin
 
+# REMOVE
+import os
+import sys
+
+sys.path.append(os.getcwd())
+# REMOVE
 from Modules.Print.constants import SUB_LINE_SEPARATOR
 from Modules.VGMDB.constants import APICALLRETRIES, USE_LOCAL_SERVER, VGMDB_INFO_BASE_URL
 from Modules.Utils.general_utils import get_default_logger

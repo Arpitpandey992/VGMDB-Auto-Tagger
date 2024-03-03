@@ -1,4 +1,10 @@
 import os
+
+# REMOVE
+import sys
+
+sys.path.append(os.getcwd())
+# REMOVE
 import shutil
 import string
 import random
