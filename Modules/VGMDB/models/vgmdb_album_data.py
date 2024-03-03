@@ -16,6 +16,7 @@ language_aliases: dict[LANGUAGES, list[str]] = {
     "translated": [],
     "romaji": ["ja-latn", "Romaji"],
     "japanese": ["ja", "Japanese"],
+    "other": ["Other"],
 }
 
 logger = get_default_logger(__name__, "info")

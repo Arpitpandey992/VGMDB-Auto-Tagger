@@ -18,8 +18,8 @@
             "request": "launch",
             "program": "album_tagger.py",
             "args": [
-                "/Users/arpit/Library/Custom/music",
-                "--recur",
+                "/mnt/B0C019ADC0197B34/Downloads/Torrents/[2024.01.17] Genshin Impact - The Stellar Moments, Vol. 4 (Original Game Soundtrack) [WEB-FLAC 24bit 48kHz]",
+                // "--recur",
             ],
             "console": "integratedTerminal",
             "justMyCode": true

@@ -1,5 +1,6 @@
 import os
 import shutil
+import traceback
 import questionary
 import concurrent.futures
 from typing import Any, Callable
@@ -56,6 +57,8 @@ class CLI:
             except Exception as e:
                 print_separator()
                 self.console.log(f"[bright_red bold]Error Occurred: {type(e).__name__} -> {e}, skipping {album.album_folder_path}")
+                traceback_info = traceback.format_exc()
+                logger.debug(traceback_info)
                 print_separator()
 
     def operate(self, local_album_data: LocalAlbumData, config: Config) -> None:
@@ -69,6 +72,8 @@ class CLI:
                 config.yes = False
                 print_separator()
                 self.console.log(f"[bright_red bold]Error While Tagging: {type(e).__name__} -> {e}, not Tagging {local_album_data.album_folder_name}")
+                traceback_info = traceback.format_exc()
+                logger.debug(traceback_info)
                 print_separator()
         if config.organize:
             try:
