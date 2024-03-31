@@ -21,8 +21,8 @@ class Organizer:
         self.album_folder_path = local_album_data.album_folder_path
 
     def organize(self) -> FolderOrganizeResult:
-        old_path = self.local_album_data.album_folder_path
-        base_path = os.path.dirname(old_path)
+        old_path = os.path.normpath(self.local_album_data.album_folder_path)
+        base_path, _ = os.path.split(old_path)
         folder_naming_template_mapping = self._get_album_template_mapping()
         new_name = clean_name(TemplateResolver(folder_naming_template_mapping).evaluate(self.config.folder_naming_template))
         new_path = os.path.join(base_path, new_name)
