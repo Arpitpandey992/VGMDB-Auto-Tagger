@@ -39,7 +39,7 @@ logger = get_default_logger(__name__, "info")
 class Scanner:
     def scan_albums_recursively(self, root_dir: str) -> list[LocalAlbumData]:
         """scans for all albums inside root_folder recursively"""
-        max_depths = {}
+        max_depths: dict[str, int] = {}
         self._precalculate_max_depths_with_audio_files(root_dir, max_depths)
         albums = self._scan_albums_recursively(root_dir, max_depths)
         return albums
