@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from Imports.config import Config
 from Modules.Mutagen.utils import cleanDate, getProperCount
 from Modules.Scan.models.local_album_data import LocalAlbumData, LocalTrackData
@@ -22,7 +23,7 @@ class Organizer:
 
     def organize(self) -> FolderOrganizeResult:
         old_path = os.path.normpath(self.local_album_data.album_folder_path)
-        base_path, _ = os.path.split(old_path)
+        base_path = Path(old_path).parent
         folder_naming_template_mapping = self._get_album_template_mapping()
         new_name = clean_name(TemplateResolver(folder_naming_template_mapping).evaluate(self.config.folder_naming_template))
         new_path = os.path.join(base_path, new_name)
