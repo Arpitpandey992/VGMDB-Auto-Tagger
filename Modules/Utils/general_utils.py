@@ -99,7 +99,7 @@ def printAndMoveBack(text: str):
     sys.stdout.write("\033[K")  # Clear to the end of line, this will not clear the current line because we are not flushing stdout at this point
 
 
-def getSha256(filePath, block_size=8192):
+def getSha256(filePath: str, block_size: int = 8192) -> str:
     sha256Hash = hashlib.sha256()
     with open(filePath, "rb") as file:
         for block in iter(lambda: file.read(block_size), b""):

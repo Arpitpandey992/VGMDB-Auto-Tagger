@@ -39,6 +39,7 @@ logger = get_default_logger(__name__, "info")
 class Scanner:
     def scan_albums_recursively(self, root_dir: str) -> list[LocalAlbumData]:
         """scans for all albums inside root_folder recursively"""
+        root_dir = self._convert_path_to_absolute(root_dir)
         max_depths: dict[str, int] = {}
         self._precalculate_max_depths_with_audio_files(root_dir, max_depths)
         albums = self._scan_albums_recursively(root_dir, max_depths)
@@ -46,6 +47,7 @@ class Scanner:
 
     def scan_album_in_folder_if_exists(self, folder_path: str) -> Optional[LocalAlbumData]:
         """returns a single album if the given folders contains files belonging to a single album"""
+        folder_path = self._convert_path_to_absolute(folder_path)
         logger.info(SUB_LINE_SEPARATOR)
         logger.info(f"Scanning {folder_path}")
         logger.info(SUB_LINE_SEPARATOR)
@@ -56,6 +58,7 @@ class Scanner:
 
     def get_supported_audio_files_in_folder(self, folder_path: str, max_depth: int = -1) -> list[LocalTrackData]:
         """get a list of all supported audio files inside a folder, provide max_depth for recursion depth while scanning"""
+        folder_path = self._convert_path_to_absolute(folder_path)
         return self._get_supported_audio_files_in_folder(folder_path, max_depth)
 
     # private functions
@@ -180,6 +183,11 @@ class Scanner:
                 max_depth = max(max_depth, 1)
 
         max_depths[folder_path] = max_depth
+
+    def _convert_path_to_absolute(self, path: str) -> str:
+        if os.path.isabs(path):
+            return path
+        return os.path.abspath(path)
 
 
 if __name__ == "__main__":

@@ -70,8 +70,8 @@ def get_config_from_args() -> Config:
     args = _get_args()
     config = get_config(**{k: v for k, v in args.items() if v})  # Removing None values first
 
-    if args["translate"]:
-        config.keep_title = True
+    # if args["translate"]:
+    #     config.keep_title = True # Choosing not to do this anymore
     if args["no_modify"]:
         config.tag = False
         config.rename = False

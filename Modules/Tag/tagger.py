@@ -102,7 +102,7 @@ class Tagger:
                 if self.config.title:
                     titles = self._get_flag_filtered_names(track.names)
                     if self.config.keep_title:
-                        titles.extend(audio_manager.getTitle())
+                        titles = [*audio_manager.getTitle(), *titles]
                     audio_manager.setTitle(titles) if titles else None
 
                 if self.config.disc_numbers:

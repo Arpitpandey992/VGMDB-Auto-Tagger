@@ -18,7 +18,7 @@
             "request": "launch",
             "program": "album_tagger.py",
             "args": [
-                "/mnt/e/Downloads/Music/Qobuz/Gustavo Santaolalla/The Last of Us Video Game Soundtrack/",
+                "/mnt/c/Users/Arpit/Music/Converted/______ starring ____",
                 // "--recur",
             ],
             "console": "integratedTerminal",
