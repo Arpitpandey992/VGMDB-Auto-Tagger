@@ -1,19 +1,25 @@
-#  VGMDB-Auto-Tagger
+# VGMDB-Auto-Tagger
+
 Python script to automatically tag an album using data fetched from VGMDB.info
 
 This project uses api from [hufman VGMDB.info](https://github.com/hufman/vgmdb). Respect+
+
 ## Some Important Requirements
-* The music files must have proper `tracknumber` and `discnumber` tags for this to work.
-* Tags like `artist`, `album artist` are not supported as this data is not present in VGMDB itself.
-* This script works best for partially tagged albums, and it will fill in other details like `catalog`, `title`, `publisher`, etc. So it is best used in conjunction with other tagging tools, as it is very difficult to get `English` track titles and `catalog` using other tools.
-* During picture grabbing stage, it is required to give username and password, since getting all scans require the client to be logged in. If you want to skip the login part and are okay with not grabbing all available scans, pass the --no-auth flag.
-* If using the translate command, make sure to have translate-shell installed in your system, with it being added to path. Basically, 'trans <text>' should work. Get it <a href="https://github.com/soimort/translate-shell">Here</a>
+
+-   The music files must have proper `tracknumber` and `discnumber` tags for this to work.
+-   Tags like `artist`, `album artist` are not supported as this data is not present in VGMDB itself.
+-   This script works best for partially tagged albums, and it will fill in other details like `catalog`, `title`, `publisher`, etc. So it is best used in conjunction with other tagging tools, as it is very difficult to get `English` track titles and `catalog` using other tools.
+-   During picture grabbing stage, it is required to give username and password, since getting all scans require the client to be logged in. If you want to skip the login part and are okay with not grabbing all available scans, pass the --no-auth flag.
+-   If using the translate command, make sure to have translate-shell installed in your system, with it being added to path. Basically, 'trans <text>' should work. Get it <a href="https://github.com/soimort/translate-shell">Here</a>
+-   Running this requires python3.11, make sure to use a virtual environment
 
 ## Usage
+
 Clone the repository, then inside the directory:
 install all requirements using:
 `pip install -r requirements.txt`
 then, use it like:
+
 ```
 usage: album_tagger.py [-r] [--id ID] [--search SEARCH] [-y] [--no_input] [--backup] [--backup_folder BACKUP_FOLDER]
                        [--no_auth] [--no_tag] [--no_rename] [--no_modify] [--no_rename_folder] [--no_rename_files]
@@ -72,6 +78,7 @@ options:
 ```
 
 ### For providing naming template in CLI argument
+
 we have variables like `catalog` `foldername` `date` `albumname` `barcode`
 
 in template, anything written inside curly braces is evaluated as a variable, and if anything inside the curly brace evaluates to false, then it evaluates to blank character.
@@ -79,11 +86,11 @@ evaluating to false means that the key written inside the curly brace was valid,
 
 for example, consider naming template : `{[{catalog}] }{[{albumname}]}`
 
-here, we have catalog inside bracket and the entire [catalog] block inside another bracket. 
+here, we have catalog inside bracket and the entire [catalog] block inside another bracket.
 
 This means that if file contains a `catalog` tag, then the name will be like: `[<catalog>] [<albumname>]`
 
-otherwise,  it will be like `[<albumname>]`
+otherwise, it will be like `[<albumname>]`
 
 note that albumname will also be evaluated in a similar way here. Also, note that since square brackets are put inside another curly brackets, they only appear if the variable in the innermost layer is available. This is desirable because:
 
@@ -92,11 +99,12 @@ consider naming template like: `[{catalog}] [{albumname}]`
 this will work fine when both of these variables are present, but if catalog is not present, then the name will evaluate to: `[] [<albumname>]` which is not desirable
 
 ## Progress and Future Plans
-- [X] Making the program more fail-safe and "trustable".
-- [X] Adding support for FLAC.
-- [X] Adding support for MP3 and WAV.
-- [X] Adding support for OGG and OPUS.
-- [X] Adding support for M4A.
-- [ ] Integrating some other API (Like Musicbrainz) to get tags such as `artist`, `album artist`, etc.
-- [ ] Adding a User Interface for easily using the script.
-- [ ] Script for easily managing albums that were tagged once, by fetching data in a fully automatic fashion.
+
+-   [x] Making the program more fail-safe and "trustable".
+-   [x] Adding support for FLAC.
+-   [x] Adding support for MP3 and WAV.
+-   [x] Adding support for OGG and OPUS.
+-   [x] Adding support for M4A.
+-   [ ] Integrating some other API (Like Musicbrainz) to get tags such as `artist`, `album artist`, etc.
+-   [ ] Adding a User Interface for easily using the script.
+-   [ ] Script for easily managing albums that were tagged once, by fetching data in a fully automatic fashion.

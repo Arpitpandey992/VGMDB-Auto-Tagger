@@ -38,7 +38,7 @@ class CLIArgs(Tap):
     cover_overwrite: bool = False  # Overwrite album cover within files
 
     one_lang: bool = False  # For tags with multiple values, only keep the highest priority one
-    translate: bool = False  # Translate all text to English and Romaji (will enable keep_title flag as well)
+    translate: bool = False  # Translate all text to English and Romaji
     album_data_only: bool = False  # Only tag album specific details to ALL files in the folder, this option will tag those files as well which are not matching with any track in albumData received from VGMDB. Thus, this is a dangerous option, be careful
 
     performers: bool = False  # tag performers in the files
