@@ -86,7 +86,9 @@ class VgmdbClient:
         self.album_cache[album_id] = VgmdbAlbumData(**vgmdb_album_data, album_id=album_id)
         return self.album_cache[album_id]
 
-    def search_album(self, search_term: str) -> list[SearchAlbum]:
+    def search_album(self, search_term: str | None) -> list[SearchAlbum]:
+        if not search_term:
+            search_term = ""
         cleaned_search_term = self._clean_search_term(search_term)
         if cleaned_search_term in self.search_cache:
             return self.search_cache[cleaned_search_term]

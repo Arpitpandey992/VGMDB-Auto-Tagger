@@ -12,7 +12,9 @@ from typing import Any, Callable, Optional, get_args
 import unittest
 
 from Modules.Print.constants import LINE_SEPARATOR
-from Modules.Mutagen.mutagen_wrapper import AudioFactory, IAudioManager, pictureTypes
+from Modules.Mutagen.audio_factory import AudioFactory
+from Modules.Mutagen.audio_manager import IAudioManager
+from Modules.Mutagen.utils import pictureTypes
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 baseFolder = os.path.join(__location__, "testSamples", "baseSamples")
@@ -120,7 +122,6 @@ class TestMutagenWrapper(unittest.TestCase):
 
     def test_setting_multiple_pictures(self):
         """This test is not for m4a files because they don't support multiple pictures"""
-        # chosen_picture_types = select_random_keys_from_dict(pictureNameToNumber)  # random selection of which type of picture to embed
         chosen_picture_types: list[pictureTypes] = list(get_args(pictureTypes))
         if self.single_cover_test:
             chosen_picture_types = [random.choice(chosen_picture_types)]

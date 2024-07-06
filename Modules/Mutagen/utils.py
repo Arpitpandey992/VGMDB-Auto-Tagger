@@ -1,29 +1,11 @@
 import re
 from math import ceil, log10
+from sys import exception
 from typing import Any, Literal, Optional, Union
 
 from Modules.Utils.general_utils import get_default_logger
 
 logger = get_default_logger(__name__, "info")
-
-pictureNameToNumber = {
-    "Other": 0,
-    "File icon": 1,
-    "Other file icon": 2,
-    "Cover (front)": 3,
-    "Cover (back)": 4,
-    "Leaflet page": 5,
-    "Media (e.g. lable side of CD)": 6,
-    "Lead artist/lead performer/soloist": 7,
-    "Artist/performer": 8,
-    "Conductor": 9,
-    "Band/Orchestra": 10,
-    "Composer": 11,
-    "Lyricist/text writer": 12,
-    "Recording Location": 13,
-    "During recording": 14,
-    "During performance": 15,
-}
 
 pictureTypes = Literal[
     "Other",
@@ -43,6 +25,27 @@ pictureTypes = Literal[
     "During recording",
     "During performance",
 ]
+
+pictureNameToNumber: dict[pictureTypes, int] = {
+    "Other": 0,
+    "File icon": 1,
+    "Other file icon": 2,
+    "Cover (front)": 3,
+    "Cover (back)": 4,
+    "Leaflet page": 5,
+    "Media (e.g. lable side of CD)": 6,
+    "Lead artist/lead performer/soloist": 7,
+    "Artist/performer": 8,
+    "Conductor": 9,
+    "Band/Orchestra": 10,
+    "Composer": 11,
+    "Lyricist/text writer": 12,
+    "Recording Location": 13,
+    "During recording": 14,
+    "During performance": 15,
+}
+
+pictureNumberToName: dict[int, pictureTypes] = {number: name for name, number in pictureNameToNumber.items()}
 
 
 def isString(var: Any) -> bool:
@@ -98,7 +101,7 @@ def getFirstElement(listVariable: list[Any] | Any) -> Any:
     return listVariable
 
 
-def getProperCount(count: Union[str, int, None], totalCount: Union[str, int, None]) -> tuple[str | None, str | None]:
+def getProperCount(count: str | int | None, totalCount: str | int | None) -> tuple[str, str]:
     """
     if total tracks = 100, then this function will convert 1 to 001 for consistent sorting
     getProperCount(4,124) will return ["004", "124"]
@@ -109,7 +112,9 @@ def getProperCount(count: Union[str, int, None], totalCount: Union[str, int, Non
             upperBound = int(ceil(log10(int(totalCount) + 1)))
             return str(count).zfill(upperBound), str(totalCount)
         except Exception as e:
-            logger.error(e)
+            logger.error(f"exception while standardizing count. returning as it is. Error: {e}")
+    else:
+        logger.error(f"both count and totalCount are required for standardizing counts, returning as it is. provided count: {count}, totalCount: {totalCount}")
     return toString(count), toString(totalCount)
 
 
