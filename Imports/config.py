@@ -60,7 +60,7 @@ class Config(BaseModel):
     file_naming_template_single: str = "{tracktitle|filename}{extension}"
     file_naming_template_multiple: str = "{{{tracknumber}. {tracktitle}}|filename}{extension}"
     disc_folder_naming_template_single: str = ""
-    disc_folder_naming_template_multiple: str = "{Disc {discnumber}. {discname}}|discfoldername"
+    disc_folder_naming_template_multiple: str = "{Disc {discnumber}. {discname}}|discfoldername|{Disc {discnumber}}"
 
     # Extra stuff
     scans_download: bool = True

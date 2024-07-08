@@ -9,7 +9,7 @@ logger = get_default_logger(__name__, "info")
 
 """
 This is a wrapper around mutagen module. 
-This basically allows us to call the same functions for any extension, and hence reducing code complexity.
+It allows us to call the same functions for any supported extension, and hence reducing code complexity.
 """
 
 
@@ -30,14 +30,12 @@ class IAudioManager(ABC):
     def setDiscNumbers(self, discNumber: int, totalDiscs: int):
         """
         set disc number and total number of discs
-        The arguments are supposed to be a string here
         """
 
     @abstractmethod
     def setTrackNumbers(self, trackNumber: int, totalTracks: int):
         """
         Set Track number and total number of tracks
-        The arguments are supposed to be a string here
         """
 
     @abstractmethod
@@ -145,9 +143,9 @@ class IAudioManager(ABC):
         """get the extension name of the file"""
 
     @abstractmethod
-    def save(self):
+    def save(self) -> None:
         """Apply metadata changes"""
 
     @abstractmethod
-    def clearTags(self):
+    def clearTags(self) -> None:
         """clear all metadata tags"""

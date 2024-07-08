@@ -33,7 +33,7 @@ class MP4Wrapper(IAudioManager):
     def setComment(self, comment):
         self.audio["\xa9cmt"] = comment
 
-    # There is no way to set cover of a certain type here :(
+    # There is no way to set cover of a certain type here :( We can put multiple covers but it becomes messy without identifiers for cover type
     def setPictureOfType(self, imageData, pictureType):
         cover = MP4Cover(imageData, imageformat=MP4Cover.FORMAT_JPEG)
         self.audio["covr"] = [cover]

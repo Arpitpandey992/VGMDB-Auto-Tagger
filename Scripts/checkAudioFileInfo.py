@@ -1,7 +1,15 @@
-from mutagen.flac import FLAC
+# REMOVE
+import os
+import sys
 
-filePath = ""
+sys.path.append(os.getcwd())
+# REMOVE
+from Modules.Mutagen.audio_factory import AudioFactory
+
+filePath = "/mnt/c/Users/Arpit/Downloads/m4a_test.m4a"
 
 
-audio = FLAC(filePath)
-print(audio.pprint())
+audiofile = AudioFactory.buildAudioManager(filePath)
+info = audiofile.getInfo()
+
+print(info)

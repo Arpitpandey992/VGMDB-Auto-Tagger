@@ -65,7 +65,7 @@ class TestMutagenWrapper(unittest.TestCase):
     def setUp(self):
         self.audio = audioImpl
         self.file_path = filePathImpl
-        self.single_cover_test = True  # for optimization, this will only test for one cover embed, hence greatly reducing test run time
+        self.single_cover_test = False  # for optimization, this will only test for one cover embed, hence greatly reducing test run time
 
     def test_title(self):
         test_arr = ["title1", "title2", "title3", generate_random_string(5, 20), generate_random_japanese_string(8, 32)]
