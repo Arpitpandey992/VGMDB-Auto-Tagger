@@ -31,7 +31,8 @@ class CLI:
     def __init__(self, config: Config):
         self.root_config = config
         self.scanner = Scanner()
-        self.vgmdb_client = VgmdbClient()
+        if config.tag:
+            self.vgmdb_client = VgmdbClient()
         self.console = get_rich_console()
         self.colors = {"red": "#f3aba8", "green": "#d3f5b3"}
         self.no_change = ""
