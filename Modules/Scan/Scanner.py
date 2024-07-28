@@ -4,10 +4,9 @@ from Modules.Print.constants import SUB_LINE_SEPARATOR
 
 from Modules.Scan import constants
 from Modules.Tag import custom_tags
-from Modules.Mutagen import utils as mutagenUtils
 from Modules.Scan.models.local_album_data import LocalAlbumData, LocalTrackData
-from Modules.Utils.general_utils import get_default_logger
-from Modules.Mutagen.audio_factory import AudioFactory, UnsupportedFileFormatError, isFileFormatSupported
+from Modules.Utils.general_utils import get_default_logger, is_date_in_YYYY_MM_DD, cleanDate
+from unigen import AudioFactory, UnsupportedFileFormatError, isFileFormatSupported
 
 
 """
@@ -152,7 +151,7 @@ class Scanner:
         dates = [track.audio_manager.getDate() for track in audio_files]
         if None not in dates:
             cleaned_dates = [date for date in dates if date is not None]
-            if all(mutagenUtils.is_date_in_YYYY_MM_DD(mutagenUtils.cleanDate(date)) for date in cleaned_dates) and has_identical_items_list_of_string(cleaned_dates):
+            if all(is_date_in_YYYY_MM_DD(cleanDate(date)) for date in cleaned_dates) and has_identical_items_list_of_string(cleaned_dates):
                 return True
         return False
 

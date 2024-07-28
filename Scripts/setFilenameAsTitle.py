@@ -2,7 +2,7 @@ import os
 import sys
 
 sys.path.append(os.getcwd())
-from Modules.Mutagen.audio_factory import AudioFactory
+from unigen import AudioFactory
 
 
 folderPath = ""

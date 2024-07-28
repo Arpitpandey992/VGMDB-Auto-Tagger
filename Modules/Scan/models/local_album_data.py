@@ -6,7 +6,7 @@ import sys
 sys.path.append(os.getcwd())
 # REMOVE
 from pydantic import BaseModel, Field
-from Modules.Mutagen.audio_manager import IAudioManager
+from unigen import IAudioManager
 from Modules.Print.constants import LINE_SEPARATOR, SUB_LINE_SEPARATOR
 
 

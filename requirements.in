@@ -4,7 +4,6 @@ docker
 fugashi
 gitpython
 musicbrainzngs
-mutagen
 openai
 Pillow
 pydantic
@@ -17,4 +16,5 @@ tabulate
 typed-argument-parser
 typing_extensions
 unidic-lite
+unigen
 urllib3

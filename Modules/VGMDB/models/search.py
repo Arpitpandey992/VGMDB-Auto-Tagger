@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 from Imports.constants import LANGUAGES
-from Modules.Mutagen.utils import extractYearFromDate
+from Modules.Utils.general_utils import extractYearFromDate
 from Modules.VGMDB.models.vgmdb_album_data import Names
 
 

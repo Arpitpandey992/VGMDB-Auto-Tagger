@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from Imports.config import Config
-from Modules.Mutagen.utils import cleanDate, getProperCount
+from Modules.Utils.general_utils import cleanDate, getProperCount
 from Modules.Scan.models.local_album_data import LocalAlbumData, LocalTrackData
 from Modules.Utils.general_utils import get_default_logger, getFirstProperOrNone, ifNot
 from Modules.Organize.models.organize_result import FileOrganizeResult, FolderOrganizeResult

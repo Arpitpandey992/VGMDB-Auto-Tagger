@@ -7,8 +7,7 @@ from typing import Any, Callable
 
 from Imports.config import Config
 from Imports.constants import THREAD_EXECUTOR_NUM_THREADS
-from Modules.Mutagen.audio_manager import IAudioManager
-from Modules.Mutagen.utils import extractYearFromDate
+from unigen import IAudioManager
 from Modules.Organize.organizer import Organizer
 from Modules.Organize.models.organize_result import FolderOrganizeResult
 from Modules.Print import Table
@@ -18,7 +17,7 @@ from Modules.Scan.models.local_album_data import LocalAlbumData
 from Modules.Tag import custom_tags
 from Modules.Tag.tagger import Tagger
 from Modules.Translate import translator
-from Modules.Utils.general_utils import get_default_logger, ifNot, to_sentence_case
+from Modules.Utils.general_utils import get_default_logger, ifNot, to_sentence_case, extractYearFromDate
 from Modules.VGMDB.api.client import VgmdbClient
 from Modules.VGMDB.models.vgmdb_album_data import Names, VgmdbAlbumData
 from Modules.VGMDB.user_interface import constants

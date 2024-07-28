@@ -61,7 +61,7 @@ mojimoji==0.0.13
 musicbrainzngs==0.7.1
     # via -r requirements.in
 mutagen==1.47.0
-    # via -r requirements.in
+    # via unigen
 mypy-extensions==1.0.0
     # via typing-inspect
 openai==1.37.1
@@ -121,6 +121,8 @@ typing-extensions==4.12.2
 typing-inspect==0.9.0
     # via typed-argument-parser
 unidic-lite==1.0.8
+    # via -r requirements.in
+unigen==1.2
     # via -r requirements.in
 urllib3==2.2.2
     # via
