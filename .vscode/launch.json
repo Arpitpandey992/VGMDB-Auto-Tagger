@@ -18,7 +18,7 @@
             "request": "launch",
             "program": "album_tagger.py",
             "args": [
-                "/mnt/d/Downloads/Music/Soulseek/[2024.04.17] Kusuriya no Hitorigoto Original Soundtrack [THCA-60289] [CD-FLAC 16bit 44.1kHz]",
+                "",
                 // "--recur",
             ],
             "console": "integratedTerminal",

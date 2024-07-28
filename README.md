@@ -15,15 +15,15 @@ This project uses api from [VGMDB.info API by Hufman](https://github.com/hufman/
 
 ## Dependencies
 
-### Last updated to work with: `python v3.12`. Make sure to use a virtual environment to avoid conflicts
+- Last updated to work with: `python v3.12`. Make sure to use a virtual environment to avoid conflicts
 
-### `docker` and `docker-compose` are required to run `VGMDB API` locally because `https://vgmdb.info` has been bugging out lately. These dependencies can be bypassed by turning off the following flag:
+- `docker` and `docker-compose` are required to run `VGMDB API` locally because `https://vgmdb.info` has been bugging out lately. These dependencies can be bypassed by turning off the following flag:
 
-`Modules/VGMDB/constants.py`
-
-```
-USE_LOCAL_SERVER = False
-```
+  ```
+  Modules/VGMDB/constants.py
+  ---------------------------
+  USE_LOCAL_SERVER = False
+  ```
 
 ## Installing Dependencies
 
