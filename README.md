@@ -13,7 +13,17 @@ This project uses api from [VGMDB.info API by Hufman](https://github.com/hufman/
 - During picture grabbing stage, it is required to give username and password, since getting all scans require the client to be logged in. If you want to skip the login part and are okay with not grabbing all available scans, pass the --no-auth flag.
 - If using the translate command, make sure to have translate-shell installed in your system, with it being added to path. Basically, 'trans <text>' should work in a fresh terminal. Get it <a href="https://github.com/soimort/translate-shell">Here</a>
 
+## Dependencies
+
 ### Last updated to work with: `python v3.12`. Make sure to use a virtual environment to avoid conflicts
+
+### `docker` and `docker-compose` are required to run `VGMDB API` locally because `https://vgmdb.info` has been bugging out lately. These dependencies can be bypassed by turning off the following flag:
+
+`Modules/VGMDB/constants.py`
+
+```
+USE_LOCAL_SERVER = False
+```
 
 ## Installing Dependencies
 
