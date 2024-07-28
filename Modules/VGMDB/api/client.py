@@ -31,11 +31,11 @@ class VgmdbClient:
         self.vgmdb_info_base_url = VGMDB_INFO_BASE_URL
         if USE_LOCAL_SERVER:
             try:
-                from Modules.VGMDB.api.vgmdb_info import run_server
+                from Modules.VGMDB.api.vgmdb_info import run_vgmdb_info_server
 
                 logger.info("starting vgmdb.info server")
                 logger.debug(SUB_LINE_SEPARATOR)
-                baseAddress = run_server()
+                baseAddress = run_vgmdb_info_server()
                 self.vgmdb_info_base_url = baseAddress
                 logger.debug(SUB_LINE_SEPARATOR)
             except Exception as e:

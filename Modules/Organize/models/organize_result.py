@@ -1,7 +1,7 @@
 import os
 from pydantic import BaseModel
 
-from Modules.organize.organize_utils import get_base_folder_under_parent
+from Modules.Organize.organize_utils import get_base_folder_under_parent
 
 
 class FileOrganizeResult(BaseModel):

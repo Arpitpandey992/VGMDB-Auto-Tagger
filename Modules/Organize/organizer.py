@@ -4,9 +4,9 @@ from Imports.config import Config
 from Modules.Mutagen.utils import cleanDate, getProperCount
 from Modules.Scan.models.local_album_data import LocalAlbumData, LocalTrackData
 from Modules.Utils.general_utils import get_default_logger, getFirstProperOrNone, ifNot
-from Modules.organize.models.organize_result import FileOrganizeResult, FolderOrganizeResult
-from Modules.organize.template import TemplateResolver
-from Modules.organize.organize_utils import clean_name, extract_disc_name_from_folder_name, extract_disc_number_from_folder_name, extract_track_name_from_file_name, extract_track_number_from_file_name, get_base_folder_under_parent
+from Modules.Organize.models.organize_result import FileOrganizeResult, FolderOrganizeResult
+from Modules.Organize.template import TemplateResolver
+from Modules.Organize.organize_utils import clean_name, extract_disc_name_from_folder_name, extract_disc_number_from_folder_name, extract_track_name_from_file_name, extract_track_number_from_file_name, get_base_folder_under_parent
 
 logger = get_default_logger(__name__, "info")
 

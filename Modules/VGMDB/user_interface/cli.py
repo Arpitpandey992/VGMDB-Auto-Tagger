@@ -9,8 +9,8 @@ from Imports.config import Config
 from Imports.constants import THREAD_EXECUTOR_NUM_THREADS
 from Modules.Mutagen.audio_manager import IAudioManager
 from Modules.Mutagen.utils import extractYearFromDate
-from Modules.organize.organizer import Organizer
-from Modules.organize.models.organize_result import FolderOrganizeResult
+from Modules.Organize.organizer import Organizer
+from Modules.Organize.models.organize_result import FolderOrganizeResult
 from Modules.Print import Table
 from Modules.Print.utils import get_panel, get_rich_console, print_separator
 from Modules.Scan.Scanner import Scanner

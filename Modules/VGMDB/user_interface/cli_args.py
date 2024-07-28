@@ -5,7 +5,7 @@ from typing import Any
 from rich import get_console
 
 from Imports.config import Config, get_config
-from Modules.organize.template import TemplateResolver, TemplateValidationException
+from Modules.Organize.template import TemplateResolver, TemplateValidationException
 
 
 class CLIArgs(Tap):

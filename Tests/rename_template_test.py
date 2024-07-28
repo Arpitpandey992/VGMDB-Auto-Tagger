@@ -1,5 +1,5 @@
 import unittest
-from Modules.organize.template import TemplateResolver
+from Modules.Organize.template import TemplateResolver
 
 
 class TestRenameTemplate(unittest.TestCase):

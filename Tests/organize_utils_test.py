@@ -1,5 +1,5 @@
 import unittest
-from Modules.organize.organize_utils import extract_disc_name_from_folder_name, extract_disc_number_from_folder_name, extract_track_name_from_file_name, extract_track_number_from_file_name
+from Modules.Organize.organize_utils import extract_disc_name_from_folder_name, extract_disc_number_from_folder_name, extract_track_name_from_file_name, extract_track_number_from_file_name
 
 
 class TestOrganizeUtils(unittest.TestCase):
