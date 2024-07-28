@@ -1,5 +1,5 @@
 {
-    "backup_folder": "/run/media/arpit/DATA/Downloads/Torrents/Backup",
-    "backup": false,
-    "english": true
+  "backup_folder": "",
+  "backup": false,
+  "english": true
 }

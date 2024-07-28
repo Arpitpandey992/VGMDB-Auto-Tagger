@@ -3,7 +3,7 @@ import time
 import openai
 from typing import List, Type, Callable, Any, Optional, Literal
 from typing_extensions import TypedDict
-from openai.error import RateLimitError, Timeout, APIConnectionError, ServiceUnavailableError, TryAgain, APIError
+from openai import OpenAI, RateLimitError, APIConnectionError, APIError, InternalServerError, APITimeoutError
 
 from Modules.Utils.general_utils import get_default_logger
 
@@ -20,7 +20,7 @@ model_map: dict[model_types, model_details] = {
     "4k_tokens": model_details(name="gpt-3.5-turbo", max_tokens=4096),
     "16k_tokens": model_details(name="gpt-3.5-turbo-16k", max_tokens=16384),
     "4k_tokens_function_calling": model_details(name="gpt-3.5-turbo-0613", max_tokens=4096),
-    "16k_tokens_function_calling": model_details(name="gpt-3.5-turbo-16k-0613", max_tokens=16384)
+    "16k_tokens_function_calling": model_details(name="gpt-3.5-turbo-16k-0613", max_tokens=16384),
 }
 
 logger = get_default_logger(__name__)
@@ -49,24 +49,25 @@ class ChatGPTAPI:
         self.system_role_content = system_role
         self.temperature = temperature * 2
         self.max_tokens = max_tokens
+        self.client = OpenAI()
 
     def query(self, prompt: str) -> QueryResponse:
         messages = [
             {"role": "system", "content": self.system_role_content},
             {"role": "user", "content": prompt},
         ]
+
         response = retry_on_exceptions_with_backoff(
-            lambda: openai.ChatCompletion.create(
+            lambda: self.client.chat.completions.create(
                 model=self.model_name,
-                messages=messages,
+                messages=messages,  # type:ignore
                 max_tokens=self.max_tokens,
             ),
             [
                 RateLimitError,
-                Timeout,
+                APITimeoutError,
                 APIConnectionError,
-                ServiceUnavailableError,
-                TryAgain,
+                InternalServerError,
                 APIError,
             ],
         )
@@ -89,8 +90,8 @@ class ChatGPTAPI:
         if self.max_tokens:
             args_dict["max_tokens"] = self.max_tokens
         response = retry_on_exceptions_with_backoff(
-            lambda: openai.ChatCompletion.create(**args_dict),
-            [RateLimitError, Timeout, APIConnectionError],
+            lambda: self.client.chat.completions.create(**args_dict),
+            [RateLimitError, APITimeoutError, APIConnectionError],
         )
         json_response = response["choices"][0]["message"]["function_call"]["arguments"]
         usage = TokenUsage(response["usage"])
@@ -136,6 +137,7 @@ def retry_on_exceptions_with_backoff(
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
+
     load_dotenv()
     gpt = ChatGPTAPI()
     response = gpt.query("why is the sky blue?")

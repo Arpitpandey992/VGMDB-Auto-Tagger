@@ -2,7 +2,7 @@ import os
 import shutil
 
 # Specify the directory to search
-directory = "/run/media/arpit/Seagate Backup Plus Slim 1TB/found.000/dir0000.chk"
+directory = ""
 DELETE_AS_WELL = False
 
 

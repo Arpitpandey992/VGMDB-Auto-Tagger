@@ -5,7 +5,7 @@ sys.path.append(os.getcwd())
 from Modules.Mutagen.audio_factory import AudioFactory
 
 
-folderPath = "/run/media/arpit/DATA/Downloads/Music/Soulseek/red_book/Radio CDs/New Folder"
+folderPath = ""
 
 for dirpath, dirnames, filenames in os.walk(folderPath):
     for filename in filenames:
