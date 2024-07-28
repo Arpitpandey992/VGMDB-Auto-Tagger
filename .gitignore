@@ -10,3 +10,4 @@ logs/
 modifiedSamples
 .pytest_cache
 .mypy_cache
+Modules/VGMDB/api/vgmdb
