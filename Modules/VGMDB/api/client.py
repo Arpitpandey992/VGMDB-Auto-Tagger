@@ -1,4 +1,5 @@
 import textwrap
+import traceback
 import requests
 import time
 from typing import Any
@@ -10,15 +11,14 @@ import sys
 
 sys.path.append(os.getcwd())
 # REMOVE
-from Modules.Print.constants import SUB_LINE_SEPARATOR
+
 from Modules.VGMDB.constants import APICALLRETRIES, USE_LOCAL_SERVER, VGMDB_INFO_BASE_URL
-from Modules.Utils.general_utils import get_default_logger
+from Modules.Print.utils import get_panel, get_rich_console
 from Modules.VGMDB.models.vgmdb_album_data import VgmdbAlbumData
 from Modules.VGMDB.models.search import SearchAlbum
-from rich import get_console
 
 
-logger = get_default_logger(__name__, "debug")
+console = get_rich_console()
 
 
 class VgmdbRequestException(requests.RequestException):
@@ -33,27 +33,37 @@ class VgmdbClient:
             try:
                 from Modules.VGMDB.api.vgmdb_info import run_vgmdb_info_server
 
-                logger.info("starting vgmdb.info server")
-                logger.debug(SUB_LINE_SEPARATOR)
+                console.log("[magenta bold]starting vgmdb.info server locally")
+
                 baseAddress = run_vgmdb_info_server()
+
                 self.vgmdb_info_base_url = baseAddress
-                logger.debug(SUB_LINE_SEPARATOR)
             except Exception as e:
-                logger.error(
-                    textwrap.dedent(
-                        f"""
-                        {SUB_LINE_SEPARATOR}
-                        could not run local server
-                        ****make sure docker is installed and it's service is running in system****
-                        {SUB_LINE_SEPARATOR}
+                console.print(
+                    get_panel(
+                        "[bold red]"
+                        + textwrap.dedent(
+                            f"""
+                        Could not run vgmdb.info server locally
+                        Make sure that docker is installed, running and added to $PATH
                         error:
                         {e}
-                        {SUB_LINE_SEPARATOR}
                         """
-                    ).strip()
+                        ).strip()
+                    )
                 )
-
-        get_console().log(f"using {self.vgmdb_info_base_url} for VGMDB API")
+                console.print(
+                    get_panel(
+                        "[bold red]"
+                        + textwrap.dedent(
+                            f"""
+                        Stacktrace:
+                        {traceback.format_exc()}
+                        """
+                        ).strip()
+                    )
+                )
+        console.print(get_panel(f"[bold yellow]Using [blue]{self.vgmdb_info_base_url}[/] for VGMDB API"))
 
         self.album_cache: dict[str, VgmdbAlbumData] = {}
         self.search_cache: dict[str, list[SearchAlbum]] = {}
@@ -67,8 +77,8 @@ class VgmdbClient:
                 if response.status_code >= 200 and response.status_code <= 299:
                     return response.json()
             except Exception as e:
-                logger.info(f"error in getting response, retrying after {backoff_secs} seconds")
-                logger.debug(f"error: {e}")
+                console.log(f"[red]error in getting response, retrying after {backoff_secs} seconds")
+                console.log(f"[red]error: {e}")
                 found_exception = e
                 time.sleep(backoff_secs)
                 backoff_secs *= 2

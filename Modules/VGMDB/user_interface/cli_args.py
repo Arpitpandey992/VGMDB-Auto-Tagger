@@ -143,9 +143,9 @@ def _get_json_args() -> dict[str, Any]:
     current_directory = os.path.dirname(os.path.abspath(__file__))
     config_file_path = os.path.abspath(os.path.join(current_directory, "..", "..", "..", "config.json"))
     if os.path.exists(config_file_path):
-        get_console().log(f"[green bold] Reading config.json at {config_file_path}")
+        get_console().log(f"[green bold]Reading config.json at {config_file_path}")
         with open(config_file_path, "r") as file:
             file_config = json.load(file)
             return file_config
-    get_console().log(f"[red bold] Could not read config.json at {config_file_path}")
+    get_console().log(f"[red bold]Could not read config.json at {config_file_path}")
     return {}
