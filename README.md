@@ -1,6 +1,7 @@
 # VGMDB-Auto-Tagger
 
 Python script to automatically tag an album using data fetched from VGMDB.info
+The tagging and organization out of the box is highly opinionated. However, there is a good amount of customization options available
 
 This project uses api from [hufman VGMDB.info](https://github.com/hufman/vgmdb). Respect+
 
