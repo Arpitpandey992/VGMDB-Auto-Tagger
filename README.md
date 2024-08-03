@@ -23,7 +23,6 @@ This project uses api from [VGMDB.info API by Hufman](https://github.com/hufman/
   ---------------------------
   USE_LOCAL_SERVER = False
   ```
-- Translation requires `translate-shell` to be installed and added to `$PATH`. Get it <a href="https://github.com/soimort/translate-shell">Here</a> 
 
 ## Installing Dependencies
 
