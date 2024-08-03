@@ -11,7 +11,6 @@ This project uses api from [VGMDB.info API by Hufman](https://github.com/hufman/
 - Tags like `artist`, `album artist` are not supported as this data is not present in VGMDB itself.
 - This script works best for partially tagged albums, and it will fill in other details like `catalog`, `title`, `publisher`, etc. So it is best used in conjunction with other tagging tools, as it is very difficult to get `English` track titles and `catalog` using other tools.
 - During picture grabbing stage, it is required to give username and password, since getting all scans require the client to be logged in. If you want to skip the login part and are okay with not grabbing all available scans, pass the --no-auth flag.
-- If using the translate command, make sure to have translate-shell installed in your system, with it being added to path. Basically, 'trans <text>' should work in a fresh terminal. Get it <a href="https://github.com/soimort/translate-shell">Here</a>
 
 ## Dependencies
 
@@ -24,6 +23,7 @@ This project uses api from [VGMDB.info API by Hufman](https://github.com/hufman/
   ---------------------------
   USE_LOCAL_SERVER = False
   ```
+- Translation requires `translate-shell` to be installed and added to `$PATH`. Get it <a href="https://github.com/soimort/translate-shell">Here</a> 
 
 ## Installing Dependencies
 
