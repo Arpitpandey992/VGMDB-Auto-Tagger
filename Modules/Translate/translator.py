@@ -1,7 +1,9 @@
-import subprocess
 import cutlet
 import json
-from typing import Optional, get_args
+import langid
+from enum import Enum
+from typing import Literal
+from translate_shell.translate import translate as translate_shell_translate
 
 # remove
 import sys
@@ -9,74 +11,129 @@ import os
 
 sys.path.append(os.getcwd())
 # remove
-from Imports.constants import TRANSLATE_LANGUAGES
 from Modules.Translate.chatGPT import ChatGPTAPI
 from Modules.Utils.general_utils import get_default_logger
 
-logger = get_default_logger(__name__, "info")
+LANGUAGE_NAME = Literal["english", "romaji", "chinese", "hindi", "japanese"]
 
 
-# This uses 'translate-shell' system process for transcription. make sure it is available and added to path
+class Language(Enum):
+    english = "en"
+    japanese = "ja"
+    chinese = "zh"
+    hindi = "hi"
+    # custom languages which are not present in ISO 639 codes
+    romaji = "rom"
+
+    @classmethod
+    def from_value(cls, value: str):
+        for member in cls:
+            if member.value == value:
+                return member
+        raise ValueError(f"{value} is not a supported {cls.__name__}")
+
+    @classmethod
+    def from_language_name(cls, language_name: LANGUAGE_NAME):
+        language_name_mapping = cls.get_language_name_mapping()
+        if language_name in language_name_mapping:
+            return language_name_mapping[language_name]
+        # Ideally it should never go beyond this point
+        raise ValueError(f"{language_name} is not a supported {cls.__name__}")
+
+    @classmethod
+    def is_valid_language(cls, lang: str) -> bool:
+        for member in cls:
+            if member.value == lang:
+                return True
+        return False
+
+    def to_language_name(self) -> str:
+        language_name_mapping = Language.get_language_name_mapping()
+        for language_name, language_enum in language_name_mapping.items():
+            if language_enum == self.name:
+                return language_name
+        raise ValueError(f"{self.name}:{self.value} enum could not be converted to language name")
+
+    @classmethod
+    def get_language_name_mapping(cls) -> dict[LANGUAGE_NAME, "Language"]:
+        return {"english": cls.english, "japanese": cls.japanese, "chinese": cls.chinese, "hindi": cls.hindi, "romaji": cls.romaji}
 
 
-def get_text_language(text: str) -> str:
-    try:
-        sourceLanguage = subprocess.run(["trans", "-identify", "-no-warn", text], capture_output=True, text=True).stdout.strip()
-        return sourceLanguage.lower()
-    except Exception as e:
-        logger.exception(f"could not identify language: {e}")
-    return ""
+class Translator:
+    TRANSLATOR = Literal["cutlet", "chatgpt", "translate-shell"]
+    ROMAJI_TRANSLATOR: TRANSLATOR = "cutlet"
+    GENERAL_TRANSLATOR: TRANSLATOR = "translate-shell"
 
+    def __init__(self):
+        self.logger = get_default_logger(__name__, "info")
+        self.translate_cache: dict[tuple[str, LANGUAGE_NAME], str | None] = {}
 
-def translate_romaji(text: str) -> Optional[str]:
-    def translate_google_translate(text: str) -> Optional[str]:
-        options = ["trans", "--no-warn", "-t", "english", "-show-original", "Y", "-show-alternatives", "n", "-show-languages", "n", "-show-translation", "n", "-show-prompt-message", "n", "-no-theme", text]
+    def translate(self, text: str | None, target_language_name: LANGUAGE_NAME = "english") -> str | None:
+        if not text or not text.strip():
+            self.logger.exception(f"empty text provided for translation, skipping")
+            return None
+
+        if (text, target_language_name) in self.translate_cache:
+            self.logger.debug(f"using cached translation entry for translating: {text} to: {target_language_name}")
+            return self.translate_cache.get((text, target_language_name))
+
+        self.logger.debug(f"translating {text} to {target_language_name}")
+
+        target_language = Language.from_language_name(target_language_name)
+        source_language = self._identify_language(text)
+
+        if source_language == Language.english or source_language == target_language:
+            self.logger.debug(f"no need to translate: {text} to {target_language_name}")
+            self.translate_cache[(text, target_language_name)] = None
+            return None
+
+        translated_text = None
         try:
-            output_text = subprocess.run(options, capture_output=True, text=True).stdout.strip()
-            lines = output_text.split("\n")
-            for line in lines:
-                line = line.strip()
-                if line.startswith("(") and line.endswith(")"):
-                    return line[1:-1]
-            return None
-
+            if target_language == Language.romaji:
+                translated_text = self._translate_to_romaji(text)
+            else:
+                translated_text = self._general_translation(text, target_language)
         except Exception as e:
-            logger.exception(f"could not get romaji, error: {e}")
-            return None
+            raise Exception(f"could not translate {text} to {target_language_name}. exception: {e}")
 
-    def translate_romaji_cutlet(text: str) -> Optional[str]:
-        katsu = cutlet.Cutlet()
-        romajiText = katsu.romaji(text)
-        return romajiText
+        if translated_text is not None:
+            self.translate_cache[(text, target_language_name)] = translated_text
+        return translated_text
 
-    source_language = get_text_language(text)
+    def _general_translation(self, text: str, target_language: Language) -> str:
+        if self.GENERAL_TRANSLATOR == "chatgpt":
+            self.logger.debug("using chatGPT for translation")
+            return self._translate_using_chat_gpt(text, target_language)
 
-    if source_language and "japanese" in source_language:
-        logger.debug("using cutlet for translating to romaji")
-        return translate_romaji_cutlet(text)
+        self.logger.debug("using translate-shell for translation")
+        return self._translate_using_translate_shell(text, target_language)
 
-    logger.debug("using google translate for translating to romaji")
-    return translate_google_translate(text)
+    def _translate_to_romaji(self, text: str) -> str:
+        if self.ROMAJI_TRANSLATOR == "cutlet":
+            source_language = self._identify_language(text)
+            if source_language == Language.japanese:
+                self.logger.debug("using cutlet for translation")
+                return self._translate_to_romaji_using_cutlet(text)
+        elif self.ROMAJI_TRANSLATOR == "chatgpt":
+            self.logger.debug("using chatGPT for translation")
+            return self._translate_using_chat_gpt(text, Language.romaji)
 
+        self.logger.debug("using translate-shell for translation")
+        return self._translate_to_romaji_using_translate_shell(text)
 
-def translate_translate_shell(text: str, target_language: str) -> str | None:
-    def translate(text: str, target_language: str) -> Optional[str]:
-        try:
-            translated_text = subprocess.run(["trans", "-b", "-no-warn", "-t", target_language, text], capture_output=True, text=True).stdout.strip()
-            return translated_text
+    # <Source Lang> -> <Target Lang> translation
+    def _translate_using_translate_shell(self, text: str, target_language: Language) -> str:
+        translated_text = translate_shell_translate(text, target_lang=target_language.value)
+        if translated_text.status != 1 or len(translated_text.results) == 0:
+            raise Exception(f"could not translate {text} to {target_language} using translate-shell")
+        result = translated_text.results[0]
+        return result.paraphrase
 
-        except Exception as e:
-            logger.exception(f"could not translate, error: {e}")
-            return None
-
-    return translate(text, target_language)
-
-
-def translate_chat_gpt(text: str, targetLanguage: str) -> str:
-    def translate(text: str, targetLanguage: str):
+    # It can do both general purpose translation and romaji translation
+    def _translate_using_chat_gpt(self, text: str, target_language: Language) -> str:
         system_role = "You are a translation helper that is used to translate metadata of music files from one language to another."
-        prompt = f"You will help to translate the given text to {targetLanguage}. The context for the text is: The given text is the title/name of a music track in a japanese soundtrack album. Try to be accurate and use plain english wherever appropriate. "
-        if targetLanguage == "Romaji":
+        prompt = f"You will help to translate the given text to {target_language.name}. The context for the text is: The given text is the title/name of a music track in a japanese soundtrack album. Try to be accurate and use plain english wherever appropriate. "
+        if target_language == Language.romaji:
             prompt += "For english words present in text, written in japanese, write them out in plain english without any romanization. "
         prompt += f"Text:\n```\n{text}\n```"
         function_call = {
@@ -98,47 +155,34 @@ def translate_chat_gpt(text: str, targetLanguage: str) -> str:
         responseDict = json.loads(response)
         return responseDict["translated_text"]
 
-    options = {"text": text, "targetLanguage": targetLanguage}
-    return translate(**options)
+    # <Source Lang> -> Romaji translation
+    def _translate_to_romaji_using_translate_shell(self, text: str) -> str:
+        translated_text = translate_shell_translate(text)
+        if translated_text.status != 1 or len(translated_text.results) == 0:
+            raise Exception(f"could not translate {text} to {target_language} using translate-shell")
+        result = translated_text.results[0]
+        return result.phonetic
 
+    def _translate_to_romaji_using_cutlet(self, text: str) -> str:
+        """only from ja -> rom translation"""
+        katsu = cutlet.Cutlet()
+        romajiText = katsu.romaji(text)
+        if not romajiText:
+            raise Exception(f"could not translate {text} to romaji using cutlet")
+        return romajiText
 
-translate_cache: dict[tuple[str, TRANSLATE_LANGUAGES], str | None] = {}
-
-
-def translate(text: str | None, target_language: TRANSLATE_LANGUAGES = "english") -> str | None:
-    if not text:
-        return None
-    global translate_cache
-    if (text, target_language) in translate_cache:
-        return translate_cache.get((text, target_language))
-    source_language = get_text_language(text)
-    if target_language.lower() in source_language or "english" in source_language:
-        translate_cache[(text, target_language)] = None
-        return None
-    if target_language not in get_args(TRANSLATE_LANGUAGES):
-        logger.error(f"{target_language} is not supported for translation")
-        return None
-    translated_text = None
-    if target_language == "romaji":
-        # chatGPT is good for romaji, but API KEY :(
-        use_chat_gpt = False
-        if use_chat_gpt:
-            try:
-                translated_text = translate_chat_gpt(text, "Romaji")
-            except Exception as e:
-                logger.error(f"chatGPT failed for {text}, using cutlet")
-                logger.debug(f"error:\n{e}")
-                translated_text = translate_romaji(text)
-        else:
-            translated_text = translate_romaji(text)
-    else:
-        translated_text = translate_translate_shell(text, target_language)
-    translate_cache[(text, target_language)] = translated_text
-    return translated_text
+    def _identify_language(self, text: str) -> Language:
+        result = langid.classify(text)
+        if not result:
+            raise Exception(f"could not identify language for text: {text}")
+        identified_language = result[0].lower().strip()
+        if Language.is_valid_language(identified_language):
+            return Language.from_value(identified_language)
+        raise Exception(f"identified language: {identified_language} is not a supported Language")
 
 
 if __name__ == "__main__":
-    target_languages: list[TRANSLATE_LANGUAGES] = ["english", "romaji"]
+    target_languages: list[LANGUAGE_NAME] = ["english", "romaji"]
     examples = [
         "Damn son, this is in english",
         "醉梦前尘 - 琵琶版",
@@ -155,9 +199,10 @@ if __name__ == "__main__":
         "あの日へ繋がるラジオ",
         "Thanks -fromˮCD꞉yoursˮ2022マスタリングVer.- feat.癒月",
     ]
+    translator = Translator()
     for i in range(2):
         for example in examples:
             print(f"original: {example}")
             for target_language in target_languages:
-                print(f"{target_language}: {translate(example,target_language)}")
+                print(f"{target_language}: {translator.translate(example,target_language)}")
             print("------------------------------")

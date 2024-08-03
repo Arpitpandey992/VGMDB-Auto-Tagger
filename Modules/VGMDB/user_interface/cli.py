@@ -16,7 +16,7 @@ from Modules.Scan.Scanner import Scanner
 from Modules.Scan.models.local_album_data import LocalAlbumData
 from Modules.Tag import custom_tags
 from Modules.Tag.tagger import Tagger
-from Modules.Translate import translator
+from Modules.Translate.translator import Translator
 from Modules.Utils.general_utils import get_default_logger, ifNot, to_sentence_case, extractYearFromDate
 from Modules.VGMDB.api.client import VgmdbClient
 from Modules.VGMDB.models.vgmdb_album_data import Names, VgmdbAlbumData
@@ -30,6 +30,7 @@ class CLI:
     def __init__(self, config: Config):
         self.root_config = config
         self.scanner = Scanner()
+        self.translator = Translator()
         if config.tag:
             self.vgmdb_client = VgmdbClient()
         self.console = get_rich_console()
@@ -256,6 +257,7 @@ class CLI:
     def _find_and_show_match_for_tagging(self, vgmdb_album_data: VgmdbAlbumData, config: Config) -> bool:
         """Find the match between the two data we have, and returns whether the albums are perfectly matching or not"""
         if config.translate:
+            self.console.log(f"[bold green]Translating Album Name and Track Names to languages: {", ".join(config.translation_language)}")
             num_threads = THREAD_EXECUTOR_NUM_THREADS
             with self.console.status(f"[bold green]Translating Album Name and Track Names With {num_threads} threads"):
                 to_translate: list[Names] = [vgmdb_album_data.names] + [track.names for disc in vgmdb_album_data.discs.values() for track in disc.tracks.values()]
@@ -435,25 +437,24 @@ class CLI:
 
     def _translate_names(self, to_translate: list[Names], config: Config, num_threads: int) -> list[list[str]]:
         """Translates Names present in to_translate, Returns translated names (list) for every Name"""
-
         def translate(name_object: Names) -> list[str]:
             track_title = name_object.get_highest_priority_name([order for order in config.language_order if order != "translated"])  # don't wanna translate translated text ;)
             try:
                 translated_names: list[str] = []
                 for translate_language in config.translation_language:
-                    translated_name = translator.translate(track_title, translate_language)
+                    translated_name = self.translator.translate(track_title, translate_language)
                     if translated_name and translated_name != track_title:
                         translated_names.append(to_sentence_case(translated_name))
 
                 successfully_translated = len(translated_names) > 0
                 if successfully_translated:
-                    self.console.log(f"[green]Translated [magenta bold]{track_title}")
+                    self.console.log(f"[green]Translated [cyan bold]{track_title}")
                 else:
                     self.console.log(f"[yellow]No need to Translate [cyan bold]{track_title}")
 
                 return translated_names
             except Exception as e:
-                self.console.log(f"[red bold]Error in Translating {track_title}, error: {e}")
+                self.console.log(f"[red bold]Error in Translating [cyan bold]{track_title}[/cyan bold], error: {e}")
                 return []
 
         tasks: list[Any] = []

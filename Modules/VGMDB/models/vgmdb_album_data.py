@@ -173,7 +173,7 @@ class VgmdbAlbumData(BaseModel):
         """
         thread = threading.Thread(target=self.get_album_cover_data)
         thread.start()
-        logger.info("fetching for album cover in background")
+        logger.info("Fetching for album cover in background")
 
     @field_validator("catalog", mode="before")
     @classmethod

@@ -3,6 +3,7 @@ cutlet
 docker
 fugashi
 gitpython
+langid
 musicbrainzngs
 openai
 Pillow
@@ -13,6 +14,7 @@ questionary
 requests
 rich
 tabulate
+translate-shell
 typed-argument-parser
 typing_extensions
 unidic-lite

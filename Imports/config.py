@@ -8,7 +8,8 @@ import sys
 sys.path.append(os.getcwd())
 # REMOVE
 
-from Imports.constants import LANGUAGES, TRANSLATE_LANGUAGES
+from Imports.constants import LANGUAGES
+from Modules.Translate.translator import LANGUAGE_NAME
 
 
 class Config(BaseModel):
@@ -70,7 +71,7 @@ class Config(BaseModel):
     # language priority for names of various tags (title, album, composer, etc)
     language_order: list[LANGUAGES] = ["english", "translated", "romaji", "japanese", "other"]
     translate: bool = False
-    translation_language: list[TRANSLATE_LANGUAGES] = ["english", "romaji"]
+    translation_language: list[LANGUAGE_NAME] = ["english", "romaji"]
 
     def get_dynamically(self, key: str):
         """access the internal variables like a dict, will raise a KeyError if invalid key"""

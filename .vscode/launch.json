@@ -17,10 +17,7 @@
             "type": "debugpy",
             "request": "launch",
             "program": "album_tagger.py",
-            "args": [
-                "",
-                // "--recur",
-            ],
+            "args": [],
             "console": "integratedTerminal",
             "justMyCode": true
         }
