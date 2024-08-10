@@ -3,14 +3,17 @@ import os
 # REMOVE
 import sys
 
+from Modules.Organize.template import TemplateResolver
+
 sys.path.append(os.getcwd())
 # REMOVE
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from unigen import IAudioManager
 from Modules.Print.constants import LINE_SEPARATOR, SUB_LINE_SEPARATOR
 
 
 class LocalTrackData(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     file_path: str = Field(frozen=True)
     depth_in_parent_folder: int
     audio_manager: IAudioManager
@@ -25,47 +28,87 @@ class LocalTrackData(BaseModel):
         _, extension = os.path.splitext(self.file_path)
         return extension
 
-    class Config:
-        arbitrary_types_allowed = True
-
     def __hash__(self) -> int:
         return self.file_path.__hash__()  # for being able to create a set
 
     def get_audio_source(self) -> str | None:
-        extension = self.audio_manager.getExtension()
-        # Flac contains most info variables, hence using it here for type hints only
-        info = self.audio_manager.getInfo()
+
+        audio_source_format_lossless = "{{{source}-{codec}}|source|codec}{ {bits}bit}{ {sample_rate}kHz}"
+        audio_source_format_lossy = "{{{source}-{codec}}|source|codec}{ {bitrate}kbps}"
+        source = None
+        codec = None
+        bits = None
+        sample_rate = None
+        bitrate = None
+
+        extension = self.extension
+        info = self.audio_manager.getMediaInfo()
         if extension.lower() in [".flac", ".wav"]:
             codec = "FLAC" if extension == ".flac" else "WAV"
             bits = info.bits_per_sample
-            sample_rate = info.sample_rate / 1000
-            if sample_rate.is_integer():
-                sample_rate = int(sample_rate)
-            source = "CD" if bits == 16 else "WEB"
-            if sample_rate >= 192 or bits > 24:
+
+            if info.sample_rate and info.sample_rate.is_integer():
+                sample_rate = int(info.sample_rate / 1000)
+            if bits:
+                source = "CD" if bits == 16 else "WEB"
+            if (sample_rate and sample_rate >= 192) or (bits and bits > 24):
                 source = "VINYL"  # Scuffed way, but assuming Vinyl rips have extremely high sample rate, but Qobuz does provide 192kHz files so yeah...
             # Edge cases should be edited manually later
-            return f"{source}-{codec} {bits}bit {sample_rate}kHz"
+
+            return TemplateResolver(
+                {
+                    "source": source,
+                    "codec": codec,
+                    "bits": str(bits) if bits else None,
+                    "sample_rate": str(sample_rate) if sample_rate else None,
+                }
+            ).evaluate(audio_source_format_lossless)
+
         elif extension == ".mp3":
             # CD-MP3 because in 99% cases, an mp3 album is a lossy cd rip
-            bitrate = int(info.bitrate / 1000)
-            return f"CD-MP3 {bitrate}kbps"
+            source = "CD"
+            codec = "MP3"
+            bitrate = int(info.bitrate / 1000) if info.bitrate else None
+
         elif extension == ".m4a" or extension == ".aac":
             # aac files are usually provided by websites directly for lossy versions. apple music files are also m4a, m4a can also contain Apple ALAC files
-            bitrate = int(info.bitrate / 1000)
-            if info.codec.lower() == "alac":
+            bitrate = int(info.bitrate / 1000) if info.bitrate else None
+            if info.codec and info.codec.lower() == "alac":
+                source = "WEB"
+                codec = "ALAC"
                 bits = info.bits_per_sample
-                sample_rate = info.sample_rate / 1000
-                return f"WEB-ALAC {bits}bit {sample_rate}kHz"
-            return f"WEB-AAC {bitrate}kbps"
+                sample_rate = int(info.sample_rate / 1000) if info.sample_rate else None
+
+                return TemplateResolver(
+                    {
+                        "source": source,
+                        "codec": codec,
+                        "bits": str(bits) if bits else None,
+                        "sample_rate": str(sample_rate) if sample_rate else None,
+                    }
+                ).evaluate(audio_source_format_lossless)
+            else:
+                source = "WEB"
+                codec = "AAC"
+
         elif extension == ".ogg":
             # Usually from spotify
-            bitrate = int(info.bitrate / 1000)
-            return f"WEB-OGG {bitrate}kbps"
+            bitrate = int(info.bitrate / 1000) if info.bitrate else None
+            source = "WEB"
+            codec = "OGG"
+
         elif extension == ".opus":
             # YouTube bruh, couldn't figure out a way to retrieve bitrate
-            return f"YT-OPUS"
-        return None
+            source = "YT"
+            codec = "OPUS"
+
+        return TemplateResolver(
+            {
+                "source": source,
+                "codec": codec,
+                "bitrate": str(bitrate) if bitrate else None,
+            }
+        ).evaluate(audio_source_format_lossy)
 
 
 class LocalDiscData(BaseModel):
