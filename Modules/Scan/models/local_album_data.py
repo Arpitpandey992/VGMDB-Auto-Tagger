@@ -47,7 +47,7 @@ class LocalTrackData(BaseModel):
             codec = "FLAC" if extension == ".flac" else "WAV"
             bits = info.bits_per_sample
 
-            if info.sample_rate and info.sample_rate.is_integer():
+            if info.sample_rate:
                 sample_rate = int(info.sample_rate / 1000)
             if bits:
                 source = "CD" if bits == 16 else "WEB"
