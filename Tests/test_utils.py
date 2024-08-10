@@ -71,11 +71,12 @@ def copy_base_samples(force: bool = False):
             shutil.copy(file_path, modifiedFolder)
 
 
-def get_test_file_path(file_extension: str) -> str:
+def get_test_file_path(file_extension: str, use_modified_folder: bool = True) -> str:
+    audio_files_folder = modifiedFolder if use_modified_folder else baseFolder
     file_extension = file_extension.lower()
     if file_extension not in supported_extensions:
         raise Exception(f"{file_extension} is not supported")
-    return os.path.join(modifiedFolder, f"{file_extension}_test.{file_extension}")
+    return os.path.join(audio_files_folder, f"{file_extension}_test.{file_extension}")
 
 
 def save_image(image_bytes: bytes, filename: str):
