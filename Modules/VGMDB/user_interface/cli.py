@@ -257,7 +257,7 @@ class CLI:
     def _find_and_show_match_for_tagging(self, vgmdb_album_data: VgmdbAlbumData, config: Config) -> bool:
         """Find the match between the two data we have, and returns whether the albums are perfectly matching or not"""
         if config.translate:
-            self.console.log(f"[bold green]Translating Album Name and Track Names to languages: {", ".join(config.translation_language)}")
+            self.console.log(f"[bold green]Translating Album Name and Track Names to languages: {', '.join(config.translation_language)}")
             num_threads = THREAD_EXECUTOR_NUM_THREADS
             with self.console.status(f"[bold green]Translating Album Name and Track Names With {num_threads} threads"):
                 to_translate: list[Names] = [vgmdb_album_data.names] + [track.names for disc in vgmdb_album_data.discs.values() for track in disc.tracks.values()]
