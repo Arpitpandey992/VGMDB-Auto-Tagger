@@ -178,7 +178,7 @@ class LocalAlbumData(BaseModel):
 
 
 def test():
-    from Modules.Scan.Scanner import Scanner
+    from Modules.Scan.scanner import Scanner
 
     test_music_dir = "/mnt/f/Music/Visual Novels/Key Sounds Label/KSLC/[KSLC-0006～7] Key Net Radio Vol.1 [2009.02.28] [Data-CD, CD-FLAC]"
     scanner = Scanner()

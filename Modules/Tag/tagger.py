@@ -120,7 +120,7 @@ class Tagger:
 
 
 if __name__ == "__main__":
-    from Modules.Scan.Scanner import Scanner
+    from Modules.Scan.scanner import Scanner
     from Modules.VGMDB.api.client import VgmdbClient
 
     folder = ""

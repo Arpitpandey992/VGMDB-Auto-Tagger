@@ -10,9 +10,9 @@ from Imports.constants import THREAD_EXECUTOR_NUM_THREADS
 from unigen import IAudioManager
 from Modules.Organize.organizer import Organizer
 from Modules.Organize.models.organize_result import FolderOrganizeResult
-from Modules.Print import Table
+from Modules.Print import table
 from Modules.Print.utils import get_panel, get_rich_console, print_separator
-from Modules.Scan.Scanner import Scanner
+from Modules.Scan.scanner import Scanner
 from Modules.Scan.models.local_album_data import LocalAlbumData
 from Modules.Tag import custom_tags
 from Modules.Tag.tagger import Tagger
@@ -198,13 +198,13 @@ class CLI:
             table_data = sorted(table_data, key=sort_comparator)
 
             columns = (
-                Table.Column(header="Old Name", justify="left", style="cyan"),
-                Table.Column(header="New Name (if Changed)", justify="left", style="magenta"),
-                Table.Column(header="Disc Name (Old)", justify="left", style="yellow"),
-                Table.Column(header="Disc Name (New, if Changed)", justify="left", style="green"),
+                table.Column(header="Old Name", justify="left", style="cyan"),
+                table.Column(header="New Name (if Changed)", justify="left", style="magenta"),
+                table.Column(header="Disc Name (Old)", justify="left", style="yellow"),
+                table.Column(header="Disc Name (New, if Changed)", justify="left", style="green"),
             )
             if not config.no_input:
-                Table.tabulate(table_data, columns=columns, title=f"Organizing Result for Files (Blank Field Means No Change)")
+                table.tabulate(table_data, columns=columns, title=f"Organizing Result for Files (Blank Field Means No Change)")
 
             all_good = all_good and all(res.new_path for res in folder_organize_result.file_organize_results)
 
@@ -294,13 +294,13 @@ class CLI:
                 table_data[i] = data
 
         columns = (
-            Table.Column(header="Disc", justify="center", style="bold"),
-            Table.Column(header="Track", justify="center", style="bold"),
-            Table.Column(header=f"Title{' [Translated]' if config.translate else ''}", justify="left", style="cyan"),
-            Table.Column(header="File Name", justify="left", style="magenta"),
+            table.Column(header="Disc", justify="center", style="bold"),
+            table.Column(header="Track", justify="center", style="bold"),
+            table.Column(header=f"Title{' [Translated]' if config.translate else ''}", justify="left", style="cyan"),
+            table.Column(header="File Name", justify="left", style="magenta"),
         )
         if not config.no_input:
-            Table.tabulate(table_data, columns=columns, title=f"Album Name{' [Translated]' if config.translate else ''}: {vgmdb_album_data.names.get_highest_priority_name(config.language_order)}")
+            table.tabulate(table_data, columns=columns, title=f"Album Name{' [Translated]' if config.translate else ''}: {vgmdb_album_data.names.get_highest_priority_name(config.language_order)}")
         is_perfect_match = all(col for row in table_data for col in row)  # perfect match only if nothing is "" or None
         return is_perfect_match
 
@@ -339,14 +339,14 @@ class CLI:
             get_second_key: Callable[[Any], Any] = lambda x: x[1]
             table_data = sorted(table_data, key=get_second_key)
             columns = (
-                Table.Column(header="Catalog", justify="left", style="cyan bold"),
-                Table.Column(header="Title", justify="left", style="magenta"),
-                Table.Column(header="Link", justify="left", style="green"),
-                Table.Column(header="Year", justify="center", style="yellow"),
+                table.Column(header="Catalog", justify="left", style="cyan bold"),
+                table.Column(header="Title", justify="left", style="magenta"),
+                table.Column(header="Link", justify="left", style="green"),
+                table.Column(header="Year", justify="center", style="yellow"),
             )
 
             if not config.no_input:
-                Table.tabulate(table_data, columns=columns, add_number_column=True, title=f"Search Results, Search Term: {config.search}{f', year: {config.year_search}' if config.year_search else ''}")
+                table.tabulate(table_data, columns=columns, add_number_column=True, title=f"Search Results, Search Term: {config.search}{f', year: {config.year_search}' if config.year_search else ''}")
 
             def is_choice_within_bounds(choice: str) -> bool | str:
                 if not choice:
