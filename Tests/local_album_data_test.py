@@ -1,7 +1,6 @@
-from typing import Literal
 import unittest
-from unittest.mock import MagicMock
-from unigen import MediaInfo, AudioFactory
+from typing import Literal
+from unigen import MediaInfo
 from unigen.wrapper.vorbis import VorbisWrapper
 
 # REMOVE
@@ -26,7 +25,6 @@ class MockAudioManager(VorbisWrapper):
 
 class TestRenameTemplate(unittest.TestCase):
     def setUp(self):
-        self.mock_audio = MagicMock()
         self.flac_file_path = get_test_file_path("flac", use_modified_folder=False)
 
     def test_get_audio_source_lossless(self):
@@ -146,7 +144,7 @@ class TestRenameTemplate(unittest.TestCase):
         audio_manager = MockAudioManager(self.flac_file_path, ".flac", MediaInfo(bitrate=320000, channels=2, bits_per_sample=16, sample_rate=44100, codec=None))
         self.assertEqual(
             LocalTrackData(file_path=file_path, depth_in_parent_folder=0, audio_manager=audio_manager).get_audio_source(),
-            f"YT-{codec}",
+            f"YT-{codec} 320kbps",
         )
 
         audio_manager = MockAudioManager(self.flac_file_path, ".flac", MediaInfo(bitrate=None, channels=2, bits_per_sample=16, sample_rate=44100, codec=None))

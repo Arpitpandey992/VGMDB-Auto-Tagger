@@ -41,9 +41,9 @@ class LocalTrackData(BaseModel):
         sample_rate = None
         bitrate = None
 
-        extension = self.extension
+        extension = self.extension.lower().strip()
         info = self.audio_manager.getMediaInfo()
-        if extension.lower() in [".flac", ".wav"]:
+        if extension in [".flac", ".wav"]:
             codec = "FLAC" if extension == ".flac" else "WAV"
             bits = info.bits_per_sample
 
@@ -98,9 +98,10 @@ class LocalTrackData(BaseModel):
             codec = "OGG"
 
         elif extension == ".opus":
-            # YouTube bruh, couldn't figure out a way to retrieve bitrate
+            # YouTube bruh
             source = "YT"
             codec = "OPUS"
+            bitrate = int(info.bitrate / 1000) if info.bitrate else None
 
         return TemplateResolver(
             {
@@ -179,9 +180,7 @@ class LocalAlbumData(BaseModel):
 def test():
     from Modules.Scan.Scanner import Scanner
 
-    test_music_dir = "/mnt/B0C019ADC0197B34/Downloads/Browser Downloads/Mariya Nishiuchi - 7 WONDERS - EP  [1647145089]"
-    # test_music_dir = "/mnt/0AA0B344A0B334D3/Music/Indian/[2013] Gajendra Verma - Emptiness"
-    # test_music_dir = "/mnt/0AA0B344A0B334D3/Music/Indian/[2013] Bhaag Milkha Bhaag (Original Motion Picture Soundtrack)"
+    test_music_dir = "/mnt/f/Music/Visual Novels/Key Sounds Label/KSLC/[KSLC-0006～7] Key Net Radio Vol.1 [2009.02.28] [Data-CD, CD-FLAC]"
     scanner = Scanner()
     album = scanner.scan_album_in_folder_if_exists(test_music_dir)
     if not album:
