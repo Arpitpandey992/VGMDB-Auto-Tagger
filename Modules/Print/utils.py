@@ -7,7 +7,7 @@ console = Console()
 
 
 def get_rich_console():
-    """maintain the use of a single rich console throughtout"""
+    """maintain the use of a single rich console throughout"""
     return console
 
 
