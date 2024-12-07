@@ -71,9 +71,13 @@ class VgmdbClient:
     def get_request(self, url: str) -> dict[str, Any] | Exception:
         backoff_secs = 1
         found_exception = Exception("empty exception")
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            "Accept": "application/json, text/javascript, */*; q=0.01",
+        }
         for _ in range(APICALLRETRIES):
             try:
-                response = requests.get(url)
+                response = requests.get(url, headers=headers)
                 if response.status_code >= 200 and response.status_code <= 299:
                     return response.json()
             except Exception as e:
