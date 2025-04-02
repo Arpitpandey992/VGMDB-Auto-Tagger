@@ -115,7 +115,7 @@ class Organizer:
             "discfoldername": disc_folder_name,
         }
 
-        file_naming_template = self.config.file_naming_template_single if is_disc_single else self.config.file_naming_template_multiple
+        file_naming_template = self.config.file_naming_template_single if is_disc_single or self.config.singles else self.config.file_naming_template_multiple
         file_naming_template_mapping: dict[str, str | None] = {
             "tracknumber": track_number_fixed,
             "tracktitle": title,

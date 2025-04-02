@@ -17,7 +17,12 @@ from Modules.Scan.models.local_album_data import LocalAlbumData
 from Modules.Tag import custom_tags
 from Modules.Tag.tagger import Tagger
 from Modules.Translate.translator import Translator
-from Modules.Utils.general_utils import get_default_logger, ifNot, to_sentence_case, extractYearFromDate
+from Modules.Utils.general_utils import (
+    get_default_logger,
+    ifNot,
+    to_sentence_case,
+    extractYearFromDate,
+)
 from Modules.VGMDB.api.client import VgmdbClient
 from Modules.VGMDB.models.vgmdb_album_data import Names, VgmdbAlbumData
 from Modules.VGMDB.user_interface import constants
@@ -29,7 +34,8 @@ logger = get_default_logger(__name__, "info")
 class CLI:
     def __init__(self, config: Config):
         self.root_config = config
-        self.scanner = Scanner()
+        ensure_album_match = False if config.singles else True
+        self.scanner = Scanner(ensure_album_match)
         self.translator = Translator()
         if config.tag:
             self.vgmdb_client = VgmdbClient()
@@ -39,8 +45,8 @@ class CLI:
         self.not_available = "(Not Available)"
 
     def run(self):
-        albums = self._scan_for_proper_albums(self.root_config.root_dir, self.root_config.recur)
-        self.console.log(f"Found {len(albums)} Albums")
+        albums = self._scan_directories(self.root_config.root_dir)
+        self.console.log(f"Found {len(albums)} Albums") if not self.root_config.singles else self.console.log(f"Found {len(albums)} folders containing individual tracks")
         print_separator()
         for album in albums:
             self.console.print(f"[bright_magenta bold]Operating on {album.album_folder_name}")
@@ -145,8 +151,17 @@ class CLI:
                 questionary.select(
                     message,
                     choices=[option.value for option in constants.choices if option != constants.choices.go_back],
-                    default=constants.choices.yes.value if all_good else constants.choices.no.value,
-                    style=questionary.Style([("question", f"fg:{self.colors['green'] if all_good else self.colors['red']} bold"), ("highlighted", "fg:white bold"), ("selected", "fg:white")]),
+                    default=(constants.choices.yes.value if all_good else constants.choices.no.value),
+                    style=questionary.Style(
+                        [
+                            (
+                                "question",
+                                f"fg:{self.colors['green'] if all_good else self.colors['red']} bold",
+                            ),
+                            ("highlighted", "fg:white bold"),
+                            ("selected", "fg:white"),
+                        ]
+                    ),
                 )
                 .skip_if(config.yes and all_good, default=constants.choices.yes.value)
                 .ask()
@@ -177,9 +192,9 @@ class CLI:
         table_data: list[tuple[str, str, str, str]] = [
             (
                 result.old_name,
-                ifNot(result.new_name, self.not_available) if result.new_name != result.old_name else self.no_change,
+                (ifNot(result.new_name, self.not_available) if result.new_name != result.old_name else self.no_change),
                 ifNot(result.old_disc_folder_name, ""),
-                ifNot(result.new_disc_folder_name, "") if result.new_disc_folder_name != result.old_disc_folder_name else self.no_change,
+                (ifNot(result.new_disc_folder_name, "") if result.new_disc_folder_name != result.old_disc_folder_name else self.no_change),
             )
             for result in folder_organize_result.file_organize_results
         ]
@@ -204,7 +219,11 @@ class CLI:
                 table.Column(header="Disc Name (New, if Changed)", justify="left", style="green"),
             )
             if not config.no_input:
-                table.tabulate(table_data, columns=columns, title=f"Organizing Result for Files (Blank Field Means No Change)")
+                table.tabulate(
+                    table_data,
+                    columns=columns,
+                    title=f"Organizing Result for Files (Blank Field Means No Change)",
+                )
 
             all_good = all_good and all(res.new_path for res in folder_organize_result.file_organize_results)
 
@@ -217,14 +236,26 @@ class CLI:
                 "Local Album Data is matching perfectly with VGMDB Album Data, Proceed?",
                 choices=[option.value for option in constants.choices],
                 default=constants.choices.yes.value,
-                style=questionary.Style([("question", f"fg:{self.colors['green']} bold"), ("highlighted", "fg:white bold"), ("selected", "fg:white")]),
+                style=questionary.Style(
+                    [
+                        ("question", f"fg:{self.colors['green']} bold"),
+                        ("highlighted", "fg:white bold"),
+                        ("selected", "fg:white"),
+                    ]
+                ),
             ).skip_if(config.yes or config.no_input, default=constants.choices.yes.value)
         else:
             question = questionary.select(
                 "Local Album Data is NOT matching perfectly with VGMDB Album Data, Proceed?",
                 choices=[option.value for option in constants.choices],
                 default=constants.choices.no.value,
-                style=questionary.Style([("question", f"fg:{self.colors['red']} bold"), ("highlighted", "fg:white bold"), ("selected", "fg:white")]),
+                style=questionary.Style(
+                    [
+                        ("question", f"fg:{self.colors['red']} bold"),
+                        ("highlighted", "fg:white bold"),
+                        ("selected", "fg:white"),
+                    ]
+                ),
                 pointer="❯",
             ).skip_if(config.no_input, default=constants.choices.no.value)
 
@@ -296,11 +327,19 @@ class CLI:
         columns = (
             table.Column(header="Disc", justify="center", style="bold"),
             table.Column(header="Track", justify="center", style="bold"),
-            table.Column(header=f"Title{' [Translated]' if config.translate else ''}", justify="left", style="cyan"),
+            table.Column(
+                header=f"Title{' [Translated]' if config.translate else ''}",
+                justify="left",
+                style="cyan",
+            ),
             table.Column(header="File Name", justify="left", style="magenta"),
         )
         if not config.no_input:
-            table.tabulate(table_data, columns=columns, title=f"Album Name{' [Translated]' if config.translate else ''}: {vgmdb_album_data.names.get_highest_priority_name(config.language_order)}")
+            table.tabulate(
+                table_data,
+                columns=columns,
+                title=f"Album Name{' [Translated]' if config.translate else ''}: {vgmdb_album_data.names.get_highest_priority_name(config.language_order)}",
+            )
         is_perfect_match = all(col for row in table_data for col in row)  # perfect match only if nothing is "" or None
         return is_perfect_match
 
@@ -318,7 +357,10 @@ class CLI:
         if not config.search:
             config.search, search_reason = self._extract_search_term_from_audio_file(audio_manager)
         if not config.search:
-            config.search, search_reason = local_album_data.album_folder_name, "folder name"
+            config.search, search_reason = (
+                local_album_data.album_folder_name,
+                "folder name",
+            )
         if not config.search:
             return None
         logger.debug(f"using {search_reason} as search term")
@@ -334,7 +376,16 @@ class CLI:
             self.console.log(f"Searching For [bold cyan]{config.search}")
             search_result = self.vgmdb_client.search_album(config.search)
 
-            table_data = [(result.catalog, result.get_album_name(config.language_order), result.album_link, result.release_year) for result in search_result if not config.year_search or result.release_year == config.year_search]
+            table_data = [
+                (
+                    result.catalog,
+                    result.get_album_name(config.language_order),
+                    result.album_link,
+                    result.release_year,
+                )
+                for result in search_result
+                if not config.year_search or result.release_year == config.year_search
+            ]
             num_results = len(table_data)
             get_second_key: Callable[[Any], Any] = lambda x: x[1]
             table_data = sorted(table_data, key=get_second_key)
@@ -346,7 +397,12 @@ class CLI:
             )
 
             if not config.no_input:
-                table.tabulate(table_data, columns=columns, add_number_column=True, title=f"Search Results, Search Term: {config.search}{f', year: {config.year_search}' if config.year_search else ''}")
+                table.tabulate(
+                    table_data,
+                    columns=columns,
+                    add_number_column=True,
+                    title=f"Search Results, Search Term: {config.search}{f', year: {config.year_search}' if config.year_search else ''}",
+                )
 
             def is_choice_within_bounds(choice: str) -> bool | str:
                 if not choice:
@@ -398,8 +454,8 @@ class CLI:
                 config.year_search = ""
         return album_id
 
-    def _scan_for_proper_albums(self, root_dir: str, recur: bool) -> list[LocalAlbumData]:
-        if recur:
+    def _scan_directories(self, root_dir: str) -> list[LocalAlbumData]:
+        if self.root_config.recur:
             local_albums = self.scanner.scan_albums_recursively(root_dir)
         else:
             local_album = self.scanner.scan_album_in_folder_if_exists(root_dir)
@@ -437,6 +493,7 @@ class CLI:
 
     def _translate_names(self, to_translate: list[Names], config: Config, num_threads: int) -> list[list[str]]:
         """Translates Names present in to_translate, Returns translated names (list) for every Name"""
+
         def translate(name_object: Names) -> list[str]:
             track_title = name_object.get_highest_priority_name([order for order in config.language_order if order != "translated"])  # don't wanna translate translated text ;)
             try:

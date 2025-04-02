@@ -2,7 +2,7 @@ import os
 import shutil
 
 # Specify the directory to search
-directory = ""
+directory = "/mnt/f/Music/Indie Creators/Eddie Van Meer Covers"
 DELETE_AS_WELL = False
 
 

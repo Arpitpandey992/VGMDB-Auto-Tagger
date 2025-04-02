@@ -37,6 +37,9 @@ logger = get_default_logger(__name__, "info")
 
 
 class Scanner:
+    def __init__(self, ensure_album_match: bool = True):
+        self.ensure_album_match = ensure_album_match
+
     def scan_albums_recursively(self, root_dir: str) -> list[LocalAlbumData]:
         """scans for all albums inside root_folder recursively"""
         root_dir = self._convert_path_to_absolute(root_dir)
@@ -52,7 +55,7 @@ class Scanner:
         logger.info(f"Scanning {folder_path}")
         logger.info(SUB_LINE_SEPARATOR)
         audio_files = self.get_supported_audio_files_in_folder(folder_path)
-        if not self._does_audio_files_belong_to_one_album_only(audio_files):
+        if self.ensure_album_match and not self._does_audio_files_belong_to_one_album_only(audio_files):
             return None
         return self._compile_album_data_from_track_data(folder_path, audio_files)
 
@@ -85,9 +88,13 @@ class Scanner:
         album_data = LocalAlbumData(album_folder_path=parent_directory)
 
         # mapping tracks and discs
-        for track in audio_files:
-            disc_number, track_number = track.audio_manager.getDiscNumber(), track.audio_manager.getTrackNumber()
+        for track_number_internal, track in enumerate(audio_files):
+            if not self.ensure_album_match:
+                # Since the tracks are individual files, we don't need to match anything
+                album_data.set_track(1, track_number_internal + 1, track)  # disc number is not important here, just to avoid conflicts
+                continue
 
+            disc_number, track_number = track.audio_manager.getDiscNumber(), track.audio_manager.getTrackNumber()
             if not track_number:
                 logger.info(f"track number not present in {track.file_name}, adding to unclean tracks")
                 album_data.unclean_tracks.append(track)

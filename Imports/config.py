@@ -56,6 +56,7 @@ class Config(BaseModel):
     rename_folder: bool = True
     rename_files: bool = True
     same_folder_name: bool = False
+    singles: bool = False
     folder_naming_template: str = "{[{date|year}] }{albumname|foldername}{ [{catalog}]}{ [{format}]}"
     folder_naming_template_ksl: str = "{[{catalog}] }{albumname|foldername}{ [{date|year}]}{ [{format}]}"
     file_naming_template_single: str = "{tracktitle|filename}{extension}"
@@ -73,19 +74,23 @@ class Config(BaseModel):
     translate: bool = False
     translation_language: list[LANGUAGE_NAME] = ["english", "romaji"]
 
-    def get_dynamically(self, key: str):
-        """access the internal variables like a dict, will raise a KeyError if invalid key"""
-        return self.__dict__[key]
-
     def set_dynamically(self, key: str, val: Any):
-        """set the internal variables like a dict, will raise a KeyError if invalid key"""
-        self.__dict__[key] = val
+        """Safely update attributes with Pydantic validation"""
+        if key not in self.model_fields:
+            raise KeyError(f"Invalid key: {key}")
+        object.__setattr__(self, key, val)  # Ensures validation is applied
+
+    def get_dynamically(self, key: str):
+        """Access attributes dynamically"""
+        if key not in self.model_fields:
+            raise KeyError(f"Invalid key: {key}")
+        return getattr(self, key)
 
 
-config_cache: dict[str, Any] = {}
+config_cache: dict[str, Config] = {}
 
 
-def get_config(root_dir: str, **kwargs: Any):
+def get_config(root_dir: str, **kwargs: Any) -> Config:
     global config_cache
     if root_dir in config_cache:
         return config_cache[root_dir]

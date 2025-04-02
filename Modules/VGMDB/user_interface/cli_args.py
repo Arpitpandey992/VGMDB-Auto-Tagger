@@ -28,6 +28,7 @@ class CLIArgs(Tap):
     no_rename_folder: bool = False  # Do not Rename the containing folder
     no_rename_files: bool = False  # Do not rename the files
     same_folder_name: bool = False  # While renaming the folder, use the current folder name instead of getting it from album name
+    singles: bool = False  # For folders containing individual files, this will disable tagging and folder rename
     folder_naming_template: str | None = None  # Give a folder naming template like "{[{catalog}] }{albumname}{ [{date}]}"
     ksl: bool = False  # for KSL folder, (custom setting), keep catalog first in naming
 
@@ -74,11 +75,13 @@ def get_config_from_args() -> Config:
     #     config.keep_title = True # Choosing not to do this anymore
     if args["no_modify"]:
         config.tag = False
-        config.rename = False
+        config.rename_files = False
+        config.rename_folder = False
     if args["no_tag"]:
         config.tag = False
     if args["no_rename"]:
-        config.rename = False
+        config.rename_files = False
+        config.rename_folder = False
     if args["no_input"]:
         config.no_input = True
         config.yes = True
@@ -98,6 +101,10 @@ def get_config_from_args() -> Config:
         config.album_cover = False
     if args["cover_overwrite"]:
         config.album_cover_overwrite = True
+
+    if args["singles"]:
+        config.tag = False
+        config.rename_folder = False
 
     if args["one_lang"]:
         config.all_lang = False
