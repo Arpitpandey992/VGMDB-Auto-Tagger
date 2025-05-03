@@ -145,9 +145,7 @@ class Translator:
                 "required": ["translated_text"],
             },
         }
-        model_used = "4k_tokens_function_calling"
         response = ChatGPTAPI(
-            model_name=model_used,
             system_role=system_role,
         ).query_with_function_call(
             prompt, function_call

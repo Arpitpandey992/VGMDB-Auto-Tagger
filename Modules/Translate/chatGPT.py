@@ -4,11 +4,13 @@ import openai
 from typing import List, Type, Callable, Any, Optional, Literal
 from typing_extensions import TypedDict
 from openai import OpenAI, RateLimitError, APIConnectionError, APIError, InternalServerError, APITimeoutError
-
+from openai.types.chat import ChatCompletionMessageParam
+from openai.types.chat.completion_create_params import Function
+from openai.types.chat.completion_create_params import FunctionCall
 from Modules.Utils.general_utils import get_default_logger
 
 DEFAULT_SYSTEM_ROLE_CONTENT = "You are a helpful assistant."
-model_types = Literal["4k_tokens", "16k_tokens", "4k_tokens_function_calling", "16k_tokens_function_calling"]
+model_types = Literal["4k_tokens", "16k_tokens", "4k_tokens_function_calling", "16k_tokens_function_calling", "gpt-4o-mini"]
 
 
 class model_details(TypedDict):
@@ -21,6 +23,7 @@ model_map: dict[model_types, model_details] = {
     "16k_tokens": model_details(name="gpt-3.5-turbo-16k", max_tokens=16384),
     "4k_tokens_function_calling": model_details(name="gpt-3.5-turbo-0613", max_tokens=4096),
     "16k_tokens_function_calling": model_details(name="gpt-3.5-turbo-16k-0613", max_tokens=16384),
+    "gpt-4o-mini": model_details(name="gpt-4o-mini", max_tokens=4096),  # you can adjust max_tokens if needed
 }
 
 logger = get_default_logger(__name__)
@@ -43,7 +46,7 @@ class QueryResponseFunctionCalling(TypedDict):
 
 
 class ChatGPTAPI:
-    def __init__(self, model_name: model_types = "4k_tokens", system_role=DEFAULT_SYSTEM_ROLE_CONTENT, temperature=0.5, max_tokens=None):
+    def __init__(self, model_name: model_types = "gpt-4o-mini", system_role=DEFAULT_SYSTEM_ROLE_CONTENT, temperature=0.5, max_tokens=None):
         self.model_name = model_map[model_name]["name"]
         openai.api_key = os.environ.get("OPENAI_API_KEY", "")
         self.system_role_content = system_role
@@ -77,29 +80,31 @@ class ChatGPTAPI:
         return {"response": reply, "usage": usage}
 
     def query_with_function_call(self, prompt: str, function_call_dict: dict) -> QueryResponse:
-        messages = [
+        messages: list[ChatCompletionMessageParam] = [
             {"role": "system", "content": self.system_role_content},
             {"role": "user", "content": prompt},
         ]
-        args_dict = {
-            "model": self.model_name,
-            "messages": messages,
-            "functions": [function_call_dict],
-            "function_call": {"name": function_call_dict["name"]},
-        }
-        if self.max_tokens:
-            args_dict["max_tokens"] = self.max_tokens
+
         response = retry_on_exceptions_with_backoff(
-            lambda: self.client.chat.completions.create(**args_dict),
+            lambda: self.client.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                functions=[function_call_dict],  # pass raw dict
+                function_call={"name": function_call_dict["name"]},  # pass dict, not FunctionCall()
+                max_tokens=self.max_tokens,
+                temperature=self.temperature,
+            ),
             [RateLimitError, APITimeoutError, APIConnectionError],
         )
-        json_response = response["choices"][0]["message"]["function_call"]["arguments"]
-        usage = TokenUsage(response["usage"])
-        # logger.info(f"ChatGPT Token Usage - {usage}")
+
+        # Extract the function call arguments
+        json_response = response.choices[0].message.function_call.arguments
+        usage = TokenUsage(response.usage)
+
         return {
             "response": json_response,
             "usage": usage,
-        }  # the json_response may be incomplete
+        }
 
 
 def retry_on_exceptions_with_backoff(
