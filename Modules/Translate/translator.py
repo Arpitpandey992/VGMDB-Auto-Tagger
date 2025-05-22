@@ -22,18 +22,19 @@ class Language(Enum):
     japanese = "ja"
     chinese = "zh"
     hindi = "hi"
+    korean = "ko"
     # custom languages which are not present in ISO 639 codes
     romaji = "rom"
 
     @classmethod
-    def from_value(cls, value: str):
+    def from_value(cls, value: str) -> "Language":
         for member in cls:
             if member.value == value:
                 return member
         raise ValueError(f"{value} is not a supported {cls.__name__}")
 
     @classmethod
-    def from_language_name(cls, language_name: LANGUAGE_NAME):
+    def from_language_name(cls, language_name: LANGUAGE_NAME) -> "Language":
         language_name_mapping = cls.get_language_name_mapping()
         if language_name in language_name_mapping:
             return language_name_mapping[language_name]
@@ -62,7 +63,7 @@ class Language(Enum):
 class Translator:
     TRANSLATOR = Literal["cutlet", "chatgpt", "translate-shell"]
     ROMAJI_TRANSLATOR: TRANSLATOR = "cutlet"
-    GENERAL_TRANSLATOR: TRANSLATOR = "translate-shell"
+    GENERAL_TRANSLATOR: TRANSLATOR = "chatgpt"
 
     def __init__(self):
         self.logger = get_default_logger(__name__, "info")
