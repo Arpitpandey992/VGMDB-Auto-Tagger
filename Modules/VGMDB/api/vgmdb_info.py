@@ -180,8 +180,13 @@ def run_server_using_docker_compose() -> str:
 def run_vgmdb_info_server() -> str:
     if constants.VGMDB_INFO_LOCAL_RUN_TYPE == "docker-compose":
         server_base_url = run_server_using_docker_compose()
-    else:
+    elif constants.VGMDB_INFO_LOCAL_RUN_TYPE == "docker":
         server_base_url = run_server_using_docker()
+    elif constants.VGMDB_INFO_LOCAL_RUN_TYPE == "windows":
+        hostname = subprocess.run(["hostname"], capture_output=True, text=True, check=True).stdout.strip()
+        server_base_url = f"http://{hostname}.local:5020"
+    else:
+        raise ValueError(f"Invalid VGMDB_INFO_LOCAL_RUN_TYPE: {constants.VGMDB_INFO_LOCAL_RUN_TYPE}")
 
     successfully_started_server = wait_for_server_start(server_base_url)
     if not successfully_started_server:
